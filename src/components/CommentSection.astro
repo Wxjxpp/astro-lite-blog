@@ -1,0 +1,106 @@
+---
+import type { Comment, SessionUser } from '@types/index';
+import { timeAgo } from '@lib/utils';
+interface Props { postSlug: string; }
+const { postSlug } = Astro.props;
+---
+
+<section class="comments-section" id="comments">
+  <div class="comments-header">
+    <h2 class="comments-title">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      评论 <span class="comments-count" id="commentsCount">0</span>
+    </h2>
+  </div>
+  <div id="commentFormContainer">
+    <div class="login-prompt" id="loginPrompt">
+      <p class="login-prompt-text">登录 GitHub 后即可发表评论</p>
+      <a href="/api/auth/github" class="github-login-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        使用 GitHub 登录
+      </a>
+    </div>
+    <div class="comment-form" id="commentForm" style="display:none;">
+      <div class="comment-form-user">
+        <img id="commentUserAvatar" class="comment-form-avatar" src="" alt="" />
+        <span class="comment-form-username" id="commentUserName"></span>
+        <button class="comment-form-logout" id="logoutBtn">退出登录</button>
+      </div>
+      <textarea id="commentTextarea" class="comment-textarea" placeholder="写下你的评论...（支持 Markdown 语法）" maxlength="2000"></textarea>
+      <div class="comment-form-actions">
+        <span class="comment-form-hint"><span id="charCount">0</span>/2000 字</span>
+        <button class="btn-primary" id="submitCommentBtn" disabled>发表评论</button>
+      </div>
+    </div>
+  </div>
+  <div class="comment-list" id="commentList">
+    <div class="no-comments" id="noComments" style="display:none;">暂无评论，来发表第一条评论吧！</div>
+  </div>
+  <button class="load-more-btn" id="loadMoreBtn" style="display:none;">加载更多评论</button>
+</section>
+
+<script>
+  interface CommentData { id:string; postSlug:string; userId:string; username:string; avatarUrl:string; content:string; createdAt:number; parentId?:string; likes?:number; }
+  interface UserData { id:string; username:string; displayName:string; avatarUrl:string; githubUrl:string; }
+  const postSlug = '${postSlug}';
+  let currentUser: UserData | null = null;
+  let currentPage = 1; let totalPages = 1; let totalCount = 0; let isLoading = false;
+  const $ = (id:string) => document.getElementById(id);
+  const loginPrompt = $('loginPrompt'), commentForm = $('commentForm');
+  const commentUserAvatar = $('commentUserAvatar') as HTMLImageElement;
+  const commentUserName = $('commentUserName'), logoutBtn = $('logoutBtn');
+  const commentTextarea = $('commentTextarea') as HTMLTextAreaElement;
+  const submitCommentBtn = $('submitCommentBtn') as HTMLButtonElement;
+  const charCount = $('charCount'), commentList = $('commentList');
+  const noComments = $('noComments'), commentsCount = $('commentsCount'), loadMoreBtn = $('loadMoreBtn');
+
+  function renderMarkdown(text:string):string {
+    return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>')
+      .replace(/`([^`]+)`/g,'<code>$1</code>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>')
+      .replace(/\n/g,'<br>');
+  }
+  function formatTime(ts:number):string {
+    const diff = Date.now()-ts; const m=Math.floor(diff/60000); const h=Math.floor(m/60); const d=Math.floor(h/24);
+    if(d>7) return new Date(ts).toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric'});
+    if(d>0) return `${d}天前`; if(h>0) return `${h}小时前`; if(m>0) return `${m}分钟前`; return '刚刚';
+  }
+  function createCommentElement(c:CommentData):HTMLElement {
+    const item=document.createElement('div'); item.className='comment-item'; item.dataset.commentId=c.id;
+    const isOwner=currentUser&&currentUser.id===c.userId;
+    item.innerHTML=`<img class="comment-avatar" src="${c.avatarUrl}" alt="${c.username}" loading="lazy"/><div class="comment-body"><div class="comment-header"><a href="https://github.com/${c.username}" target="_blank" class="comment-username">${c.username}</a><span class="comment-time">${formatTime(c.createdAt)}</span></div><div class="comment-content">${renderMarkdown(c.content)}</div><div class="comment-actions"><button class="comment-action-btn like-btn" data-id="${c.id}">👍 <span class="like-count">${c.likes||0}</span></button>${isOwner?`<button class="comment-action-btn delete-btn" data-id="${c.id}">删除</button>`:''}</div></div>`;
+    item.querySelector('.like-btn')?.addEventListener('click',async()=>{try{const r=await fetch('/api/comments/like',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({postSlug,commentId:c.id})});const d=await r.json();if(d.success){const el=item.querySelector('.like-count');if(el)el.textContent=String(d.data.likes);}}catch(e){console.error(e);}});
+    item.querySelector('.delete-btn')?.addEventListener('click',async()=>{if(!confirm('确定删除这条评论吗？'))return;try{const r=await fetch(`/api/comments?slug=${encodeURIComponent(postSlug)}&commentId=${encodeURIComponent(c.id)}`,{method:'DELETE'});const d=await r.json();if(d.success){item.remove();totalCount--;if(commentsCount)commentsCount.textContent=String(totalCount);}else alert(d.error||'删除失败');}catch(e){alert('删除失败');}});
+    return item;
+  }
+  async function loadComments(page=1,append=false) {
+    if(isLoading)return; isLoading=true;
+    if(loadMoreBtn){loadMoreBtn.textContent='加载中...';loadMoreBtn.disabled=true;}
+    try{
+      const r=await fetch(`/api/comments?slug=${encodeURIComponent(postSlug)}&page=${page}&pageSize=20`);
+      const d=await r.json();
+      if(d.success){
+        const comments:CommentData[]=d.data.items; totalPages=d.data.totalPages; totalCount=d.data.totalCount;
+        if(commentsCount)commentsCount.textContent=String(totalCount);
+        if(!append&&commentList)Array.from(commentList.children).forEach(ch=>{if(ch.id!=='noComments')ch.remove();});
+        if(comments.length===0&&!append){if(noComments)noComments.style.display='block';}
+        else{if(noComments)noComments.style.display='none';comments.forEach(c=>commentList?.appendChild(createCommentElement(c)));}
+        if(loadMoreBtn){if(page<totalPages){loadMoreBtn.style.display='block';loadMoreBtn.textContent='加载更多评论';loadMoreBtn.disabled=false;}else loadMoreBtn.style.display='none';}
+      }
+    }catch(e){console.error(e);if(loadMoreBtn){loadMoreBtn.textContent='加载失败，点击重试';loadMoreBtn.disabled=false;}}
+    finally{isLoading=false;}
+  }
+  async function checkAuth(){try{const r=await fetch('/api/auth/me');const d=await r.json();if(d.success&&d.data.user){currentUser=d.data.user;if(loginPrompt)loginPrompt.style.display='none';if(commentForm)commentForm.style.display='block';if(commentUserAvatar)commentUserAvatar.src=currentUser.avatarUrl;if(commentUserName)commentUserName.textContent=currentUser.displayName;}else{currentUser=null;if(loginPrompt)loginPrompt.style.display='block';if(commentForm)commentForm.style.display='none';}}catch(e){currentUser=null;}}
+  async function submitComment(){if(!currentUser||!commentTextarea)return;const content=commentTextarea.value.trim();if(!content)return;submitCommentBtn.disabled=true;submitCommentBtn.textContent='提交中...';try{const r=await fetch('/api/comments',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({postSlug,content})});const d=await r.json();if(d.success){commentTextarea.value='';if(charCount)charCount.textContent='0';submitCommentBtn.disabled=true;currentPage=1;await loadComments(1,false);}else{alert(d.error||'评论失败');submitCommentBtn.disabled=false;}submitCommentBtn.textContent='发表评论';}catch(e){alert('评论失败');submitCommentBtn.disabled=false;submitCommentBtn.textContent='发表评论';}}
+  async function logout(){try{await fetch('/api/auth/me',{method:'DELETE'});currentUser=null;if(loginPrompt)loginPrompt.style.display='block';if(commentForm)commentForm.style.display='none';await loadComments(1,false);}catch(e){console.error(e);}}
+  async function init(){
+    await checkAuth(); await loadComments(1,false);
+    commentTextarea?.addEventListener('input',()=>{const l=commentTextarea.value.length;if(charCount)charCount.textContent=String(l);if(submitCommentBtn)submitCommentBtn.disabled=l===0||l>2000;});
+    submitCommentBtn?.addEventListener('click',submitComment);
+    logoutBtn?.addEventListener('click',logout);
+    loadMoreBtn?.addEventListener('click',()=>{currentPage++;loadComments(currentPage,true);});
+    commentTextarea?.addEventListener('keydown',(e)=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();if(!submitCommentBtn.disabled)submitComment();}});
+  }
+  init();
+</script>
