@@ -1,0 +1,24 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import { getAllPosts } from '@lib/posts';
+import { extractTags, slugify } from '@lib/utils';
+const allPosts = await getAllPosts();
+const tags = extractTags(allPosts);
+const maxCount = Math.max(...tags.map(t => t.count), 1);
+function getTagSize(count: number): string {
+  const r = count / maxCount;
+  if (r > 0.75) return '1.25rem'; if (r > 0.5) return '1.1rem'; if (r > 0.25) return '1rem'; return '0.9rem';
+}
+---
+<BaseLayout title="标签" description="浏览所有文章标签">
+  <div class="container">
+    <div class="page-header"><h1 class="page-title">标签云</h1><p class="page-description">共 {tags.length} 个标签</p></div>
+    <div class="tag-cloud">
+      {tags.map(tag => (
+        <a href={`/tags/${slugify(tag.name)}`} class="tag-cloud-item" style={`font-size:${getTagSize(tag.count)};`}>
+          #{tag.name}<span class="tag-cloud-count">{tag.count}</span>
+        </a>
+      ))}
+    </div>
+  </div>
+</BaseLayout>

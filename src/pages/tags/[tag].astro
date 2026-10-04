@@ -1,0 +1,24 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import PostList from '@components/PostList.astro';
+import { getPostsByTag, getAllPosts } from '@lib/posts';
+import { SITE_CONFIG, paginate, slugify, extractTags } from '@lib/utils';
+const { tag } = Astro.params;
+const allPosts = await getAllPosts();
+const tags = extractTags(allPosts);
+const matchedTag = tags.find(t => slugify(t.name) === tag);
+const tagName = matchedTag?.name || tag;
+const tagPosts = await getPostsByTag(tagName);
+const page = Number(Astro.url.searchParams.get('page')) || 1;
+const { items: posts, totalPages } = paginate(tagPosts, page, SITE_CONFIG.postsPerPage);
+---
+<BaseLayout title={`#${tagName}`} description={`标签 ${tagName} 下的所有文章`}>
+  <div class="container">
+    <div class="page-header">
+      <a href="/tags" style="font-size:0.9rem;color:var(--color-text-secondary);">← 返回全部标签</a>
+      <h1 class="page-title" style="margin-top:0.5rem;">#{tagName}</h1>
+      <p class="page-description">共 {tagPosts.length} 篇文章</p>
+    </div>
+    <PostList posts={posts} page={page} totalPages={totalPages} baseUrl={`/tags/${slugify(tagName)}`} emptyMessage="该标签下暂无文章" />
+  </div>
+</BaseLayout>

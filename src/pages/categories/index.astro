@@ -1,0 +1,20 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import { getAllPosts } from '@lib/posts';
+import { extractCategories } from '@lib/utils';
+const allPosts = await getAllPosts();
+const categories = extractCategories(allPosts);
+---
+<BaseLayout title="分类" description="浏览所有文章分类">
+  <div class="container">
+    <div class="page-header"><h1 class="page-title">文章分类</h1><p class="page-description">共 {categories.length} 个分类</p></div>
+    <div class="category-grid">
+      {categories.map(cat => (
+        <a href={`/categories/${cat.name.toLowerCase()}`} class="category-card">
+          <div class="category-card-name">{cat.name}</div>
+          <div class="category-card-count">{cat.count} 篇文章</div>
+        </a>
+      ))}
+    </div>
+  </div>
+</BaseLayout>

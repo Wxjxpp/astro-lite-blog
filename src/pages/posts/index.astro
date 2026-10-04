@@ -1,0 +1,15 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import PostList from '@components/PostList.astro';
+import { getAllPosts } from '@lib/posts';
+import { SITE_CONFIG, paginate } from '@lib/utils';
+const allPosts = await getAllPosts();
+const page = Number(Astro.url.searchParams.get('page')) || 1;
+const { items: posts, totalPages } = paginate(allPosts, page, SITE_CONFIG.postsPerPage);
+---
+<BaseLayout title="文章" description="所有博客文章列表">
+  <div class="container">
+    <div class="page-header"><h1 class="page-title">所有文章</h1><p class="page-description">共 {allPosts.length} 篇文章</p></div>
+    <PostList posts={posts} page={page} totalPages={totalPages} baseUrl="/posts" emptyMessage="还没有发布任何文章" />
+  </div>
+</BaseLayout>
