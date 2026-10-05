@@ -17,7 +17,7 @@ export const GET: APIRoute = async ({ site }) => {
   ];
 
   const postUrls = posts.map(post => ({
-    url: `/posts/${post.slug}`,
+    url: `/posts/${post.id}`,
     priority: '0.8',
     changefreq: 'weekly',
     lastmod: (post.data.updatedDate || post.data.pubDate).toISOString().split('T')[0],
@@ -41,6 +41,8 @@ ${allUrls
 
   return new Response(xml, {
     status: 200,
-    headers: { 'Content-Type': 'application/xml' },
+    headers: {
+      'Content-Type': 'application/xml',
+    },
   });
 };
