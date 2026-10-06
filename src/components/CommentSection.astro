@@ -20,7 +20,7 @@ const isConfigured = Boolean(envId);
     <span class="label">Powered by Twikoo</span>
   </div>
 
-  <div class="comments-shell" id="commentsShell" data-env={envId || ''} data-path={term || ''}>
+  <div class="comments-shell" id="commentsShell" data-env={envId ? '/api/twikoo' : ''} data-path={term || ''}>
     <div class="comments-mascot">
       <GrokOrb size={72} mood="hold" state={isConfigured ? 'loading' : 'curious'} follow={false} />
     </div>
@@ -56,7 +56,10 @@ const isConfigured = Boolean(envId);
 <script>
   const shell = document.getElementById('commentsShell');
   if (shell && shell.dataset.env) {
-    const envId = shell.dataset.env as string;
+    // Use the blog's same-origin proxy instead of calling the separate
+    // Twikoo deployment directly. This avoids mobile browsers blocking the
+    // cross-origin POST with a misleading status 0 error.
+    const envId = new URL(shell.dataset.env as string, location.origin).href;
     const path = shell.dataset.path || location.pathname;
     const loader = document.getElementById('commentsLoader');
     const loaderText = document.getElementById('commentsLoaderText');
