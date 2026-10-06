@@ -14,7 +14,7 @@ const canonicalUrl = canonical || new URL(Astro.url.pathname, SITE_CONFIG.url).t
 const ogImage = image || new URL('/og-image.png', SITE_CONFIG.url).toString();
 ---
 <!DOCTYPE html>
-<html lang="zh-CN" data-theme="light">
+<html lang="zh-CN" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -36,10 +36,23 @@ const ogImage = image || new URL('/og-image.png', SITE_CONFIG.url).toString();
   <meta name="twitter:image" content={ogImage} />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="alternate" type="application/rss+xml" title={SITE_CONFIG.title} href="/rss.xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=Geist:wght@400;500;600;700&display=swap"
+  />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/styles/github-dark.min.css" id="hljs-theme" />
   <script is:inline>
-    (function(){try{const s=localStorage.getItem('theme');const d=window.matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.setAttribute('data-theme',s||(d?'dark':'light'));}catch(e){document.documentElement.setAttribute('data-theme','light');}})();
+    /* Dark-first: default to dark unless the visitor explicitly chose light. */
+    (function () {
+      try {
+        var stored = localStorage.getItem('theme');
+        document.documentElement.setAttribute('data-theme', stored === 'light' ? 'light' : 'dark');
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
   </script>
 </head>
 <body>
@@ -49,11 +62,28 @@ const ogImage = image || new URL('/og-image.png', SITE_CONFIG.url).toString();
   <button class="back-to-top" id="backToTop" aria-label="回到顶部"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
   <div class="lightbox" id="lightbox"><button class="lightbox-close" aria-label="关闭">&times;</button><img id="lightbox-img" src="" alt="" /></div>
   <script>
-    const initTheme=()=>{const b=document.getElementById('themeToggle');if(!b)return;const u=()=>{const d=document.documentElement.getAttribute('data-theme')==='dark';b.innerHTML=d?'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>':'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';};u();b.addEventListener('click',()=>{const c=document.documentElement.getAttribute('data-theme');const n=c==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',n);localStorage.setItem('theme',n);u();});};
-    const initMobileMenu=()=>{const m=document.getElementById('mobileMenuBtn'),n=document.getElementById('navMenu');if(!m||!n)return;m.addEventListener('click',()=>n.classList.toggle('open'));n.querySelectorAll('a').forEach(l=>l.addEventListener('click',()=>n.classList.remove('open')));};
-    const initBackToTop=()=>{const b=document.getElementById('backToTop');if(!b)return;window.addEventListener('scroll',()=>{b.classList.toggle('visible',window.scrollY>400);});b.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));};
-    const initImages=()=>{const imgs=document.querySelectorAll('img[loading="lazy"]');if('IntersectionObserver' in window){const o=new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting){en.target.classList.add('loaded');o.unobserve(en.target);}});},{rootMargin:'100px'});imgs.forEach(i=>o.observe(i));}else{imgs.forEach(i=>i.classList.add('loaded'));}const lb=document.getElementById('lightbox'),li=document.getElementById('lightbox-img');if(!lb||!li)return;document.querySelectorAll('.markdown-content img').forEach(i=>{i.addEventListener('click',()=>{li.src=i.src;li.alt=i.alt;lb.classList.add('open');document.body.style.overflow='hidden';});});const cl=()=>{lb.classList.remove('open');document.body.style.overflow='';};lb.addEventListener('click',cl);document.querySelector('.lightbox-close')?.addEventListener('click',cl);document.addEventListener('keydown',e=>{if(e.key==='Escape')cl();});};
-    document.addEventListener('DOMContentLoaded',()=>{initTheme();initMobileMenu();initBackToTop();initImages();});
+    const initTheme = () => {
+      const b = document.getElementById('themeToggle');
+      if (!b) return;
+      const sunSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+      const moonSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+      const update = () => {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        b.innerHTML = isDark ? sunSvg : moonSvg;
+        b.setAttribute('aria-label', isDark ? '切换到浅色模式' : '切换到深色模式');
+      };
+      update();
+      b.addEventListener('click', () => {
+        const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        try { localStorage.setItem('theme', next); } catch (e) { /* ignore */ }
+        update();
+      });
+    };
+    const initMobileMenu = () => { const m = document.getElementById('mobileMenuBtn'), n = document.getElementById('navMenu'); if (!m || !n) return; m.addEventListener('click', () => n.classList.toggle('open')); n.querySelectorAll('a').forEach(l => l.addEventListener('click', () => n.classList.remove('open'))); };
+    const initBackToTop = () => { const b = document.getElementById('backToTop'); if (!b) return; window.addEventListener('scroll', () => { b.classList.toggle('visible', window.scrollY > 400); }); b.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' })); };
+    const initImages = () => { const imgs = document.querySelectorAll('img[loading="lazy"]'); if ('IntersectionObserver' in window) { const o = new IntersectionObserver(e => { e.forEach(en => { if (en.isIntersecting) { en.target.classList.add('loaded'); o.unobserve(en.target); } }); }, { rootMargin: '100px' }); imgs.forEach(i => o.observe(i)); } else { imgs.forEach(i => i.classList.add('loaded')); } const lb = document.getElementById('lightbox'), li = document.getElementById('lightbox-img'); if (!lb || !li) return; document.querySelectorAll('.markdown-content img').forEach(i => { i.addEventListener('click', () => { li.src = i.src; li.alt = i.alt; lb.classList.add('open'); document.body.style.overflow = 'hidden'; }); }); const cl = () => { lb.classList.remove('open'); document.body.style.overflow = ''; }; lb.addEventListener('click', cl); document.querySelector('.lightbox-close')?.addEventListener('click', cl); document.addEventListener('keydown', e => { if (e.key === 'Escape') cl(); }); };
+    document.addEventListener('DOMContentLoaded', () => { initTheme(); initMobileMenu(); initBackToTop(); initImages(); });
   </script>
 </body>
 </html>

@@ -15,7 +15,7 @@ const { items: posts, totalPages } = paginate(tagPosts, page, SITE_CONFIG.postsP
 <BaseLayout title={`#${tagName}`} description={`标签 ${tagName} 下的所有文章`}>
   <div class="container">
     <div class="page-header">
-      <a href="/tags" style="font-size:0.9rem;color:var(--color-text-secondary);">← 返回全部标签</a>
+      <a href="/tags" class="link-arrow">← 返回全部标签</a>
       <h1 class="page-title" style="margin-top:0.5rem;">#{tagName}</h1>
       <p class="page-description">共 {tagPosts.length} 篇文章</p>
     </div>

@@ -15,7 +15,7 @@ if (!post) {
   return Astro.redirect('/404');
 }
 
-const { Content, remarkPluginFrontmatter } = await render(post);
+const { Content } = await render(post);
 const data = post.data as PostFrontmatter;
 
 const relatedPosts = await getRelatedPosts(post.id, 4);
@@ -31,13 +31,11 @@ const { prev, next } = await getPrevNextPosts(post.id);
   <article class="container-narrow">
     <!-- 文章头部 -->
     <header class="post-header">
-      <a href={`/categories/${slugify(data.category)}`} class="post-card-category" style="display: inline-block; margin-bottom: 1rem;">
-        {data.category}
-      </a>
+      <a href={`/categories/${slugify(data.category)}`} class="post-card-category">{data.category}</a>
       <h1 class="post-title">{data.title}</h1>
       <div class="post-meta">
         <span class="post-meta-item">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
             <line x1="16" y1="2" x2="16" y2="6"/>
             <line x1="8" y1="2" x2="8" y2="6"/>
@@ -47,23 +45,16 @@ const { prev, next } = await getPrevNextPosts(post.id);
         </span>
         {data.updatedDate && (
           <span class="post-meta-item">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M1 4v6h6"/>
               <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
             </svg>
             更新于 {formatDate(data.updatedDate)}
           </span>
         )}
-        <span class="post-meta-item">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <polyline points="12 6 12 12 16 14"/>
-          </svg>
-          {remarkPluginFrontmatter.minutesRead || Math.ceil(post.body.length / 300)} 分钟阅读
-        </span>
         {data.author && (
           <span class="post-meta-item">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
               <circle cx="12" cy="7" r="4"/>
             </svg>
@@ -86,50 +77,48 @@ const { prev, next } = await getPrevNextPosts(post.id);
     )}
 
     <!-- 文章正文 -->
-    <div class="markdown-content">
+    <div class="markdown-content post-body">
       <Content />
     </div>
 
     <!-- 文章标签 -->
     {data.tags.length > 0 && (
-      <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--color-border-light);">
-        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-          <span style="font-weight: 600; color: var(--color-text-secondary);">标签：</span>
-          {data.tags.map(tag => (
-            <TagBadge tag={tag} size="md" />
-          ))}
-        </div>
+      <div class="post-tags-row">
+        <span class="label">标签</span>
+        {data.tags.map(tag => (
+          <TagBadge tag={tag} size="md" />
+        ))}
       </div>
     )}
 
     <!-- 上一篇/下一篇 -->
     {(prev || next) && (
-      <nav style="margin-top: 2.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+      <nav class="post-nav">
         {prev ? (
-          <a href={`/posts/${prev.slug}`} class="post-card" style="padding: 1rem;">
-            <div style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 0.25rem;">← 上一篇</div>
-            <div style="font-weight: 600; color: var(--color-text); font-size: 0.95rem;">{prev.title}</div>
+          <a href={`/posts/${prev.slug}`} class="post-nav-card">
+            <div class="post-nav-label">← 上一篇</div>
+            <div class="post-nav-title">{prev.title}</div>
           </a>
-        ) : <div />}
+        ) : <span />}
         {next ? (
-          <a href={`/posts/${next.slug}`} class="post-card" style="padding: 1rem; text-align: right;">
-            <div style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 0.25rem;">下一篇 →</div>
-            <div style="font-weight: 600; color: var(--color-text); font-size: 0.95rem;">{next.title}</div>
+          <a href={`/posts/${next.slug}`} class="post-nav-card next">
+            <div class="post-nav-label">下一篇 →</div>
+            <div class="post-nav-title">{next.title}</div>
           </a>
-        ) : <div />}
+        ) : <span />}
       </nav>
     )}
 
     <!-- 相关文章 -->
     {relatedPosts.length > 0 && (
-      <section style="margin-top: 3rem;">
-        <h2 style="font-size: 1.35rem; margin-bottom: 1.5rem;">相关文章</h2>
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
+      <section style="margin-top: var(--space-3xl);">
+        <h2 class="post-section-title">相关文章</h2>
+        <div class="related-grid">
           {relatedPosts.map(rp => (
-            <a href={`/posts/${rp.slug}`} class="post-card" style="padding: 1rem;">
-              <div style="font-size: 0.75rem; color: var(--color-primary); font-weight: 600; margin-bottom: 0.25rem;">{rp.category}</div>
-              <div style="font-weight: 600; color: var(--color-text); font-size: 0.95rem; margin-bottom: 0.25rem;">{rp.title}</div>
-              <div style="font-size: 0.8rem; color: var(--color-text-muted);">{formatDate(rp.pubDate)}</div>
+            <a href={`/posts/${rp.slug}`} class="related-card">
+              <span class="post-card-category">{rp.category}</span>
+              <div class="related-title">{rp.title}</div>
+              <div class="related-date">{formatDate(rp.pubDate)}</div>
             </a>
           ))}
         </div>
@@ -137,6 +126,6 @@ const { prev, next } = await getPrevNextPosts(post.id);
     )}
 
     <!-- 评论区 -->
-    <CommentSection postSlug={post.id} />
+    <CommentSection term={post.id} />
   </article>
 </BaseLayout>

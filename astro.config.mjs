@@ -20,6 +20,7 @@ export default defineConfig({
     mdx(),
   ],
   markdown: {
+    syntaxHighlight: false,
     remarkPlugins: [remarkGfm, remarkMath],
     rehypePlugins: [
       rehypeSlug,
@@ -27,14 +28,5 @@ export default defineConfig({
       rehypeKatex,
       [rehypeHighlight, { detect: true, ignoreMissing: true }],
     ],
-    shikiConfig: {
-      theme: 'github-dark',
-      wrap: true,
-    },
-  },
-  vite: {
-    ssr: {
-      noExternal: ['@vercel/kv', '@vercel/blob'],
-    },
   },
 });

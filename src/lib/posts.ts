@@ -1,6 +1,5 @@
 import { getCollection, getEntry, type CollectionEntry } from 'astro:content';
 import type { PostItem, PostFrontmatter } from '@types/index';
-import { calculateReadingTime } from './utils';
 
 // 获取所有已发布文章
 export async function getAllPosts(): Promise<PostItem[]> {
@@ -22,7 +21,6 @@ export async function getAllPosts(): Promise<PostItem[]> {
         cover: data.cover,
         draft: data.draft,
         author: data.author,
-        readingTime: calculateReadingTime(entry.body || ''),
       } as PostItem;
     })
     .sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());

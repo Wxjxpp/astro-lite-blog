@@ -1,42 +1,32 @@
 ---
 import BaseLayout from '@layouts/BaseLayout.astro';
+import PostCard from '@components/PostCard.astro';
 import { getAllPosts, getAllCategories, getAllTags } from '@lib/posts';
-import { SITE_CONFIG, paginate } from '@lib/utils';
+import { SITE_CONFIG } from '@lib/utils';
 const allPosts = await getAllPosts();
 const allCategories = await getAllCategories();
 const allTags = await getAllTags();
-const page = Number(Astro.url.searchParams.get('page')) || 1;
-const { items: posts, totalPages } = paginate(allPosts, page, SITE_CONFIG.postsPerPage);
-const recentPosts = allPosts.slice(0, 5);
+const recentPosts = allPosts.slice(0, 6);
 ---
 <BaseLayout title="首页" description={SITE_CONFIG.description}>
   <div class="container">
     <section class="hero-section">
+      <p class="kicker">/// {SITE_CONFIG.author}</p>
       <h1 class="hero-title">{SITE_CONFIG.title}</h1>
       <p class="hero-subtitle">{SITE_CONFIG.description}</p>
       <div class="hero-stats">
-        <div class="hero-stat"><div class="hero-stat-number">{allPosts.length}</div><div class="hero-stat-label">篇文章</div></div>
-        <div class="hero-stat"><div class="hero-stat-number">{allCategories.length}</div><div class="hero-stat-label">个分类</div></div>
-        <div class="hero-stat"><div class="hero-stat-number">{allTags.length}</div><div class="hero-stat-label">个标签</div></div>
+        <div class="hero-stat"><span class="hero-stat-number">{allPosts.length}</span><span class="hero-stat-label">篇文章</span></div>
+        <div class="hero-stat"><span class="hero-stat-number">{allCategories.length}</span><span class="hero-stat-label">个分类</span></div>
+        <div class="hero-stat"><span class="hero-stat-number">{allTags.length}</span><span class="hero-stat-label">个标签</span></div>
       </div>
     </section>
     <section>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
-        <h2 style="font-size:1.5rem;">最新文章</h2>
-        <a href="/posts" style="font-size:0.9rem;color:var(--color-text-secondary);">查看全部 →</a>
+      <div class="section-head">
+        <h2>最新文章</h2>
+        <a href="/posts" class="link-arrow">查看全部 →</a>
       </div>
       <div class="posts-list">
-        {recentPosts.map(post => (
-          <a href={`/posts/${post.slug}`} class="post-card">
-            <div class="post-card-header"><span class="post-card-category">{post.category}</span><time datetime={post.pubDate.toISOString()}>{new Date(post.pubDate).toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric'})}</time></div>
-            <h3 class="post-card-title">{post.title}</h3>
-            <p class="post-card-excerpt">{post.description}</p>
-            <div class="post-card-footer">
-              <div class="post-card-tags">{post.tags.slice(0,3).map(tag => <span class="tag-badge">#{tag}</span>)}</div>
-              <span style="font-size:0.8rem;color:var(--color-text-muted);">{post.readingTime} 分钟阅读</span>
-            </div>
-          </a>
-        ))}
+        {recentPosts.map(post => (<PostCard post={post} />))}
       </div>
     </section>
   </div>

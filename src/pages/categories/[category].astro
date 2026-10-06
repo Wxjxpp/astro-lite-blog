@@ -15,7 +15,7 @@ const { items: posts, totalPages } = paginate(categoryPosts, page, SITE_CONFIG.p
 <BaseLayout title={categoryName} description={`${categoryName} 分类下的所有文章`}>
   <div class="container">
     <div class="page-header">
-      <a href="/categories" style="font-size:0.9rem;color:var(--color-text-secondary);">← 返回全部分类</a>
+      <a href="/categories" class="link-arrow">← 返回全部分类</a>
       <h1 class="page-title" style="margin-top:0.5rem;">{categoryName}</h1>
       <p class="page-description">共 {categoryPosts.length} 篇文章</p>
     </div>

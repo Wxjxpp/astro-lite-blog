@@ -4,39 +4,35 @@ import { SITE_CONFIG } from '@lib/utils';
 ---
 <BaseLayout title="关于" description={`关于 ${SITE_CONFIG.title}`}>
   <div class="container-narrow">
-    <div class="page-header"><h1 class="page-title">关于本站</h1></div>
+    <div class="page-header">
+      <h1 class="page-title">关于本站</h1>
+      <p class="page-description">{SITE_CONFIG.description}</p>
+    </div>
     <div class="markdown-content">
       <section class="about-section">
         <h2>博客简介</h2>
-        <p>欢迎来到 <strong>{SITE_CONFIG.title}</strong>！这是一个基于 <a href="https://astro.build" target="_blank" rel="noopener">Astro</a> 构建的现代化博客，部署在 <a href="https://vercel.com" target="_blank" rel="noopener">Vercel</a> 平台上。</p>
-        <p>本站支持完整的 Markdown 语法（包括 GitHub Flavored Markdown、数学公式、代码高亮等），拥有分类和标签系统，并集成了基于 GitHub 登录的评论功能。</p>
+        <p>欢迎来到 <strong>{SITE_CONFIG.title}</strong>。这里是一个基于 <a href="https://astro.build" target="_blank" rel="noopener">Astro</a> 构建的极简博客，部署在 <a href="https://vercel.com" target="_blank" rel="noopener">Vercel</a> 平台上。</p>
+        <p>站点坚持黑白、留白与等宽字体的表达方式，内容以 Markdown 为主，包含完整的 GFM、数学公式与代码高亮支持。</p>
       </section>
       <section class="about-section">
         <h2>技术栈</h2>
         <ul>
-          <li><strong>前端框架：</strong>Astro 4.x（岛屿架构，极致性能）</li>
-          <li><strong>内容管理：</strong>Astro Content Collections（类型安全的 Markdown/MDX）</li>
-          <li><strong>Markdown 增强：</strong>GFM、数学公式（KaTeX）、代码高亮（highlight.js）</li>
-          <li><strong>后端服务：</strong>Astro Server Endpoints（API Routes）</li>
-          <li><strong>数据存储：</strong>Vercel KV（Redis）存储评论</li>
-          <li><strong>图片存储：</strong>Vercel Blob（可选）</li>
-          <li><strong>身份认证：</strong>GitHub OAuth 2.0</li>
-          <li><strong>部署平台：</strong>Vercel（Serverless 函数 + 边缘网络）</li>
+          <li><strong>前端框架：</strong>Astro（Content Collections，类型安全的内容管理）</li>
+          <li><strong>Markdown 增强：</strong>GFM、KaTeX 数学公式、highlight.js 代码高亮</li>
+          <li><strong>评论系统：</strong>Giscus（基于 GitHub Discussions，无需自建后端）</li>
+          <li><strong>订阅与 SEO：</strong>RSS、Sitemap、Open Graph</li>
+          <li><strong>部署平台：</strong>Vercel</li>
         </ul>
       </section>
       <section class="about-section">
         <h2>功能特性</h2>
         <ul>
           <li>完整的 Markdown / MDX 支持，包含 GitHub 风格标记</li>
-          <li>文字标色、字号调整、字体切换（通过 HTML 内联样式）</li>
-          <li>图片懒加载 + 点击放大灯箱效果</li>
           <li>文章分类与标签系统</li>
-          <li>基于 GitHub 登录的评论系统（支持点赞、删除）</li>
-          <li>深色 / 浅色主题切换（跟随系统偏好）</li>
-          <li>响应式设计，完美适配移动端</li>
-          <li>SEO 优化（Open Graph、Twitter Card、Sitemap、RSS）</li>
-          <li>代码语法高亮（支持 190+ 编程语言）</li>
-          <li>数学公式渲染（LaTeX / KaTeX）</li>
+          <li>黑白双主题（默认深色）</li>
+          <li>图片懒加载与点击放大</li>
+          <li>响应式设计，适配移动端</li>
+          <li>基于 GitHub 账号的评论与互动（Giscus）</li>
         </ul>
       </section>
       <section class="about-section">
@@ -44,7 +40,6 @@ import { SITE_CONFIG } from '@lib/utils';
         <p>如有任何问题或建议，欢迎通过以下方式联系：</p>
         <ul>
           <li>GitHub：<a href="https://github.com/yourusername" target="_blank" rel="noopener">@yourusername</a></li>
-          <li>邮箱：your@email.com</li>
         </ul>
       </section>
     </div>

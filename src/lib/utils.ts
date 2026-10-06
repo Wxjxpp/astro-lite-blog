@@ -24,20 +24,6 @@ export function formatDate(date: Date | string): string {
 
 export function formatDateISO(date: Date | string): string { return new Date(date).toISOString(); }
 
-export function timeAgo(date: Date | number | string): string {
-  const diff = Date.now() - new Date(date).getTime();
-  const minutes = Math.floor(diff / 60000); const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24); const months = Math.floor(days / 30); const years = Math.floor(days / 365);
-  if (years > 0) return `${years}年前`; if (months > 0) return `${months}个月前`;
-  if (days > 0) return `${days}天前`; if (hours > 0) return `${hours}小时前`;
-  if (minutes > 0) return `${minutes}分钟前`; return '刚刚';
-}
-
-export function calculateReadingTime(content: string): number {
-  const cleanText = content.replace(/[#*`~\[\]()<>!-]/g, '').replace(/\s+/g, '');
-  return Math.max(1, Math.ceil(cleanText.length / 300));
-}
-
 export function generateExcerpt(content: string, maxLength = 150): string {
   const clean = content.replace(/^#+\s.*$/gm, '').replace(/```[\s\S]*?```/g, '').replace(/[#*`~\[\]()<>!]/g, '').replace(/\s+/g, ' ').trim();
   return clean.length > maxLength ? clean.slice(0, maxLength) + '...' : clean;
