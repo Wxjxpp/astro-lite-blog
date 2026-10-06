@@ -14,7 +14,7 @@ export const NAV_MENU = [
 ];
 
 export const SOCIAL_LINKS = [
-  { name: 'GitHub', icon: 'github', url: 'https://github.com/yourusername' },
+  { name: 'GitHub', icon: 'github', url: 'https://github.com/Wxjxpp' },
   { name: 'RSS', icon: 'rss', url: '/rss.xml' },
 ];
 
