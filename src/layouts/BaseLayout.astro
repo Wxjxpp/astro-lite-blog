@@ -99,9 +99,10 @@ const ogImage = image || new URL('/og-image.png', SITE_CONFIG.url).toString();
       document.addEventListener('keydown', e => { if (e.key === 'Escape') setOpen(false); });
       window.addEventListener('resize', () => { if (window.innerWidth > 768) setOpen(false); });
     };
+    const initScrollChrome = () => { const update = () => { document.documentElement.toggleAttribute('data-scrolled', window.scrollY > 28); }; update(); window.addEventListener('scroll', update, { passive: true }); };
     const initBackToTop = () => { const b = document.getElementById('backToTop'); if (!b) return; window.addEventListener('scroll', () => { b.classList.toggle('visible', window.scrollY > 400); }); b.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' })); };
     const initImages = () => { const imgs = document.querySelectorAll('img[loading="lazy"]'); if ('IntersectionObserver' in window) { const o = new IntersectionObserver(e => { e.forEach(en => { if (en.isIntersecting) { en.target.classList.add('loaded'); o.unobserve(en.target); } }); }, { rootMargin: '100px' }); imgs.forEach(i => o.observe(i)); } else { imgs.forEach(i => i.classList.add('loaded')); } const lb = document.getElementById('lightbox'), li = document.getElementById('lightbox-img'); if (!lb || !li) return; document.querySelectorAll('.markdown-content img').forEach(i => { i.addEventListener('click', () => { li.src = i.src; li.alt = i.alt; lb.classList.add('open'); document.body.style.overflow = 'hidden'; }); }); const cl = () => { lb.classList.remove('open'); document.body.style.overflow = ''; }; lb.addEventListener('click', cl); document.querySelector('.lightbox-close')?.addEventListener('click', cl); document.addEventListener('keydown', e => { if (e.key === 'Escape') cl(); }); };
-    document.addEventListener('DOMContentLoaded', () => { initTheme(); initMobileMenu(); initBackToTop(); initImages(); });
+    document.addEventListener('DOMContentLoaded', () => { initTheme(); initMobileMenu(); initScrollChrome(); initBackToTop(); initImages(); });
   </script>
 </body>
 </html>
