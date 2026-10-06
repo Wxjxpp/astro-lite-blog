@@ -1,21 +1,5 @@
 import { defineMiddleware } from 'astro:middleware';
-import { getAdminPath } from '@lib/admin-auth';
 
-const internalPrefix = '/cms-internal';
-
-export const onRequest = defineMiddleware(async (context, next) => {
-  const url = new URL(context.request.url);
-  const adminPath = `/${getAdminPath()}`;
-  if (url.pathname === internalPrefix || url.pathname.startsWith(`${internalPrefix}/`)) {
-    return url.searchParams.get('_cms') === '1' ? next() : new Response('Not Found', { status: 404 });
-  }
-  if (url.pathname === adminPath || url.pathname.startsWith(`${adminPath}/`)) {
-    const rewritten = new URL(`${internalPrefix}${url.pathname.slice(adminPath.length) || '/'}`, url);
-    rewritten.search = url.search;
-    rewritten.searchParams.set('_cms', '1');
-    const response = await context.rewrite(rewritten);
-    if (response.status === 404) return new Response(response.body, { status: 200, headers: response.headers });
-    return response;
-  }
-  return next();
-});
+// The CMS uses an Astro catch-all route that checks BLOG_ADMIN_PATH server-side.
+// Keep this middleware so the project can add request-level protections later.
+export const onRequest = defineMiddleware(async (_, next) => next());
