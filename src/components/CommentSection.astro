@@ -1,85 +1,153 @@
 ---
-interface Props { term?: string; }
+import GrokOrb from '@components/GrokOrb.astro';
+
+interface Props {
+  term?: string;
+}
+
 const { term } = Astro.props;
 
-const repo = import.meta.env.PUBLIC_GISCUS_REPO;
-const repoId = import.meta.env.PUBLIC_GISCUS_REPO_ID;
-const category = import.meta.env.PUBLIC_GISCUS_CATEGORY;
-const categoryId = import.meta.env.PUBLIC_GISCUS_CATEGORY_ID;
-const mapping = import.meta.env.PUBLIC_GISCUS_MAPPING || 'pathname';
-const isConfigured = Boolean(repo && repoId && categoryId);
+// Twikoo cloud function URL, e.g. https://my-twikoo.vercel.app
+// Deploy it as its own Vercel project (templates/vercel-min) backed by MongoDB Atlas
+// so the blog's comments never depend on a GitHub repository.
+const envId = import.meta.env.PUBLIC_TWIKOO_ENV_ID;
+const isConfigured = Boolean(envId);
 ---
 
 <section class="comments-section" id="comments">
   <div class="comments-header">
     <h2 class="comments-title">Comments</h2>
-    <span class="label">Powered by GitHub Discussions</span>
+    <span class="label">Powered by Twikoo</span>
   </div>
 
-  {isConfigured ? (
-    <div
-      class="giscus-wrap"
-      id="giscusContainer"
-      data-repo={repo}
-      data-repo-id={repoId}
-      data-category={category}
-      data-category-id={categoryId}
-      data-mapping={mapping}
-      data-term={term}
-    ></div>
-  ) : (
-    <div class="comments-config-hint">
-      <p>评论功能尚未配置。请在环境变量中填写 giscus 参数后重新部署：</p>
-      <p>
-        <code>PUBLIC_GISCUS_REPO</code> · <code>PUBLIC_GISCUS_REPO_ID</code> ·
-        <code>PUBLIC_GISCUS_CATEGORY</code> · <code>PUBLIC_GISCUS_CATEGORY_ID</code>
-      </p>
-      <p>参数可在 <code>https://giscus.app</code> 生成。</p>
+  <div class="comments-shell" id="commentsShell" data-env={envId || ''} data-path={term || ''}>
+    <div class="comments-mascot">
+      <GrokOrb size={72} mood="hold" state={isConfigured ? 'loading' : 'curious'} follow={false} />
     </div>
-  )}
+    <div class="comments-stage">
+      {
+        isConfigured ? (
+          <>
+            <div id="twikoo" />
+            <div class="comments-loader" id="commentsLoader">
+              <span class="comments-spinner" aria-hidden="true" />
+              <span class="comments-loader-text" id="commentsLoaderText">
+                正在加载评论…
+              </span>
+            </div>
+          </>
+        ) : (
+          <div class="comments-config-hint">
+            <p>
+              评论功能尚未配置。请在部署时为环境变量 <code>PUBLIC_TWIKOO_ENV_ID</code> 赋值后重新部署：
+            </p>
+            <p>
+              该变量是 Twikoo 云函数的访问地址（形如 <code>https://xxx.vercel.app</code>
+              ）。云函数需要单独建一个 Vercel 项目部署（官方 <code>templates/vercel-min</code>），并绑定
+              MongoDB Atlas。
+            </p>
+          </div>
+        )
+      }
+    </div>
+  </div>
 </section>
 
 <script>
-  const container = document.getElementById('giscusContainer');
-  if (container) {
-    const currentTheme = () =>
-      document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+  const shell = document.getElementById('commentsShell');
+  if (shell && shell.dataset.env) {
+    const envId = shell.dataset.env as string;
+    const path = shell.dataset.path || location.pathname;
+    const loader = document.getElementById('commentsLoader');
+    const loaderText = document.getElementById('commentsLoaderText');
+    const orb = shell.querySelector('[data-grok-orb]') as HTMLElement | null;
+    const stage = shell.querySelector('.comments-stage') as HTMLElement | null;
 
-    const script = document.createElement('script');
-    script.src = 'https://giscus.app/client.js';
-    script.async = true;
-    script.crossOrigin = 'anonymous';
-    script.setAttribute('data-repo', container.dataset.repo || '');
-    script.setAttribute('data-repo-id', container.dataset.repoId || '');
-    script.setAttribute('data-category', container.dataset.category || '');
-    script.setAttribute('data-category-id', container.dataset.categoryId || '');
-    script.setAttribute('data-mapping', container.dataset.mapping || 'pathname');
-    if (container.dataset.term) script.setAttribute('data-term', container.dataset.term);
-    script.setAttribute('data-strict', '0');
-    script.setAttribute('data-reactions-enabled', '1');
-    script.setAttribute('data-emit-metadata', '0');
-    script.setAttribute('data-input-position', 'top');
-    script.setAttribute('data-theme', currentTheme());
-    script.setAttribute('data-lang', 'zh-CN');
-    script.setAttribute('data-loading', 'lazy');
-    container.appendChild(script);
+    const setOrb = (next: string) => {
+      if (orb) orb.dataset.state = next;
+    };
+    const showLoader = (text?: string) => {
+      if (loaderText && text) loaderText.textContent = text;
+      loader?.classList.add('visible');
+    };
+    const hideLoader = () => loader?.classList.remove('visible');
 
-    const syncTheme = () => {
-      const iframe = document.querySelector('iframe.giscus-frame');
-      if (iframe && iframe.contentWindow) {
-        iframe.contentWindow.postMessage(
-          { giscus: { setConfig: { theme: currentTheme() } } },
-          'https://giscus.app'
-        );
-      }
+    /* Repeat-click guard: the first click on the send button locks it, and the
+       lock is only released once Twikoo has reloaded the comment list (or after
+       a safety timeout), so a slow round trip can never post twice. */
+    let submitting = false;
+    let guardTimer = 0;
+
+    const releaseGuard = () => {
+      if (guardTimer) window.clearTimeout(guardTimer);
+      guardTimer = 0;
+      submitting = false;
+      stage
+        ?.querySelectorAll('.tk-submitting-guard')
+        .forEach(btn => btn.classList.remove('tk-submitting-guard'));
     };
 
-    window.addEventListener('message', event => {
-      if (event.origin === 'https://giscus.app') syncTheme();
-    });
-    new MutationObserver(syncTheme).observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['data-theme'],
-    });
+    stage?.addEventListener(
+      'click',
+      event => {
+        const target = event.target as HTMLElement | null;
+        const btn = target?.closest('.tk-button--primary');
+        if (!btn) return;
+        if (submitting) {
+          event.preventDefault();
+          event.stopPropagation();
+          return;
+        }
+        submitting = true;
+        btn.classList.add('tk-submitting-guard');
+        setOrb('sending');
+        guardTimer = window.setTimeout(releaseGuard, 15000);
+      },
+      true
+    );
+
+    const loadTwikoo = () =>
+      new Promise<any>((resolve, reject) => {
+        const ready = (window as any).twikoo;
+        if (ready) return resolve(ready);
+        const el = document.createElement('script');
+        el.src = '/twikoo/twikoo.min.js';
+        el.async = true;
+        el.onload = () => resolve((window as any).twikoo);
+        el.onerror = () => reject(new Error('[Twikoo] client failed to load'));
+        document.head.appendChild(el);
+      });
+
+    // Keep the block from looking broken while the widget boots (the CDN path
+    // through Cloudflare can be slow).
+    showLoader('正在加载评论…');
+    setOrb('loading');
+
+    loadTwikoo()
+      .then(twikoo => {
+        if (!twikoo || !envId) throw new Error('[Twikoo] client or envId missing');
+        return twikoo.init({
+          envId,
+          el: '#twikoo',
+          path,
+          lang: 'zh-CN',
+          onCommentLoaded: () => {
+            hideLoader();
+            releaseGuard();
+            setOrb('happy');
+            window.setTimeout(() => setOrb('idle'), 1600);
+          },
+        });
+      })
+      .then(() => {
+        hideLoader();
+        releaseGuard();
+        setOrb('idle');
+      })
+      .catch(err => {
+        console.error(err);
+        if (loaderText) loaderText.textContent = '评论加载失败，请刷新重试';
+        setOrb('sad');
+      });
   }
 </script>

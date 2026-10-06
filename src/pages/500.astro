@@ -3,12 +3,12 @@ import BaseLayout from '@layouts/BaseLayout.astro';
 import GrokOrb from '@components/GrokOrb.astro';
 ---
 
-<BaseLayout title="404 - 页面未找到" noindex>
+<BaseLayout title="500 - 服务器错误" noindex>
   <div class="container">
     <div class="not-found">
-      <GrokOrb size={240} state="curious" mood="onboarding" follow={true} class="error-orb" />
-      <h1 class="error-http">HTTP 404 · NOT FOUND</h1>
-      <p class="not-found-text">抱歉，你访问的页面不存在或已被移动。</p>
+      <GrokOrb size={240} state="alerting" mood="hold" follow={true} class="error-orb" />
+      <h1 class="error-http">HTTP 500 · SERVER ERROR</h1>
+      <p class="not-found-text">服务器开小差了，请稍后再试。</p>
       <a href="/" class="btn-primary">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         返回首页

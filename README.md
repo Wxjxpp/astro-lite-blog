@@ -2,7 +2,7 @@
 
 一个基于 **Astro 5** 构建的极简博客系统，部署在 **Vercel** 平台。
 
-界面采用**极简黑白配色**、**暗黑优先**、**巨大等宽字体**的 xAI 式设计语言；评论基于 **Giscus**（GitHub Discussions），无需任何自建后端。
+界面采用**极简黑白配色**、**暗黑优先**、**巨大等宽字体**的 xAI 式设计语言；评论基于自托管的 **Twikoo** 云函数 + MongoDB，数据完全掌握在自己手里，**不依赖任何 Git 仓库**。
 
 ## ✨ 功能特性
 
@@ -10,12 +10,13 @@
 - 🌙 **暗黑优先**：默认深色主题，可一键切换浅色，选择会本地记忆
 - 🔠 **等宽字体排版**：标题、导航、元信息统一使用等宽字体，超大字号展示
 - 📝 **完整 Markdown 支持**：GFM、数学公式（KaTeX）、单色代码高亮、脚注
-- 💬 **Giscus 评论**：基于 GitHub Discussions，自带登录 / 退出，零后端
+- 💬 **Twikoo 评论**：自托管云函数 + MongoDB，数据自主可控，与仓库解耦；自带加载动画与防重复提交
+- 🤖 **GrokBot 小球**：错误页与评论区内置 Grok Bot 角色动效，状态跟随页面行为变化
 - 📂 **分类与标签**：每篇文章一个分类 + 多个标签，自动生成分类页和标签云
 - 🖼️ **图片懒加载**：原生 lazy loading + IntersectionObserver，点击放大灯箱
 - 📱 **响应式设计**：适配桌面、平板、手机
 - 🔍 **SEO 优化**：Open Graph、Twitter Card、Sitemap、RSS 订阅
-- ☁️ **Vercel 部署**：纯静态/边缘渲染，无需数据库
+- ☁️ **Vercel 部署**：边缘渲染，评论云函数可独立部署
 
 ## 🛠️ 技术栈
 
@@ -24,7 +25,8 @@
 | 前端框架 | Astro 5 |
 | 内容管理 | Content Collections (Markdown/MDX) |
 | Markdown 增强 | remark-gfm, remark-math, rehype-katex, rehype-highlight |
-| 评论系统 | Giscus (GitHub Discussions) |
+| 评论系统 | Twikoo（云函数 + MongoDB） |
+| 角色动效 | Grok Bot 复刻引擎（本地化，`public/grok`） |
 | 字体 | Geist / Geist Mono |
 | 部署平台 | Vercel |
 | 开发语言 | TypeScript |
@@ -56,23 +58,18 @@ npm run preview
 | `SITE_URL` | 博客域名 | ✅ |
 | `SITE_NAME` | 站点名称 | ✅ |
 | `SITE_DESCRIPTION` | 站点描述 | ✅ |
-| `PUBLIC_GISCUS_REPO` | GitHub 仓库，格式 `owner/repo` | ✅ |
-| `PUBLIC_GISCUS_REPO_ID` | 仓库 ID | ✅ |
-| `PUBLIC_GISCUS_CATEGORY` | Discussions 分类名 | ✅ |
-| `PUBLIC_GISCUS_CATEGORY_ID` | Discussions 分类 ID | ✅ |
-| `PUBLIC_GISCUS_MAPPING` | 页面与讨论的映射方式，默认 `pathname` | 可选 |
+| `PUBLIC_TWIKOO_ENV_ID` | Twikoo 云函数地址，如 `https://my-twikoo.vercel.app` | 评论功能必填 |
 
-### 配置 Giscus 评论
+### 部署 Twikoo 评论
 
-Giscus 把每条评论存到 GitHub Discussions，因此需要一个**公开仓库**：
+评论与仓库彻底解耦，云函数单独部署、数据存在你自己的 MongoDB：
 
-1. 在 GitHub 上创建一个公开仓库（或用现有仓库），并在 **Settings → General → Features** 中开启 **Discussions**
-2. 安装 [giscus App](https://github.com/apps/giscus) 并授权该仓库
-3. 打开 [giscus.app](https://giscus.app)，填入仓库名，选择 Discussion 分类（如 `Announcements`）
-4. 复制页面生成的 `data-repo`、`data-repo-id`、`data-category`、`data-category-id`，填入上面的环境变量
-5. 重新部署即可
+1. **申请 MongoDB**：注册 [MongoDB Atlas](https://www.mongodb.com/atlas) 免费集群，创建数据库用户并允许访问，复制连接字符串（`mongodb+srv://...`）
+2. **部署云函数**：把官方 [`templates/vercel-min`](https://github.com/twikoojs/twikoo/tree/main/templates/vercel-min) 作为**一个独立的 Vercel 项目**导入并部署
+3. 在该 Vercel 项目的环境变量里设置 `MONGODB_URI` 为上一步的连接字符串，重新部署
+4. 把该项目的访问地址（形如 `https://xxx.vercel.app`）填入本博客的 `PUBLIC_TWIKOO_ENV_ID`，重新部署
 
-未配置时，评论区会显示配置提示而不会报错。
+未配置时，评论区会显示配置提示而不会报错。Twikoo 前端脚本已本地化到 `public/twikoo/twikoo.min.js`，不依赖公共 CDN。
 
 ## ☁️ Vercel 部署
 
@@ -81,7 +78,7 @@ Giscus 把每条评论存到 GitHub Discussions，因此需要一个**公开仓�
 3. Framework 选 Astro（自动识别），添加环境变量
 4. Deploy
 
-> Giscus 为纯前端组件，**无需数据库或 Serverless 函数**，因此在 Vercel 上开箱即用。
+> 博客本身无需数据库；评论的云函数与 MongoDB 是独立部署的第二步，两者互不影响。
 
 ## 📝 写作指南
 
@@ -113,7 +110,7 @@ author: "作者名"                # 可选
 
 ```
 src/
-├── components/     # Header, Footer, PostCard, CommentSection(Giscus) 等
+├── components/     # Header, Footer, PostCard, CommentSection(Twikoo), GrokOrb 等
 ├── content/posts/  # Markdown/MDX 博客文章
 ├── layouts/        # BaseLayout
 ├── lib/            # posts, utils

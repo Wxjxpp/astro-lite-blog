@@ -1,0 +1,128 @@
+---
+/**
+ * GrokBot orb.
+ *
+ * Renders a monochrome SVG stage that is animated by the vendored Grok Bot
+ * engine in `/public/grok` (see https://github.com/blessonism/grok-icon-study).
+ * The engine is loaded lazily, only on pages that actually render an orb.
+ *
+ * State is driven through the `data-state` attribute, so any other script can
+ * control the orb without racing the async engine boot:
+ *   el.dataset.state = 'sending'
+ */
+interface Props {
+  size?: number;
+  state?: string;
+  mood?: 'hold' | 'onboarding';
+  follow?: boolean;
+  shape?: string;
+  class?: string;
+}
+
+const {
+  size = 96,
+  state = 'curious',
+  mood = 'hold',
+  follow = true,
+  shape = 'blob',
+  class: className = '',
+} = Astro.props;
+---
+
+<div
+  class:list={['grok-orb', className]}
+  data-grok-orb
+  data-state={state}
+  data-mood={mood}
+  data-shape={shape}
+  data-follow={follow ? '1' : '0'}
+  style={`--orb-size:${size}px`}
+>
+  <svg class="grok-orb-svg" role="img" aria-label="Grok Bot"></svg>
+</div>
+
+<script>
+  const ENGINE = [
+    '/grok/geometry-data.js',
+    '/grok/src/math.js',
+    '/grok/src/tables.js',
+    '/grok/src/pose.js',
+    '/grok/src/tricks.js',
+    '/grok/src/fx.js',
+    '/grok/src/eyes.js',
+    '/grok/src/character.js',
+  ];
+
+  function loadEngine(): Promise<void> {
+    const w = window as unknown as { __grokEngine?: Promise<void> };
+    if (w.__grokEngine) return w.__grokEngine;
+    w.__grokEngine = ENGINE.reduce(
+      (chain, src) =>
+        chain.then(
+          () =>
+            new Promise<void>((resolve, reject) => {
+              const el = document.createElement('script');
+              el.src = src;
+              el.async = false;
+              el.onload = () => resolve();
+              el.onerror = () => reject(new Error(`[GrokOrb] failed to load ${src}`));
+              document.head.appendChild(el);
+            })
+        ),
+      Promise.resolve()
+    );
+    return w.__grokEngine;
+  }
+
+  function initOrbs() {
+    const nodes = document.querySelectorAll<HTMLElement>('[data-grok-orb]');
+    if (!nodes.length) return;
+
+    loadEngine()
+      .then(() => {
+        const GrokCharacter = (window as any).GrokCharacter;
+        if (!GrokCharacter) return;
+
+        const ready: any[] = [];
+        nodes.forEach(node => {
+          if ((node as any)._grok) return;
+          const svg = node.querySelector('svg');
+          if (!svg) return;
+          try {
+            const inst = new GrokCharacter(svg, {
+              shape: node.dataset.shape || 'blob',
+              color: 'black',
+              scheme: 'dark',
+              mode: node.dataset.mood || 'hold',
+              state: node.dataset.state || 'curious',
+              loginWrap: true,
+              // Let the orb inherit the monochrome palette from CSS.
+              inkFlat: 'currentColor',
+              followPointer: node.dataset.follow === '1',
+              reduceMotion:
+                typeof matchMedia === 'function' &&
+                matchMedia('(prefers-reduced-motion: reduce)').matches,
+            });
+            (node as any)._grok = inst;
+            ready.push(inst);
+
+            new MutationObserver(() => {
+              const next = node.dataset.state;
+              if (next) inst.setState(next);
+            }).observe(node, { attributes: true, attributeFilter: ['data-state'] });
+          } catch (err) {
+            console.error('[GrokOrb] init failed', err);
+          }
+        });
+
+        document.dispatchEvent(new CustomEvent('grok:ready', { detail: { orbs: ready } }));
+      })
+      .catch(err => console.error(err));
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initOrbs, { once: true });
+  } else {
+    initOrbs();
+  }
+</script>
