@@ -56,6 +56,11 @@ export function clearSession() {
 }
 
 export function getOAuthRedirectUri(request: Request) {
+  const configuredSite = import.meta.env.SITE_URL;
+  if (configuredSite) return `${configuredSite.replace(/\/$/, '')}/api/auth/github/callback`;
+  const protocol = request.headers.get('x-forwarded-proto') || 'https';
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host');
+  if (host) return `${protocol}://${host}/api/auth/github/callback`;
   const url = new URL(request.url);
   return `${url.origin}/api/auth/github/callback`;
 }

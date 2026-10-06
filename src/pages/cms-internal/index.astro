@@ -3,6 +3,7 @@ import BaseLayout from '@layouts/BaseLayout.astro';
 import { getAdminPath, isAdminAuthenticated } from '@lib/admin-auth';
 
 const loggedIn = isAdminAuthenticated(Astro.request);
+Astro.response.status = 200;
 ---
 <BaseLayout title="博客管理" description="博客内容管理后台">
   <main class="container-narrow cms-page">
