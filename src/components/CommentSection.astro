@@ -109,11 +109,18 @@ const isConfigured = Boolean(envId);
     const loadTwikoo = () =>
       new Promise<any>((resolve, reject) => {
         const ready = (window as any).twikoo;
-        if (ready) return resolve(ready);
+        // The widget container has id="twikoo", so browsers expose it as
+        // window.twikoo before the client script is loaded. Only reuse the
+        // global when it is the actual Twikoo API, not that DOM element.
+        if (ready && typeof ready.init === 'function') return resolve(ready);
         const el = document.createElement('script');
         el.src = '/twikoo/twikoo.min.js';
         el.async = true;
-        el.onload = () => resolve((window as any).twikoo);
+        el.onload = () => {
+          const api = (window as any).twikoo;
+          if (api && typeof api.init === 'function') return resolve(api);
+          reject(new Error('[Twikoo] client API failed to initialize'));
+        };
         el.onerror = () => reject(new Error('[Twikoo] client failed to load'));
         document.head.appendChild(el);
       });
