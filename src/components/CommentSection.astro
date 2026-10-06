@@ -61,6 +61,9 @@ const isConfigured = Boolean(envId);
 
 <script>
   const shell = document.getElementById('commentsShell');
+  if (shell && new URLSearchParams(location.search).get('twikoo-admin') === '1') {
+    shell.dataset.adminMode = 'true';
+  }
   if (shell && shell.dataset.env) {
     // Use the blog's same-origin proxy instead of calling the separate
     // Twikoo deployment directly. This avoids mobile browsers blocking the
