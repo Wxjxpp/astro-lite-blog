@@ -56,13 +56,14 @@ export function clearSession() {
 }
 
 export function getOAuthRedirectUri(request: Request) {
+  const callbackPath = '/api/auth/callback';
   const configuredSite = import.meta.env.SITE_URL;
-  if (configuredSite) return `${configuredSite.replace(/\/$/, '')}/api/auth/github/callback`;
+  if (configuredSite) return `${configuredSite.replace(/\/$/, '')}${callbackPath}`;
   const protocol = request.headers.get('x-forwarded-proto') || 'https';
   const host = request.headers.get('x-forwarded-host') || request.headers.get('host');
-  if (host) return `${protocol}://${host}/api/auth/github/callback`;
+  if (host) return `${protocol}://${host}${callbackPath}`;
   const url = new URL(request.url);
-  return `${url.origin}/api/auth/github/callback`;
+  return `${url.origin}${callbackPath}`;
 }
 
 export { sessionCookie, stateCookie };
