@@ -23,7 +23,7 @@
 | 层级 | 技术 |
 |------|------|
 | 前端框架 | Astro 5 |
-| 内容管理 | Content Collections (Markdown/MDX) |
+| 内容管理 | Content Collections (Markdown/MDX) + MongoDB Content Studio |
 | Markdown 增强 | remark-gfm, remark-math, rehype-katex, rehype-highlight |
 | 评论系统 | Twikoo（云函数 + MongoDB） |
 | 角色动效 | Grok Bot 复刻引擎（本地化，`public/grok`） |
@@ -59,6 +59,12 @@ npm run preview
 | `SITE_NAME` | 站点名称 | ✅ |
 | `SITE_DESCRIPTION` | 站点描述 | ✅ |
 | `PUBLIC_TWIKOO_ENV_ID` | Twikoo 云函数地址，如 `https://my-twikoo.vercel.app` | 评论功能必填 |
+| `BLOG_MONGODB_URI` | 博客独立 MongoDB 连接串，不要复用 Twikoo 数据库名 | 后台必填 |
+| `BLOG_MONGODB_DATABASE` | 博客数据库名，默认 `astro_blog` | 否 |
+| `BLOG_ADMIN_PATH` | 随机管理路径，不要使用 `/admin` | 后台必填 |
+| `BLOG_SESSION_SECRET` | 用于签名后台会话的随机长字符串 | 后台必填 |
+| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | GitHub OAuth 应用凭据 | 后台必填 |
+| `GITHUB_ADMIN_LOGIN` | 允许登录的 GitHub 用户名，默认 `Wxjxpp` | 否 |
 
 ### 部署 Twikoo 评论
 
@@ -78,9 +84,11 @@ npm run preview
 3. Framework 选 Astro（自动识别），添加环境变量
 4. Deploy
 
-> 博客本身无需数据库；评论的云函数与 MongoDB 是独立部署的第二步，两者互不影响。
+> 博客内容数据库与 Twikoo 的 MongoDB 数据库/集合分开，避免评论系统和文章系统互相影响。
 
 ## 📝 写作指南
+
+配置 MongoDB 和 GitHub OAuth 后，访问随机的 `BLOG_ADMIN_PATH` 即可打开 Content Studio。后台使用 GitHub OAuth 白名单、HttpOnly 会话和随机路径保护，不把 `/admin` 当作安全措施。文章正文、草稿和元数据保存在博客自己的 MongoDB 数据库中。
 
 在 `src/content/posts/` 创建 `.md` 或 `.mdx` 文件：
 

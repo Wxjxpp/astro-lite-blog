@@ -6,6 +6,7 @@ import { getPostBySlug, getRelatedPosts, getPrevNextPosts } from '@lib/posts';
 import { formatDate, slugify } from '@lib/utils';
 import type { PostFrontmatter } from '@types/index';
 import { render } from 'astro:content';
+import { marked } from 'marked';
 
 // SSR 模式下从 URL 参数动态获取文章（Astro 5 Content Layer）
 const { slug } = Astro.params;
@@ -15,8 +16,9 @@ if (!post) {
   return Astro.redirect('/404');
 }
 
-const { Content } = await render(post);
+const Content = post.source === 'file' && post.entry ? (await render(post.entry)).Content : undefined;
 const data = post.data as PostFrontmatter;
+const databaseHtml = post.source === 'database' ? await marked.parse(post.body || '') : '';
 
 const relatedPosts = await getRelatedPosts(post.id, 4);
 const { prev, next } = await getPrevNextPosts(post.id);
@@ -78,7 +80,7 @@ const { prev, next } = await getPrevNextPosts(post.id);
 
     <!-- 文章正文 -->
     <div class="markdown-content post-body">
-      <Content />
+      {Content ? <Content /> : <Fragment set:html={databaseHtml} />}
     </div>
 
     <!-- 文章标签 -->
