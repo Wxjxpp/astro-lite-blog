@@ -662,6 +662,16 @@ h1, h2, h3, h4, h5, h6 {
   border-left: 1px solid var(--border);
 }
 
+/* Only one neighbour exists — collapse to a single full-width cell so no
+   empty bordered slot is left behind. */
+.post-nav-single {
+  grid-template-columns: 1fr;
+}
+
+.post-nav-single .post-nav-card.next {
+  text-align: left;
+}
+
 .post-nav-card {
   display: block;
   padding: var(--space-lg);
@@ -697,7 +707,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .related-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   border-top: 1px solid var(--border);
   border-left: 1px solid var(--border);
 }

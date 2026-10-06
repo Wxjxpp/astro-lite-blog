@@ -93,19 +93,19 @@ const { prev, next } = await getPrevNextPosts(post.id);
 
     <!-- 上一篇/下一篇 -->
     {(prev || next) && (
-      <nav class="post-nav">
-        {prev ? (
+      <nav class:list={['post-nav', { 'post-nav-single': !(prev && next) }]}>
+        {prev && (
           <a href={`/posts/${prev.slug}`} class="post-nav-card">
             <div class="post-nav-label">← 上一篇</div>
             <div class="post-nav-title">{prev.title}</div>
           </a>
-        ) : <span />}
-        {next ? (
+        )}
+        {next && (
           <a href={`/posts/${next.slug}`} class="post-nav-card next">
             <div class="post-nav-label">下一篇 →</div>
             <div class="post-nav-title">{next.title}</div>
           </a>
-        ) : <span />}
+        )}
       </nav>
     )}
 
