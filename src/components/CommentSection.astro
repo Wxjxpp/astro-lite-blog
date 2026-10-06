@@ -20,7 +20,13 @@ const isConfigured = Boolean(envId);
     <span class="label">Powered by Twikoo</span>
   </div>
 
-  <div class="comments-shell" id="commentsShell" data-env={envId ? '/api/twikoo' : ''} data-path={term || ''}>
+  <div
+    class="comments-shell"
+    id="commentsShell"
+    data-env={envId ? '/api/twikoo' : ''}
+    data-path={term || ''}
+    data-admin-mode={Astro.url.searchParams.get('twikoo-admin') === '1' ? 'true' : undefined}
+  >
     <div class="comments-mascot">
       <GrokOrb size={72} mood="hold" state={isConfigured ? 'loading' : 'curious'} follow={false} />
     </div>
@@ -161,3 +167,11 @@ const isConfigured = Boolean(envId);
       });
   }
 </script>
+
+<style>
+  /* Do not expose the Twikoo admin entry to ordinary visitors. Add
+     ?twikoo-admin=1 when the administrator needs to open the password gate. */
+  .comments-shell:not([data-admin-mode='true']) :global(.tk-comments-actions .tk-icon:last-child) {
+    display: none;
+  }
+</style>
