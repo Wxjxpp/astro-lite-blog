@@ -28,7 +28,7 @@ const isConfigured = Boolean(envId);
     data-admin-mode={Astro.url.searchParams.get('twikoo-admin') === '1' ? 'true' : undefined}
   >
     <div class="comments-mascot">
-      <GrokOrb size={72} mood="hold" state={isConfigured ? 'loading' : 'curious'} follow={false} />
+      <GrokOrb size={72} mood="hold" state={isConfigured ? 'loading' : 'curious'} follow={true} />
     </div>
     <div class="comments-stage">
       {

@@ -77,6 +77,19 @@ npm run preview
 
 未配置时，评论区会显示配置提示而不会报错。Twikoo 前端脚本已本地化到 `public/twikoo/twikoo.min.js`，不依赖公共 CDN。
 
+### 评论邮件通知
+
+Twikoo 云函数原生支持两类邮件提醒，并会在邮件中带上文章、评论内容和回复上下文：
+
+- 新用户评论：发送给站长邮箱
+- 站长或其他用户回复：发送给被回复评论留下的邮箱
+
+在公开评论页追加 `?twikoo-admin=1`，点击评论区右下角的管理入口并输入 Twikoo 管理密码，然后进入“配置管理 → 邮件通知”填写 SMTP 配置。常用配置项包括：
+
+`BLOGGER_EMAIL`（站长收件箱）、`SENDER_EMAIL`、`SENDER_NAME`、`SMTP_SERVICE`、`SMTP_USER`、`SMTP_PASS`。
+
+SMTP 密码或邮箱授权码只在 Twikoo 管理面板中填写，不要提交到 GitHub 或博客环境变量。保存后可在管理面板发送测试邮件；测试通过后，新评论和回复会自动按上下文通知对应收件人。
+
 ## ☁️ Vercel 部署
 
 1. 推送代码到 GitHub
