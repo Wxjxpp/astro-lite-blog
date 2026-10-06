@@ -8,16 +8,23 @@ const currentPath = Astro.url.pathname;
     <a href="/" class="site-logo">
       <span>{SITE_CONFIG.title}</span><span class="logo-cursor" aria-hidden="true"></span>
     </a>
-    <nav class="nav-menu" id="navMenu">
+    <nav class="nav-menu" id="navMenu" aria-label="主导航">
       {NAV_MENU.map(item => (
         <a href={item.href} class={`nav-link ${currentPath === item.href || (item.href !== '/' && currentPath.startsWith(item.href)) ? 'active' : ''}`}>{item.label}</a>
       ))}
     </nav>
     <div class="header-actions">
       <button class="icon-btn" id="themeToggle" aria-label="切换主题"></button>
-      <button class="icon-btn mobile-menu-btn" id="mobileMenuBtn" aria-label="菜单">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      <button
+        class="icon-btn mobile-menu-btn"
+        id="mobileMenuBtn"
+        aria-label="打开菜单"
+        aria-expanded="false"
+        aria-controls="navMenu"
+      >
+        <span class="menu-bars" aria-hidden="true"><span></span><span></span><span></span></span>
       </button>
     </div>
   </div>
 </header>
+<div class="nav-backdrop" id="navBackdrop" aria-hidden="true"></div>

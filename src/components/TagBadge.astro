@@ -1,13 +1,12 @@
 ---
 import { slugify } from '@lib/utils';
-interface Props { tag: string; size?: 'sm' | 'md'; }
-const { tag, size = 'sm' } = Astro.props;
+interface Props { tag: string; size?: 'sm' | 'md'; link?: boolean; }
+const { tag, size = 'sm', link = true } = Astro.props;
+const cls = `tag-badge ${size === 'md' ? 'tag-badge-md' : ''}`;
 ---
 
-<a href={`/tags/${slugify(tag)}`} class={`tag-badge ${size === 'md' ? 'tag-badge-md' : ''}`}>
-  #{tag}
-</a>
-
-<style>
-  .tag-badge-md { font-size: 0.85rem; padding: 0.25rem 0.6rem; }
-</style>
+{link ? (
+  <a href={`/tags/${slugify(tag)}`} class={cls}>#{tag}</a>
+) : (
+  <span class={cls}>#{tag}</span>
+)}

@@ -37,7 +37,7 @@ author: "Blog Author"
 - <span style="font-size: 1.1rem;">中号文字</span>
 - <span style="font-size: 1.3rem; font-weight: 700;">大号加粗文字</span>
 - <span style="font-family: 'Georgia', serif;">衬线字体文字</span>
-- <span style="font-family: 'Courier New', monospace; background: #f1f3f5; padding: 2px 6px; border-radius: 4px;">等宽字体文字</span>
+- <span style="font-family: 'Courier New', monospace; background: var(--bg-soft); padding: 2px 8px; border-radius: 8px;">等宽字体文字</span>
 
 ## 二、标题层级
 
@@ -215,23 +215,23 @@ $$
 
 ## 十二、提示框（通过 HTML 实现）
 
-<div style="padding: 1rem 1.25rem; background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 0 8px 8px 0; margin: 1.5rem 0;">
-  <strong style="color: #1d4ed8;">💡 提示</strong><br>
+<div style="padding: 1rem 1.25rem; background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.3); border-left: 4px solid #3b82f6; border-radius: 18px; box-shadow: var(--shadow-sm); margin: 1.5rem 0;">
+  <strong style="color: #60a5fa;">💡 提示</strong><br>
   这是一个信息提示框，可以用来展示重要提示或注意事项。
 </div>
 
-<div style="padding: 1rem 1.25rem; background: #f0fdf4; border-left: 4px solid #22c55e; border-radius: 0 8px 8px 0; margin: 1.5rem 0;">
-  <strong style="color: #15803d;">✅ 成功</strong><br>
+<div style="padding: 1rem 1.25rem; background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3); border-left: 4px solid #22c55e; border-radius: 18px; box-shadow: var(--shadow-sm); margin: 1.5rem 0;">
+  <strong style="color: #4ade80;">✅ 成功</strong><br>
   操作已成功完成！
 </div>
 
-<div style="padding: 1rem 1.25rem; background: #fffbeb; border-left: 4px solid #f59e0b; border-radius: 0 8px 8px 0; margin: 1.5rem 0;">
-  <strong style="color: #b45309;">⚠️ 警告</strong><br>
+<div style="padding: 1rem 1.25rem; background: rgba(245,158,11,0.14); border: 1px solid rgba(245,158,11,0.32); border-left: 4px solid #f59e0b; border-radius: 18px; box-shadow: var(--shadow-sm); margin: 1.5rem 0;">
+  <strong style="color: #fbbf24;">⚠️ 警告</strong><br>
   请注意以下事项。
 </div>
 
-<div style="padding: 1rem 1.25rem; background: #fef2f2; border-left: 4px solid #ef4444; border-radius: 0 8px 8px 0; margin: 1.5rem 0;">
-  <strong style="color: #b91c1c;">❌ 错误</strong><br>
+<div style="padding: 1rem 1.25rem; background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); border-left: 4px solid #ef4444; border-radius: 18px; box-shadow: var(--shadow-sm); margin: 1.5rem 0;">
+  <strong style="color: #f87171;">❌ 错误</strong><br>
   发生了一个错误。
 </div>
 

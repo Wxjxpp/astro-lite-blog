@@ -18,7 +18,7 @@ const postUrl = `/posts/${post.slug}`;
   {post.tags.length > 0 && (
     <div class="post-card-footer">
       <div class="post-card-tags">
-        {post.tags.slice(0, 4).map(tag => (<TagBadge tag={tag} />))}
+        {post.tags.slice(0, 4).map(tag => (<TagBadge tag={tag} link={false} />))}
       </div>
     </div>
   )}
