@@ -1976,8 +1976,8 @@ h1, h2, h3, h4, h5, h6 {
 
 .header-inner {
   height: var(--header-height);
-  width: fit-content;
-  max-width: calc(100% - 2rem);
+  width: calc(100% - 2rem);
+  max-width: 56rem;
   margin: 0 auto;
   border: 1px solid transparent;
   border-radius: 999px;
@@ -2029,7 +2029,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 [data-scrolled] .header-inner {
-  max-width: calc(100% - 2rem);
+  width: calc(100% - 2rem);
+  max-width: 56rem;
   height: 3.35rem;
   padding: 0 0.4rem 0 0.85rem;
   background: color-mix(in srgb, var(--bg) 30%, transparent);
@@ -2103,9 +2104,9 @@ h1, h2, h3, h4, h5, h6 {
 
 @media (max-width: 768px) {
   .site-header { height: 4rem; padding: 0.45rem 0; }
-  .header-inner { height: 3.1rem; padding-left: 0.85rem; }
+  .header-inner { width: calc(100% - 1.25rem); height: 3.1rem; padding-left: 0.85rem; }
   [data-scrolled] .site-header { height: 3.7rem; padding: 0.3rem 0; }
-  [data-scrolled] .header-inner { max-width: calc(100% - 2rem); height: 3rem; padding-left: 0.8rem; }
+  [data-scrolled] .header-inner { width: calc(100% - 1.25rem); max-width: none; height: 3rem; padding-left: 0.8rem; }
   .nav-menu {
     top: calc(var(--header-height) + 0.6rem);
     left: 0.75rem;
