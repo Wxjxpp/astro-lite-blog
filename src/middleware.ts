@@ -13,7 +13,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
     const rewritten = new URL(`${internalPrefix}${url.pathname.slice(adminPath.length) || '/'}`, url);
     rewritten.search = url.search;
     rewritten.searchParams.set('_cms', '1');
-    return context.rewrite(rewritten);
+    const response = await context.rewrite(rewritten);
+    if (response.status === 404) return new Response(response.body, { status: 200, headers: response.headers });
+    return response;
   }
   return next();
 });
