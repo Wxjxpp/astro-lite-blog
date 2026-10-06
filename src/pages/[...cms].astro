@@ -2,7 +2,8 @@
 import BaseLayout from '@layouts/BaseLayout.astro';
 import { getAdminPath, isAdminAuthenticated } from '@lib/admin-auth';
 
-if (Astro.url.pathname.replace(/\/$/, '') !== `/${getAdminPath()}`) {
+const requestedPath = Array.isArray(Astro.params.cms) ? Astro.params.cms.join('/') : (Astro.params.cms || '');
+if (requestedPath !== getAdminPath()) {
   return new Response('Not Found', { status: 404 });
 }
 const loggedIn = isAdminAuthenticated(Astro.request);
