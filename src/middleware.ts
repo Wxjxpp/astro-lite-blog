@@ -1,5 +1,9 @@
 import { defineMiddleware } from 'astro:middleware';
 
-// The CMS uses an Astro catch-all route that checks BLOG_ADMIN_PATH server-side.
-// Keep this middleware so the project can add request-level protections later.
-export const onRequest = defineMiddleware(async (_, next) => next());
+export const onRequest = defineMiddleware(async (context, next) => {
+  const path = new URL(context.request.url).pathname;
+  if (path === '/cms-internal' || path.startsWith('/cms-internal/')) {
+    return new Response('Not Found', { status: 404 });
+  }
+  return next();
+});
