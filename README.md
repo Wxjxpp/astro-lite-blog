@@ -62,6 +62,7 @@ npm run preview
 | `BLOG_MONGODB_URI` | 博客独立 MongoDB 连接串，不要复用 Twikoo 数据库名 | 后台必填 |
 | `BLOG_MONGODB_DATABASE` | 博客数据库名，默认 `astro_blog` | 否 |
 | `KV_REST_API_URL` / `KV_REST_API_TOKEN` | Vercel KV / Upstash Redis 连接配置；两项同时存在时博客优先使用 KV | 否 |
+| `BLOB_READ_WRITE_TOKEN` | Vercel Blob 图片上传令牌 | 图片上传必填 |
 | `BLOG_ADMIN_PATH` | 随机管理路径，不要使用 `/admin` | 后台必填 |
 | `BLOG_SESSION_SECRET` | 用于签名后台会话的随机长字符串 | 后台必填 |
 | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | GitHub OAuth 应用凭据 | 后台必填 |

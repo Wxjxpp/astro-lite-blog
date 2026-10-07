@@ -8,7 +8,7 @@ const forbidden = () => json({ error: '未登录或会话已过期' }, 401);
 
 export const GET: APIRoute = async ({ request }) => {
   if (!isAdminAuthenticated(request)) return forbidden();
-  if (!isBlogDatabaseConfigured) return json({ error: 'BLOG_MONGODB_URI 尚未配置' }, 503);
+  if (!isBlogDatabaseConfigured) return json({ error: '博客存储尚未配置' }, 503);
   const records = await getAllPostRecords();
   return json(records.map(post => ({
     slug: post.id,
@@ -20,10 +20,12 @@ export const GET: APIRoute = async ({ request }) => {
 
 export const POST: APIRoute = async ({ request }) => {
   if (!isAdminAuthenticated(request)) return forbidden();
-  if (!isBlogDatabaseConfigured) return json({ error: 'BLOG_MONGODB_URI 尚未配置' }, 503);
+  if (!isBlogDatabaseConfigured) return json({ error: '博客存储尚未配置' }, 503);
   const input = await request.json();
-  const required = ['slug', 'title', 'description', 'category', 'content'];
-  if (required.some(key => typeof input[key] !== 'string' || !input[key].trim())) return json({ error: '请填写完整的文章必填字段' }, 400);
+  const labels: Record<string, string> = { title: '标题', slug: 'Slug', description: '摘要', category: '分类', content: '正文' };
+  const required = Object.keys(labels);
+  const missing = required.filter(key => typeof input[key] !== 'string' || !input[key].trim());
+  if (missing.length) return json({ error: `请填写：${missing.map(key => labels[key]).join('、')}`, missing }, 400);
   const slug = input.slug.trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '');
   if (!slug) return json({ error: 'slug 无效' }, 400);
   const saved = await saveBlogPost({

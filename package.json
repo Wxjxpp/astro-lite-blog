@@ -15,6 +15,7 @@
     "@astrojs/mdx": "^4.3.5",
     "@astrojs/rss": "^4.0.19",
     "@astrojs/vercel": "^9.0.5",
+    "@vercel/blob": "^2.8.1",
     "@vercel/kv": "^3.0.0",
     "astro": "^5.18.2",
     "highlight.js": "^11.10.0",
