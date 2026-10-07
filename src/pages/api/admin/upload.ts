@@ -14,7 +14,7 @@ export const POST: APIRoute = async ({ request }) => {
   const file = form.get('file');
   if (!(file instanceof File)) return json({ error: '请选择图片文件' }, 400);
   if (!allowed.has(file.type)) return json({ error: '只支持 JPG、PNG、GIF、WebP、AVIF 或 SVG 图片' }, 415);
-  if (file.size > MAX_SIZE) return json({ error: '图片不能超过 10MB' }, 413);
+  if (file.size > MAX_SIZE) return json({ error: '图片不能超过 4MB' }, 413);
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'image';
   try {
     const blob = await put(`blog/${Date.now()}-${safeName}`, file, { access: 'public', addRandomSuffix: true });
