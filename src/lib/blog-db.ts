@@ -1,3 +1,4 @@
+import { kv } from '@vercel/kv';
 import { MongoClient, type Collection, type Db } from 'mongodb';
 
 export interface BlogPostDocument {
@@ -16,77 +17,116 @@ export interface BlogPostDocument {
   updatedAt: Date;
 }
 
-interface BlogDeletionDocument {
-  slug: string;
-  deletedAt: Date;
-}
+interface BlogDeletionDocument { slug: string; deletedAt: Date; }
+type StoredPost = Omit<BlogPostDocument, 'pubDate' | 'updatedDate' | 'createdAt' | 'updatedAt'> & {
+  pubDate: string; updatedDate?: string; createdAt: string; updatedAt: string;
+};
 
-const uri = import.meta.env.BLOG_MONGODB_URI;
+const mongoUri = import.meta.env.BLOG_MONGODB_URI;
 const dbName = import.meta.env.BLOG_MONGODB_DATABASE || 'astro_blog';
+const kvUrl = import.meta.env.KV_REST_API_URL;
+const kvToken = import.meta.env.KV_REST_API_TOKEN;
+const useKv = Boolean(kvUrl && kvToken);
+const POSTS_KEY = 'blog:posts:v1';
+const DELETIONS_KEY = 'blog:deletions:v1';
+const MIGRATION_KEY = 'blog:migration:mongo-to-kv:v1';
 let clientPromise: Promise<MongoClient> | undefined;
+let kvMigrationPromise: Promise<void> | undefined;
 
-export const isBlogDatabaseConfigured = Boolean(uri);
+export const isBlogDatabaseConfigured = Boolean(mongoUri || useKv);
 
 function getClient(): Promise<MongoClient> {
-  if (!uri) throw new Error('BLOG_MONGODB_URI is not configured');
-  clientPromise ??= new MongoClient(uri).connect();
+  if (!mongoUri) throw new Error('BLOG_MONGODB_URI is not configured');
+  clientPromise ??= new MongoClient(mongoUri).connect();
   return clientPromise;
 }
-
-export async function getBlogPostsCollection(): Promise<Collection<BlogPostDocument>> {
-  const client = await getClient();
-  const db: Db = client.db(dbName);
+async function getBlogPostsCollection(): Promise<Collection<BlogPostDocument>> {
+  const db: Db = (await getClient()).db(dbName);
   return db.collection<BlogPostDocument>('posts');
 }
-
 async function getDeletionsCollection(): Promise<Collection<BlogDeletionDocument>> {
-  const client = await getClient();
-  const db: Db = client.db(dbName);
+  const db: Db = (await getClient()).db(dbName);
   return db.collection<BlogDeletionDocument>('post_deletions');
 }
 
+function toStored(post: BlogPostDocument): StoredPost {
+  return { ...post, pubDate: post.pubDate.toISOString(), updatedDate: post.updatedDate?.toISOString(), createdAt: post.createdAt.toISOString(), updatedAt: post.updatedAt.toISOString() };
+}
+function fromStored(post: StoredPost): BlogPostDocument {
+  return { ...post, pubDate: new Date(post.pubDate), updatedDate: post.updatedDate ? new Date(post.updatedDate) : undefined, createdAt: new Date(post.createdAt), updatedAt: new Date(post.updatedAt) };
+}
+
+async function ensureKvMigration() {
+  if (!useKv || kvMigrationPromise) return kvMigrationPromise;
+  kvMigrationPromise = (async () => {
+    if (await kv.get<boolean>(MIGRATION_KEY)) return;
+    const posts = mongoUri ? await (await getBlogPostsCollection()).find({}).toArray() : [];
+    const deletions = mongoUri ? await (await getDeletionsCollection()).find({}).toArray() : [];
+    const postMap: Record<string, StoredPost> = {};
+    for (const post of posts) postMap[post.slug] = toStored(post);
+    await kv.set(POSTS_KEY, postMap);
+    await kv.set(DELETIONS_KEY, deletions.map(item => item.slug));
+    await kv.set(MIGRATION_KEY, true);
+  })();
+  return kvMigrationPromise;
+}
+
+async function readKvPosts(): Promise<Record<string, StoredPost>> {
+  await ensureKvMigration();
+  return (await kv.get<Record<string, StoredPost>>(POSTS_KEY)) || {};
+}
+async function readKvDeletions(): Promise<Set<string>> {
+  await ensureKvMigration();
+  return new Set((await kv.get<string[]>(DELETIONS_KEY)) || []);
+}
+
 export async function getDeletedSlugs(): Promise<Set<string>> {
-  const collection = await getDeletionsCollection();
-  const rows = await collection.find({}, { projection: { _id: 0, slug: 1 } }).toArray();
+  if (useKv) return readKvDeletions();
+  const rows = await (await getDeletionsCollection()).find({}, { projection: { _id: 0, slug: 1 } }).toArray();
   return new Set(rows.map(row => row.slug));
 }
 
 export async function listBlogPosts() {
-  const collection = await getBlogPostsCollection();
+  if (useKv) {
+    const deleted = await readKvDeletions();
+    return Object.values(await readKvPosts()).filter(post => !deleted.has(post.slug)).map(fromStored).sort((a, b) => b.pubDate.getTime() - a.pubDate.getTime());
+  }
   const deleted = [...await getDeletedSlugs()];
-  const filter = deleted.length ? { slug: { $nin: deleted } } : {};
-  return collection.find(filter).sort({ pubDate: -1 }).toArray();
+  return (await getBlogPostsCollection()).find(deleted.length ? { slug: { $nin: deleted } } : {}).sort({ pubDate: -1 }).toArray();
 }
 
 export async function findBlogPost(slug: string) {
   if ((await getDeletedSlugs()).has(slug)) return null;
-  const collection = await getBlogPostsCollection();
-  return collection.findOne({ slug });
+  if (useKv) {
+    const post = (await readKvPosts())[slug];
+    return post ? fromStored(post) : null;
+  }
+  return (await getBlogPostsCollection()).findOne({ slug });
 }
 
 export async function saveBlogPost(post: Omit<BlogPostDocument, 'createdAt' | 'updatedAt'> & { createdAt?: Date; updatedAt?: Date }) {
-  const collection = await getBlogPostsCollection();
   const now = new Date();
-  const deletions = await getDeletionsCollection();
-  await deletions.deleteOne({ slug: post.slug });
-  await collection.updateOne(
-    { slug: post.slug },
-    { $set: { ...post, updatedAt: now }, $setOnInsert: { createdAt: post.createdAt ?? now } },
-    { upsert: true },
-  );
+  const full = { ...post, createdAt: post.createdAt ?? now, updatedAt: now } as BlogPostDocument;
+  if (useKv) {
+    const posts = await readKvPosts();
+    posts[post.slug] = toStored(full);
+    const deleted = await readKvDeletions();
+    deleted.delete(post.slug);
+    await Promise.all([kv.set(POSTS_KEY, posts), kv.set(DELETIONS_KEY, [...deleted])]);
+    return full;
+  }
+  await (await getDeletionsCollection()).deleteOne({ slug: post.slug });
+  const collection = await getBlogPostsCollection();
+  await collection.updateOne({ slug: post.slug }, { $set: full, $setOnInsert: { createdAt: full.createdAt } }, { upsert: true });
   return collection.findOne({ slug: post.slug });
 }
 
-/**
- * Keep the database copy as a recoverable backup and write a tombstone.
- * The tombstone also hides a same-slug Markdown file, which prevents the
- * public reader from falling back to the legacy file after deletion.
- */
 export async function deleteBlogPost(slug: string) {
-  const collection = await getDeletionsCollection();
-  return collection.updateOne(
-    { slug },
-    { $set: { slug, deletedAt: new Date() } },
-    { upsert: true },
-  );
+  if (useKv) {
+    const deleted = await readKvDeletions();
+    deleted.add(slug);
+    await kv.set(DELETIONS_KEY, [...deleted]);
+    return { acknowledged: true, modifiedCount: 1 };
+  }
+  return (await getDeletionsCollection()).updateOne({ slug }, { $set: { slug, deletedAt: new Date() } }, { upsert: true });
 }

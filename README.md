@@ -61,6 +61,7 @@ npm run preview
 | `PUBLIC_TWIKOO_ENV_ID` | Twikoo 云函数地址，如 `https://my-twikoo.vercel.app` | 评论功能必填 |
 | `BLOG_MONGODB_URI` | 博客独立 MongoDB 连接串，不要复用 Twikoo 数据库名 | 后台必填 |
 | `BLOG_MONGODB_DATABASE` | 博客数据库名，默认 `astro_blog` | 否 |
+| `KV_REST_API_URL` / `KV_REST_API_TOKEN` | Vercel KV / Upstash Redis 连接配置；两项同时存在时博客优先使用 KV | 否 |
 | `BLOG_ADMIN_PATH` | 随机管理路径，不要使用 `/admin` | 后台必填 |
 | `BLOG_SESSION_SECRET` | 用于签名后台会话的随机长字符串 | 后台必填 |
 | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | GitHub OAuth 应用凭据 | 后台必填 |
@@ -97,7 +98,7 @@ SMTP 密码或邮箱授权码只在 Twikoo 管理面板中填写，不要提交�
 3. Framework 选 Astro（自动识别），添加环境变量
 4. Deploy
 
-> 博客内容数据库与 Twikoo 的 MongoDB 数据库/集合分开，避免评论系统和文章系统互相影响。
+> 博客内容数据库与 Twikoo 的 MongoDB 数据库/集合分开，避免评论系统和文章系统互相影响。配置 KV 后，博客内容优先存储在 KV，MongoDB 保留为迁移备份。
 
 ## 📝 写作指南
 
