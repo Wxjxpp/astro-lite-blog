@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { isAdminAuthenticated } from '@lib/admin-auth';
-import { isBlogDatabaseConfigured, listBlogPosts, saveBlogPost } from '@lib/blog-db';
+import { isBlogDatabaseConfigured, saveBlogPost } from '@lib/blog-db';
+import { getAllPostRecords } from '@lib/posts';
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
 const forbidden = () => json({ error: '未登录或会话已过期' }, 401);
@@ -8,7 +9,13 @@ const forbidden = () => json({ error: '未登录或会话已过期' }, 401);
 export const GET: APIRoute = async ({ request }) => {
   if (!isAdminAuthenticated(request)) return forbidden();
   if (!isBlogDatabaseConfigured) return json({ error: 'BLOG_MONGODB_URI 尚未配置' }, 503);
-  return json(await listBlogPosts());
+  const records = await getAllPostRecords();
+  return json(records.map(post => ({
+    slug: post.id,
+    ...post.data,
+    content: post.body ?? post.entry?.body ?? '',
+    source: post.source,
+  })));
 };
 
 export const POST: APIRoute = async ({ request }) => {

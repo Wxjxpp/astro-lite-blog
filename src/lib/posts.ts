@@ -1,6 +1,6 @@
 import { getCollection, getEntry, type CollectionEntry } from 'astro:content';
 import type { PostItem, PostFrontmatter } from '@types/index';
-import { findBlogPost, isBlogDatabaseConfigured, listBlogPosts } from '@lib/blog-db';
+import { findBlogPost, getDeletedSlugs, isBlogDatabaseConfigured, listBlogPosts } from '@lib/blog-db';
 
 export interface PostRecord {
   id: string;
@@ -47,7 +47,8 @@ async function getDatabaseRecords(): Promise<PostRecord[]> {
 
 export async function getAllPostRecords(): Promise<PostRecord[]> {
   const files = await getCollection('posts', ({ data }) => import.meta.env.PROD ? data.draft !== true : true);
-  const records = files.map(fromFile);
+  const deleted = isBlogDatabaseConfigured ? await getDeletedSlugs() : new Set<string>();
+  const records = files.filter(entry => !deleted.has(entry.id)).map(fromFile);
   const database = await getDatabaseRecords();
   const bySlug = new Map(records.map(post => [post.id, post]));
   for (const post of database) bySlug.set(post.id, post);
@@ -61,6 +62,7 @@ export async function getAllPosts(): Promise<PostItem[]> {
 
 export async function getPostBySlug(slug: string): Promise<PostRecord | undefined> {
   if (isBlogDatabaseConfigured) {
+    if ((await getDeletedSlugs()).has(slug)) return undefined;
     try {
       const databasePost = fromDatabase(await findBlogPost(slug));
       if (databasePost && (import.meta.env.PROD ? databasePost.data.draft !== true : true)) return databasePost;
