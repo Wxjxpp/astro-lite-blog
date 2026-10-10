@@ -204,8 +204,13 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 ::selection {
-  background-color: var(--inv-bg);
-  color: var(--inv-fg);
+  background-color: transparent;
+  color: inherit;
+}
+
+::-moz-selection {
+  background-color: transparent;
+  color: inherit;
 }
 
 :focus-visible {
