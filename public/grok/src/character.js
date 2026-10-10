@@ -762,8 +762,11 @@
       let bodyD;
       if (Jc >= 1) {
         bodyD = pencil ? FX.closedSpline(FX.overlayRing(this.ovKind, R, tear)) : this.fx.circlePath;
-      } else if (Jc <= 0 && !morphing && !turned) {
-        bodyD = shape.path;
+      } else if (Jc <= 0 && !turned) {
+        // Keep the same sampled/smoothed representation at rest and during
+        // morphing. Switching back to the raw SVG path on the last frame
+        // briefly exposed corners on wedge/hex-like shapes.
+        bodyD = FX.closedSpline(liveRing);
       } else {
         const to = FX.overlayRing(this.ovKind || this.ovPrev, R, tear);
         bodyD = FX.closedSpline(Jc <= 0 ? liveRing : FX.lerpRing(liveRing, to, K2(Jc)));
