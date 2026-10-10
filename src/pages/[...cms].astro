@@ -97,7 +97,7 @@ Astro.response.status = 200;
     try { const r = await fetch('/api/admin/upload', { method:'POST', body:form }); const data = await readJson(r); if (!r.ok) return status(data.error || '图片上传失败', true); const area = $('content'); const markdown = `\n\n${data.markdown}\n`; area.setRangeText(markdown, area.selectionStart, area.selectionEnd, 'end'); status(originalSize && originalSize > UPLOAD_LIMIT ? `图片上传成功（已自动压缩 ${mb(originalSize)} → ${mb(file.size)}），Markdown 已插入正文` : '图片上传成功，Markdown 已插入正文'); $('imageUpload').value = ''; } finally { setBusy(false); }
   };
   $('previewButton').onclick = () => { $('preview').innerHTML = marked.parse($('content').value); $('preview').hidden = false; };
-  $('deleteButton').onclick = async () => { if(!current || !confirm('确认隐藏这篇文章？原内容会保留，可恢复。')) return; const r=await fetch('/api/admin/posts/'+encodeURIComponent(current),{method:'DELETE'}); const data = await readJson(r); status(r.ok ? '删除成功，文章已隐藏' : (data.error || '删除失败'), !r.ok); if(r.ok){fill();load();} };
+  $('deleteButton').onclick = async () => { if(!current || !confirm('确认隐藏这篇文章？原内容会保留，可恢复。')) return; const r=await fetch('/api/admin/posts/'+encodeURIComponent(current),{method:'DELETE',headers:{'content-type':'application/json'}}); const data = await readJson(r); status(r.ok ? '删除成功，文章已隐藏' : (data.error || '删除失败'), !r.ok); if(r.ok){fill();load();} };
   fill(); load();
 </script>}
 
