@@ -32,6 +32,9 @@ const {
 <div
   class:list={['grok-orb', className]}
   data-grok-orb
+  role="button"
+  tabindex="0"
+  aria-label="点击切换小球形状"
   data-state={state}
   data-mood={mood}
   data-shape={shape}
@@ -77,6 +80,14 @@ const {
   function initOrbs() {
     const nodes = document.querySelectorAll<HTMLElement>('[data-grok-orb]');
     if (!nodes.length) return;
+    const SHAPES = ['blob', 'pebble', 'squircle', 'tablet', 'wedge', 'hex', 'cloud', 'teardrop'];
+    const storedShape = (() => {
+      try {
+        const value = localStorage.getItem('grok-shape');
+        return value && SHAPES.includes(value) ? value : null;
+      } catch { return null; }
+    })();
+    if (storedShape) nodes.forEach(node => { node.dataset.shape = storedShape; });
 
     loadEngine()
       .then(() => {
@@ -106,6 +117,29 @@ const {
             (node as any)._grok = inst;
             ready.push(inst);
 
+            const setShapeForAll = (shape: string) => {
+              if (!SHAPES.includes(shape)) return;
+              nodes.forEach(item => {
+                item.dataset.shape = shape;
+                const character = (item as any)._grok;
+                if (character && typeof character.setShape === 'function') character.setShape(shape);
+                item.dataset.state = 'happy';
+                window.setTimeout(() => { if (item.dataset.state === 'happy') item.dataset.state = 'idle'; }, 1200);
+              });
+            };
+            if (!(node as any)._grokShapeBound) {
+              const cycleShape = () => {
+                const current = node.dataset.shape || 'blob';
+                const next = SHAPES[(SHAPES.indexOf(current) + 1) % SHAPES.length];
+                try { localStorage.setItem('grok-shape', next); } catch { /* ignore */ }
+                window.dispatchEvent(new CustomEvent('grok:shape', { detail: { shape: next } }));
+                setShapeForAll(next);
+              };
+              node.addEventListener('click', cycleShape);
+              node.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); cycleShape(); } });
+              (node as any)._grokShapeBound = true;
+            }
+
             new MutationObserver(() => {
               const next = node.dataset.state;
               if (next) inst.setState(next);
@@ -114,6 +148,19 @@ const {
             console.error('[GrokOrb] init failed', err);
           }
         });
+
+        if (!(window as any).__grokShapeSyncBound) {
+          window.addEventListener('grok:shape', event => {
+            const shape = (event as CustomEvent<{ shape?: string }>).detail?.shape;
+            if (!shape || !SHAPES.includes(shape)) return;
+            nodes.forEach(item => {
+              item.dataset.shape = shape;
+              const character = (item as any)._grok;
+              if (character && typeof character.setShape === 'function') character.setShape(shape);
+            });
+          });
+          (window as any).__grokShapeSyncBound = true;
+        }
 
         document.dispatchEvent(new CustomEvent('grok:ready', { detail: { orbs: ready } }));
       })

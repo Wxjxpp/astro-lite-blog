@@ -492,8 +492,8 @@
         const rect = this.rectCache;
         if (rect && rect.width > 0) {
           const mapped = this.gazeTarget ? src : mapPointer(rect, src);
-          this.pointer.tx = clamp((mapped.x - (rect.left + rect.width / 2)) / rect.width, -0.6, 0.6) * 22;
-          this.pointer.ty = clamp((mapped.y - (rect.top + rect.height / 2)) / rect.height, -0.6, 0.6) * 14;
+          this.pointer.tx = clamp((mapped.x - (rect.left + rect.width / 2)) / rect.width, -0.72, 0.72) * 34;
+          this.pointer.ty = clamp((mapped.y - (rect.top + rect.height / 2)) / rect.height, -0.72, 0.72) * 22;
         }
       } else {
         this.pointer.tx = 0;
