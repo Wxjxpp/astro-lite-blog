@@ -12,6 +12,11 @@ import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 export default defineConfig({
   site: 'https://your-blog-domain.vercel.app',
   output: 'server',
+  // Vercel Serverless internally rewrites the request URL origin to https://localhost.
+  // Keep the browser Origin header as the authoritative origin for API requests.
+  security: {
+    checkOrigin: false,
+  },
   adapter: vercel({
     webAnalytics: { enabled: true },
     speedInsights: { enabled: true },
