@@ -204,13 +204,17 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 ::selection {
-  background-color: transparent;
-  color: inherit;
+  background-color: var(--inv-bg);
+  color: var(--inv-fg);
 }
 
-::-moz-selection {
-  background-color: transparent;
-  color: inherit;
+/* Prevent mobile browsers from painting a blue tap highlight on controls. */
+a,
+button,
+input,
+textarea,
+select {
+  -webkit-tap-highlight-color: transparent;
 }
 
 :focus-visible {
