@@ -1145,8 +1145,9 @@ select {
 }
 
 .markdown-content pre {
+  position: relative;
   margin: var(--space-xl) 0;
-  padding: var(--space-lg);
+  padding: 2.9rem var(--space-lg) var(--space-lg);
   background-color: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -1276,7 +1277,7 @@ select {
   padding: 0.05rem 0.25rem;
 }
 
-/* ---------------------------------------------------------- Code highlighting (monochrome) */
+/* ---------------------------------------------------------- Code highlighting (color) */
 .hljs {
   background: transparent !important;
   padding: 0 !important;
@@ -1284,7 +1285,7 @@ select {
 
 .hljs-comment,
 .hljs-quote {
-  color: var(--code-comment);
+  color: #64748b;
   font-style: italic;
 }
 .hljs-keyword,
@@ -1292,7 +1293,7 @@ select {
 .hljs-literal,
 .hljs-doctag,
 .hljs-formula {
-  color: var(--code-keyword);
+  color: #c026d3;
   font-weight: 600;
 }
 .hljs-string,
@@ -1300,19 +1301,19 @@ select {
 .hljs-addition,
 .hljs-attribute,
 .hljs-meta .hljs-string {
-  color: var(--code-string);
+  color: #0f766e;
 }
 .hljs-number,
 .hljs-symbol,
 .hljs-bullet,
 .hljs-link {
-  color: var(--code-number);
+  color: #d97706;
 }
 .hljs-title,
 .hljs-title.function_,
 .hljs-section,
 .hljs-name {
-  color: var(--code-func);
+  color: #2563eb;
 }
 .hljs-attr,
 .hljs-variable,
@@ -1322,22 +1323,22 @@ select {
 .hljs-selector-id,
 .hljs-selector-attr,
 .hljs-selector-pseudo {
-  color: var(--code-attr);
+  color: #0891b2;
 }
 .hljs-built_in,
 .hljs-type,
 .hljs-class .hljs-title,
 .hljs-params,
 .hljs-tag {
-  color: var(--code-type);
+  color: #7c3aed;
 }
 .hljs-punctuation,
 .hljs-operator,
 .hljs-meta {
-  color: var(--code-punct);
+  color: #475569;
 }
 .hljs-deletion {
-  color: var(--fg-dim);
+  color: #e11d48;
   text-decoration: line-through;
 }
 .hljs-emphasis {
@@ -1345,6 +1346,34 @@ select {
 }
 .hljs-strong {
   font-weight: 700;
+}
+
+.code-copy-button {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.7rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  color: var(--fg-muted);
+  background: var(--surface-strong);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: color var(--transition-fast), background-color var(--transition-fast),
+    border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.code-copy-button:hover,
+.code-copy-button.copied {
+  color: var(--inv-fg);
+  background: var(--inv-bg);
+  border-color: var(--inv-bg);
+}
+
+.code-copy-button:active {
+  transform: scale(0.95);
 }
 
 /* ---------------------------------------------------------- Comments (Twikoo) */
