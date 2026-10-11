@@ -9,14 +9,17 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "vercel-build": "astro build"
+    "vercel-build": "astro build",
+    "migrate:tidb": "node scripts/migrate-mongo-to-tidb.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^4.3.5",
     "@astrojs/rss": "^4.0.19",
     "@astrojs/vercel": "^9.0.5",
+    "@tidbcloud/serverless": "^0.3.0",
     "@vercel/blob": "^2.8.1",
     "@vercel/kv": "^3.0.0",
+    "@tidbcloud/serverless": "^0.0.7",
     "astro": "^5.18.2",
     "highlight.js": "^11.10.0",
     "katex": "^0.16.11",

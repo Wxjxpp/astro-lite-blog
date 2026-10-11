@@ -1,5 +1,6 @@
 import { createClient } from '@vercel/kv';
 import { MongoClient, type Collection, type Db } from 'mongodb';
+import { ensureTiDbSchema, isTiDbConfigured, tidbExecute, tidbQuery } from './tidb';
 
 export interface BlogPostDocument {
   slug: string;
@@ -34,7 +35,7 @@ const MIGRATION_KEY = 'blog:migration:mongo-to-kv:v1';
 let clientPromise: Promise<MongoClient> | undefined;
 let kvMigrationPromise: Promise<void> | undefined;
 
-export const isBlogDatabaseConfigured = Boolean(mongoUri || useKv);
+export const isBlogDatabaseConfigured = Boolean(isTiDbConfigured || mongoUri || useKv);
 
 function getClient(): Promise<MongoClient> {
   if (!mongoUri) throw new Error('BLOG_MONGODB_URI is not configured');
@@ -56,6 +57,16 @@ function toStored(post: BlogPostDocument): StoredPost {
 function fromStored(post: StoredPost): BlogPostDocument {
   return { ...post, pubDate: new Date(post.pubDate), updatedDate: post.updatedDate ? new Date(post.updatedDate) : undefined, createdAt: new Date(post.createdAt), updatedAt: new Date(post.updatedAt) };
 }
+function fromTiDb(row: Record<string, unknown>): BlogPostDocument {
+  const jsonTags = typeof row.tags === 'string' ? JSON.parse(row.tags) : row.tags;
+  return {
+    slug: String(row.slug), title: String(row.title), description: String(row.description),
+    pubDate: new Date(String(row.pub_date)), updatedDate: row.updated_date ? new Date(String(row.updated_date)) : undefined,
+    category: String(row.category), tags: Array.isArray(jsonTags) ? jsonTags.map(String) : [], cover: row.cover ? String(row.cover) : undefined,
+    draft: Boolean(row.draft), author: row.author ? String(row.author) : undefined, content: String(row.content),
+    createdAt: new Date(String(row.created_at)), updatedAt: new Date(String(row.updated_at)),
+  };
+}
 
 async function ensureKvMigration() {
   if (!useKv || kvMigrationPromise) return kvMigrationPromise;
@@ -71,7 +82,6 @@ async function ensureKvMigration() {
   })();
   return kvMigrationPromise;
 }
-
 async function readKvPosts(): Promise<Record<string, StoredPost>> {
   await ensureKvMigration();
   return (await kv!.get<Record<string, StoredPost>>(POSTS_KEY)) || {};
@@ -82,12 +92,20 @@ async function readKvDeletions(): Promise<Set<string>> {
 }
 
 export async function getDeletedSlugs(): Promise<Set<string>> {
+  if (isTiDbConfigured) {
+    const rows = await tidbQuery<{ slug: string }>('SELECT slug FROM blog_post_deletions');
+    return new Set(rows.map(row => row.slug));
+  }
   if (useKv) return readKvDeletions();
   const rows = await (await getDeletionsCollection()).find({}, { projection: { _id: 0, slug: 1 } }).toArray();
   return new Set(rows.map(row => row.slug));
 }
 
 export async function listBlogPosts() {
+  if (isTiDbConfigured) {
+    const rows = await tidbQuery('SELECT * FROM blog_posts WHERE slug NOT IN (SELECT slug FROM blog_post_deletions) ORDER BY pub_date DESC');
+    return rows.map(fromTiDb);
+  }
   if (useKv) {
     const deleted = await readKvDeletions();
     return Object.values(await readKvPosts()).filter(post => !deleted.has(post.slug)).map(fromStored).sort((a, b) => b.pubDate.getTime() - a.pubDate.getTime());
@@ -102,6 +120,10 @@ export async function findBlogPost(slug: string) {
 }
 
 export async function findBlogPostIncludingDeleted(slug: string) {
+  if (isTiDbConfigured) {
+    const rows = await tidbQuery('SELECT * FROM blog_posts WHERE slug = ?', [slug]);
+    return rows[0] ? fromTiDb(rows[0]) : null;
+  }
   if (useKv) {
     const post = (await readKvPosts())[slug];
     return post ? fromStored(post) : null;
@@ -112,11 +134,18 @@ export async function findBlogPostIncludingDeleted(slug: string) {
 export async function saveBlogPost(post: Omit<BlogPostDocument, 'createdAt' | 'updatedAt'> & { createdAt?: Date; updatedAt?: Date }) {
   const now = new Date();
   const full = { ...post, createdAt: post.createdAt ?? now, updatedAt: now } as BlogPostDocument;
+  if (isTiDbConfigured) {
+    await ensureTiDbSchema();
+    await tidbExecute(`INSERT INTO blog_posts (slug,title,description,pub_date,updated_date,category,tags,cover,draft,author,content,created_at,updated_at)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+      ON DUPLICATE KEY UPDATE title=VALUES(title), description=VALUES(description), pub_date=VALUES(pub_date), updated_date=VALUES(updated_date), category=VALUES(category), tags=VALUES(tags), cover=VALUES(cover), draft=VALUES(draft), author=VALUES(author), content=VALUES(content), updated_at=VALUES(updated_at)`,
+      [full.slug, full.title, full.description, full.pubDate.toISOString(), full.updatedDate?.toISOString() || null, full.category, JSON.stringify(full.tags), full.cover || null, full.draft, full.author || null, full.content, full.createdAt.toISOString(), full.updatedAt.toISOString()]);
+    await tidbExecute('DELETE FROM blog_post_deletions WHERE slug = ?', [full.slug]);
+    return full;
+  }
   if (useKv) {
-    const posts = await readKvPosts();
-    posts[post.slug] = toStored(full);
-    const deleted = await readKvDeletions();
-    deleted.delete(post.slug);
+    const posts = await readKvPosts(); posts[post.slug] = toStored(full);
+    const deleted = await readKvDeletions(); deleted.delete(post.slug);
     await Promise.all([kv!.set(POSTS_KEY, posts), kv!.set(DELETIONS_KEY, [...deleted])]);
     return full;
   }
@@ -128,36 +157,26 @@ export async function saveBlogPost(post: Omit<BlogPostDocument, 'createdAt' | 'u
 }
 
 export async function deleteBlogPost(slug: string) {
-  if (useKv) {
-    const deleted = await readKvDeletions();
-    deleted.add(slug);
-    await kv!.set(DELETIONS_KEY, [...deleted]);
+  if (isTiDbConfigured) {
+    await tidbExecute('INSERT INTO blog_post_deletions (slug, deleted_at) VALUES (?, ?) ON DUPLICATE KEY UPDATE deleted_at=VALUES(deleted_at)', [slug, new Date().toISOString()]);
     return { acknowledged: true, modifiedCount: 1 };
   }
+  if (useKv) { const deleted = await readKvDeletions(); deleted.add(slug); await kv!.set(DELETIONS_KEY, [...deleted]); return { acknowledged: true, modifiedCount: 1 }; }
   return (await getDeletionsCollection()).updateOne({ slug }, { $set: { slug, deletedAt: new Date() } }, { upsert: true });
 }
 
-/** Permanently removes a database-backed post and its deletion marker. */
 export async function permanentlyDeleteBlogPost(slug: string) {
+  if (isTiDbConfigured) {
+    const result = await tidbExecute('DELETE FROM blog_posts WHERE slug = ?', [slug]);
+    await tidbExecute('DELETE FROM blog_post_deletions WHERE slug = ?', [slug]);
+    return { acknowledged: true, deletedCount: Number((result as { rowsAffected?: number }).rowsAffected || 0) };
+  }
   if (useKv) {
-    const posts = await readKvPosts();
-    const existed = Boolean(posts[slug]);
-    delete posts[slug];
-    const deleted = await readKvDeletions();
-    deleted.delete(slug);
-    await Promise.all([
-      kv!.set(POSTS_KEY, posts),
-      kv!.set(DELETIONS_KEY, [...deleted]),
-    ]);
+    const posts = await readKvPosts(); const existed = Boolean(posts[slug]); delete posts[slug];
+    const deleted = await readKvDeletions(); deleted.delete(slug);
+    await Promise.all([kv!.set(POSTS_KEY, posts), kv!.set(DELETIONS_KEY, [...deleted])]);
     return { acknowledged: true, deletedCount: existed ? 1 : 0 };
   }
-
-  const [postResult, deletionResult] = await Promise.all([
-    (await getBlogPostsCollection()).deleteOne({ slug }),
-    (await getDeletionsCollection()).deleteOne({ slug }),
-  ]);
-  return {
-    acknowledged: postResult.acknowledged && deletionResult.acknowledged,
-    deletedCount: postResult.deletedCount,
-  };
+  const [postResult, deletionResult] = await Promise.all([(await getBlogPostsCollection()).deleteOne({ slug }), (await getDeletionsCollection()).deleteOne({ slug })]);
+  return { acknowledged: postResult.acknowledged && deletionResult.acknowledged, deletedCount: postResult.deletedCount };
 }
