@@ -98,6 +98,10 @@ export async function listBlogPosts() {
 
 export async function findBlogPost(slug: string) {
   if ((await getDeletedSlugs()).has(slug)) return null;
+  return findBlogPostIncludingDeleted(slug);
+}
+
+export async function findBlogPostIncludingDeleted(slug: string) {
   if (useKv) {
     const post = (await readKvPosts())[slug];
     return post ? fromStored(post) : null;
@@ -131,4 +135,29 @@ export async function deleteBlogPost(slug: string) {
     return { acknowledged: true, modifiedCount: 1 };
   }
   return (await getDeletionsCollection()).updateOne({ slug }, { $set: { slug, deletedAt: new Date() } }, { upsert: true });
+}
+
+/** Permanently removes a database-backed post and its deletion marker. */
+export async function permanentlyDeleteBlogPost(slug: string) {
+  if (useKv) {
+    const posts = await readKvPosts();
+    const existed = Boolean(posts[slug]);
+    delete posts[slug];
+    const deleted = await readKvDeletions();
+    deleted.delete(slug);
+    await Promise.all([
+      kv!.set(POSTS_KEY, posts),
+      kv!.set(DELETIONS_KEY, [...deleted]),
+    ]);
+    return { acknowledged: true, deletedCount: existed ? 1 : 0 };
+  }
+
+  const [postResult, deletionResult] = await Promise.all([
+    (await getBlogPostsCollection()).deleteOne({ slug }),
+    (await getDeletionsCollection()).deleteOne({ slug }),
+  ]);
+  return {
+    acknowledged: postResult.acknowledged && deletionResult.acknowledged,
+    deletedCount: postResult.deletedCount,
+  };
 }

@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { isAdminAuthenticated } from '@lib/admin-auth';
-import { deleteBlogPost, findBlogPost, isBlogDatabaseConfigured } from '@lib/blog-db';
+import { findBlogPost, findBlogPostIncludingDeleted, isBlogDatabaseConfigured, permanentlyDeleteBlogPost } from '@lib/blog-db';
+import { extractBlogBlobUrls, permanentlyDeleteBlogBlobs } from '@lib/blob-storage';
 import { getPostBySlug } from '@lib/posts';
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
@@ -23,6 +24,26 @@ export const DELETE: APIRoute = async ({ request, params }) => {
   if (!isBlogDatabaseConfigured) return json({ error: 'BLOG_MONGODB_URI 尚未配置' }, 503);
   const slug = params.slug || '';
   if (!slug) return json({ error: '缺少文章 slug' }, 400);
-  await deleteBlogPost(slug);
-  return json({ ok: true, slug, message: '文章已隐藏；原始内容仍保留在数据库中，可恢复' });
+
+  const databasePost = await findBlogPostIncludingDeleted(slug);
+  if (!databasePost) {
+    const filePost = await getPostBySlug(slug);
+    if (filePost?.source === 'file') {
+      return json({ error: '这是 GitHub 中的 Markdown 文章，不能从数据库后台永久删除；请从仓库删除对应 .md 文件后重新部署' }, 409);
+    }
+    return json({ error: '文章不存在' }, 404);
+  }
+
+  const blobUrls = extractBlogBlobUrls(databasePost.content, databasePost.cover);
+  try {
+    await permanentlyDeleteBlogPost(slug);
+    let deletedImages = 0;
+    if (blobUrls.length) {
+      deletedImages = (await permanentlyDeleteBlogBlobs(blobUrls)).deleted;
+    }
+    return json({ ok: true, slug, deletedImages, message: '文章已永久删除，正文和关联的 Vercel Blob 图片已清理，无法恢复' });
+  } catch (error) {
+    console.error('[Blog permanent delete] failed', { slug, error });
+    return json({ error: '文章删除失败；为避免数据不一致，请检查 Vercel Blob 配置后重试' }, 502);
+  }
 };
