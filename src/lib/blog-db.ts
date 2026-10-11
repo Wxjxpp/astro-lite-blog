@@ -57,12 +57,26 @@ function toStored(post: BlogPostDocument): StoredPost {
 function fromStored(post: StoredPost): BlogPostDocument {
   return { ...post, pubDate: new Date(post.pubDate), updatedDate: post.updatedDate ? new Date(post.updatedDate) : undefined, createdAt: new Date(post.createdAt), updatedAt: new Date(post.updatedAt) };
 }
+function parseTags(value: unknown): string[] {
+  if (Array.isArray(value)) return value.map(String);
+  if (typeof value !== 'string') return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.map(String) : [];
+  } catch {
+    try {
+      const parsed = JSON.parse(value.replace(/[\u0000-\u001f]/g, character => `\\u${character.charCodeAt(0).toString(16).padStart(4, '0')}`));
+      return Array.isArray(parsed) ? parsed.map(String) : [];
+    } catch {
+      return value.split(',').map(tag => tag.trim()).filter(Boolean);
+    }
+  }
+}
 function fromTiDb(row: Record<string, unknown>): BlogPostDocument {
-  const jsonTags = typeof row.tags === 'string' ? JSON.parse(row.tags) : row.tags;
   return {
     slug: String(row.slug), title: String(row.title), description: String(row.description),
     pubDate: new Date(String(row.pub_date)), updatedDate: row.updated_date ? new Date(String(row.updated_date)) : undefined,
-    category: String(row.category), tags: Array.isArray(jsonTags) ? jsonTags.map(String) : [], cover: row.cover ? String(row.cover) : undefined,
+    category: String(row.category), tags: parseTags(row.tags), cover: row.cover ? String(row.cover) : undefined,
     draft: Boolean(row.draft), author: row.author ? String(row.author) : undefined, content: String(row.content),
     createdAt: new Date(String(row.created_at)), updatedAt: new Date(String(row.updated_at)),
   };
@@ -103,7 +117,7 @@ export async function getDeletedSlugs(): Promise<Set<string>> {
 
 export async function listBlogPosts() {
   if (isTiDbConfigured) {
-    const rows = await tidbQuery('SELECT * FROM blog_posts WHERE slug NOT IN (SELECT slug FROM blog_post_deletions) ORDER BY pub_date DESC');
+    const rows = await tidbQuery('SELECT slug,title,description,pub_date,updated_date,category,CAST(tags AS CHAR) AS tags,cover,draft,author,content,created_at,updated_at FROM blog_posts WHERE slug NOT IN (SELECT slug FROM blog_post_deletions) ORDER BY pub_date DESC');
     return rows.map(fromTiDb);
   }
   if (useKv) {
@@ -121,7 +135,7 @@ export async function findBlogPost(slug: string) {
 
 export async function findBlogPostIncludingDeleted(slug: string) {
   if (isTiDbConfigured) {
-    const rows = await tidbQuery('SELECT * FROM blog_posts WHERE slug = ?', [slug]);
+    const rows = await tidbQuery('SELECT slug,title,description,pub_date,updated_date,category,CAST(tags AS CHAR) AS tags,cover,draft,author,content,created_at,updated_at FROM blog_posts WHERE slug = ?', [slug]);
     return rows[0] ? fromTiDb(rows[0]) : null;
   }
   if (useKv) {
