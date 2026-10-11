@@ -162,32 +162,35 @@ const { prev, next } = await getPrevNextPosts(post.id);
     textarea.remove();
   };
 
-  document.querySelectorAll<HTMLElement>('.post-body pre').forEach((block) => {
-    if (block.dataset.copyReady === 'true') return;
-    block.dataset.copyReady = 'true';
+  const initCodeCopy = () => {
+    document.querySelectorAll<HTMLElement>('.post-body pre').forEach((block) => {
+      if (block.dataset.copyReady === 'true') return;
+      block.dataset.copyReady = 'true';
 
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'code-copy-button';
-    button.textContent = '复制';
-    button.setAttribute('aria-label', '复制代码');
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'code-copy-button';
+      button.textContent = '复制';
+      button.setAttribute('aria-label', '复制代码');
 
-    button.addEventListener('click', async () => {
-      const code = block.querySelector('code')?.textContent ?? '';
-      try {
-        await copyText(code);
-        button.textContent = '已复制';
-        button.classList.add('copied');
-        window.setTimeout(() => {
-          button.textContent = '复制';
-          button.classList.remove('copied');
-        }, 1600);
-      } catch {
-        button.textContent = '复制失败';
-        window.setTimeout(() => { button.textContent = '复制'; }, 1600);
-      }
+      button.addEventListener('click', async () => {
+        const code = block.querySelector('code')?.textContent ?? '';
+        try {
+          await copyText(code);
+          button.textContent = '已复制';
+          button.classList.add('copied');
+          window.setTimeout(() => {
+            button.textContent = '复制';
+            button.classList.remove('copied');
+          }, 1600);
+        } catch {
+          button.textContent = '复制失败';
+          window.setTimeout(() => { button.textContent = '复制'; }, 1600);
+        }
+      });
+
+      block.appendChild(button);
     });
-
-    block.appendChild(button);
-  });
+  };
+  document.addEventListener('astro:page-load', initCodeCopy);
 </script>

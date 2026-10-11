@@ -3,12 +3,15 @@ import '@styles/global.css';
 import Header from '@components/Header.astro';
 import Footer from '@components/Footer.astro';
 import { SITE_CONFIG } from '@lib/utils';
+import { ClientRouter } from 'astro:transitions';
 
 interface Props {
   title?: string; description?: string; image?: string;
   type?: 'website' | 'article'; canonical?: string; noindex?: boolean;
+  /** Client-side page transitions (cross-fade). Turn off for pages with heavy page-level scripts, e.g. the CMS. */
+  transitions?: boolean;
 }
-const { title, description = SITE_CONFIG.description, image, type = 'website', canonical, noindex = false } = Astro.props;
+const { title, description = SITE_CONFIG.description, image, type = 'website', canonical, noindex = false, transitions = true } = Astro.props;
 const pageTitle = title ? `${title} | ${SITE_CONFIG.title}` : SITE_CONFIG.title;
 const canonicalUrl = canonical || new URL(Astro.url.pathname, SITE_CONFIG.url).toString();
 const ogImage = image || new URL('/og-image.png', SITE_CONFIG.url).toString();
@@ -20,6 +23,7 @@ const ogImage = image || new URL('/og-image.png', SITE_CONFIG.url).toString();
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="generator" content={Astro.generator} />
   <title>{pageTitle}</title>
+  {transitions && <ClientRouter />}
   <meta name="description" content={description} />
   {noindex && <meta name="robots" content="noindex, nofollow" />}
   <link rel="canonical" href={canonicalUrl} />
@@ -61,7 +65,110 @@ const ogImage = image || new URL('/og-image.png', SITE_CONFIG.url).toString();
   <Footer />
   <button class="back-to-top" id="backToTop" aria-label="回到顶部"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
   <div class="lightbox" id="lightbox"><button class="lightbox-close" aria-label="关闭">&times;</button><img id="lightbox-img" src="" alt="" /></div>
+  <!-- Loading state for slow client-side navigations: a progress line plus a
+       skeleton that stands in for the page content until the real page swaps in. -->
+  <div class="nav-progress" aria-hidden="true"></div>
+  <div class="skeleton-layer" aria-hidden="true">
+    <div class="container sk-view" data-sk="home">
+      <section class="hero-section">
+        <div class="hero-copy">
+          <span class="sk sk-hero-line" style="width:40%"></span>
+          <span class="sk sk-hero-line" style="width:70%"></span>
+          <div class="hero-stats">
+            <span class="sk sk-stat"></span><span class="sk sk-stat"></span><span class="sk sk-stat"></span>
+          </div>
+        </div>
+        <div class="hero-orb-wrap"><span class="sk sk-circle"></span></div>
+      </section>
+      <div class="section-head"><span class="sk" style="width:7rem;height:1.6rem"></span><span class="sk" style="width:6rem;height:1rem"></span></div>
+      <div class="posts-list">
+        <div class="sk-panel"><div class="sk-row"><span class="sk sk-chip"></span><span class="sk sk-date"></span></div><span class="sk sk-title" style="width:62%"></span><span class="sk sk-line" style="width:92%"></span><span class="sk sk-line" style="width:64%"></span><div class="sk-row"><span class="sk sk-tag"></span><span class="sk sk-tag"></span><span class="sk sk-tag"></span></div></div>
+        <div class="sk-panel"><div class="sk-row"><span class="sk sk-chip"></span><span class="sk sk-date"></span></div><span class="sk sk-title" style="width:48%"></span><span class="sk sk-line" style="width:88%"></span><span class="sk sk-line" style="width:56%"></span><div class="sk-row"><span class="sk sk-tag"></span><span class="sk sk-tag"></span></div></div>
+      </div>
+    </div>
+
+    <div class="container sk-view" data-sk="list">
+      <div class="page-header"><span class="sk sk-page-title"></span><span class="sk sk-page-desc"></span></div>
+      <div class="posts-list">
+        <div class="sk-panel"><div class="sk-row"><span class="sk sk-chip"></span><span class="sk sk-date"></span></div><span class="sk sk-title" style="width:62%"></span><span class="sk sk-line" style="width:92%"></span><span class="sk sk-line" style="width:64%"></span><div class="sk-row"><span class="sk sk-tag"></span><span class="sk sk-tag"></span><span class="sk sk-tag"></span></div></div>
+        <div class="sk-panel"><div class="sk-row"><span class="sk sk-chip"></span><span class="sk sk-date"></span></div><span class="sk sk-title" style="width:48%"></span><span class="sk sk-line" style="width:88%"></span><span class="sk sk-line" style="width:56%"></span><div class="sk-row"><span class="sk sk-tag"></span><span class="sk sk-tag"></span></div></div>
+        <div class="sk-panel"><div class="sk-row"><span class="sk sk-chip"></span><span class="sk sk-date"></span></div><span class="sk sk-title" style="width:70%"></span><span class="sk sk-line" style="width:90%"></span><span class="sk sk-line" style="width:60%"></span><div class="sk-row"><span class="sk sk-tag"></span><span class="sk sk-tag"></span><span class="sk sk-tag"></span></div></div>
+      </div>
+    </div>
+
+    <div class="container sk-view" data-sk="grid">
+      <div class="page-header"><span class="sk sk-page-title"></span><span class="sk sk-page-desc"></span></div>
+      <div class="category-grid">
+        <div class="sk-panel sk-tile"><span class="sk" style="width:46%;height:1.2rem"></span><span class="sk" style="width:30%;height:0.85rem"></span></div>
+        <div class="sk-panel sk-tile"><span class="sk" style="width:38%;height:1.2rem"></span><span class="sk" style="width:30%;height:0.85rem"></span></div>
+        <div class="sk-panel sk-tile"><span class="sk" style="width:52%;height:1.2rem"></span><span class="sk" style="width:30%;height:0.85rem"></span></div>
+        <div class="sk-panel sk-tile"><span class="sk" style="width:42%;height:1.2rem"></span><span class="sk" style="width:30%;height:0.85rem"></span></div>
+        <div class="sk-panel sk-tile"><span class="sk" style="width:34%;height:1.2rem"></span><span class="sk" style="width:30%;height:0.85rem"></span></div>
+        <div class="sk-panel sk-tile"><span class="sk" style="width:48%;height:1.2rem"></span><span class="sk" style="width:30%;height:0.85rem"></span></div>
+      </div>
+    </div>
+
+    <div class="container-narrow sk-view" data-sk="article">
+      <div class="post-header">
+        <span class="sk sk-chip"></span>
+        <span class="sk sk-post-title" style="width:94%"></span>
+        <span class="sk sk-post-title" style="width:58%"></span>
+        <div class="sk-row sk-meta"><span class="sk" style="width:6.5rem;height:0.85rem"></span><span class="sk" style="width:5rem;height:0.85rem"></span><span class="sk" style="width:5.5rem;height:0.85rem"></span></div>
+      </div>
+      <span class="sk sk-line sk-body" style="width:100%"></span>
+      <span class="sk sk-line sk-body" style="width:96%"></span>
+      <span class="sk sk-line sk-body" style="width:88%"></span>
+      <span class="sk sk-line sk-body" style="width:100%"></span>
+      <span class="sk sk-line sk-body" style="width:42%;margin-bottom:2.2rem"></span>
+      <span class="sk" style="width:36%;height:1.7rem;margin-bottom:1.2rem"></span>
+      <span class="sk sk-line sk-body" style="width:100%"></span>
+      <span class="sk sk-line sk-body" style="width:92%"></span>
+      <span class="sk sk-line sk-body" style="width:97%"></span>
+      <span class="sk sk-line sk-body" style="width:64%"></span>
+    </div>
+
+    <div class="container-narrow sk-view" data-sk="text">
+      <div class="page-header"><span class="sk sk-page-title" style="width:40%"></span><span class="sk sk-page-desc"></span></div>
+      <span class="sk sk-line sk-body" style="width:100%"></span>
+      <span class="sk sk-line sk-body" style="width:94%"></span>
+      <span class="sk sk-line sk-body" style="width:98%"></span>
+      <span class="sk sk-line sk-body" style="width:56%;margin-bottom:2.2rem"></span>
+      <span class="sk sk-line sk-body" style="width:100%"></span>
+      <span class="sk sk-line sk-body" style="width:90%"></span>
+      <span class="sk sk-line sk-body" style="width:72%"></span>
+    </div>
+  </div>
   <script>
+    /* With <ClientRouter /> the <body> is swapped on every navigation but this
+       module only runs once. So: element-level listeners are (re)bound on each
+       page load, while window/document-level listeners are registered once. */
+    const onPageReady = (fn: () => void) => {
+      if (document.querySelector('meta[name="astro-view-transitions-enabled"]')) {
+        document.addEventListener('astro:page-load', fn);
+      } else if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', fn, { once: true });
+      } else {
+        fn();
+      }
+    };
+
+    const setMenuOpen = (open: boolean) => {
+      const btn = document.getElementById('mobileMenuBtn');
+      const nav = document.getElementById('navMenu');
+      const backdrop = document.getElementById('navBackdrop');
+      if (!btn || !nav) return;
+      nav.classList.toggle('open', open);
+      backdrop?.classList.toggle('open', open);
+      btn.classList.toggle('open', open);
+      btn.setAttribute('aria-expanded', String(open));
+      btn.setAttribute('aria-label', open ? '关闭菜单' : '打开菜单');
+      document.body.style.overflow = open ? 'hidden' : '';
+    };
+    const closeLightbox = () => {
+      document.getElementById('lightbox')?.classList.remove('open');
+      document.body.style.overflow = '';
+    };
+
     const initTheme = () => {
       const b = document.getElementById('themeToggle');
       if (!b) return;
@@ -80,44 +187,111 @@ const ogImage = image || new URL('/og-image.png', SITE_CONFIG.url).toString();
         update();
       });
     };
+
     const initMobileMenu = () => {
       const btn = document.getElementById('mobileMenuBtn');
       const nav = document.getElementById('navMenu');
       const backdrop = document.getElementById('navBackdrop');
       if (!btn || !nav) return;
-      const setOpen = (open: boolean) => {
-        nav.classList.toggle('open', open);
-        backdrop?.classList.toggle('open', open);
-        btn.classList.toggle('open', open);
-        btn.setAttribute('aria-expanded', String(open));
-        btn.setAttribute('aria-label', open ? '关闭菜单' : '打开菜单');
-        document.body.style.overflow = open ? 'hidden' : '';
-      };
-      btn.addEventListener('click', () => setOpen(!nav.classList.contains('open')));
-      backdrop?.addEventListener('click', () => setOpen(false));
-      nav.querySelectorAll('a').forEach(l => l.addEventListener('click', () => setOpen(false)));
-      document.addEventListener('keydown', e => { if (e.key === 'Escape') setOpen(false); });
-      window.addEventListener('resize', () => { if (window.innerWidth > 768) setOpen(false); });
+      btn.addEventListener('click', () => setMenuOpen(!nav.classList.contains('open')));
+      backdrop?.addEventListener('click', () => setMenuOpen(false));
+      nav.querySelectorAll('a').forEach(l => l.addEventListener('click', () => setMenuOpen(false)));
     };
-    const initScrollChrome = () => {
+
+    /* Header condensing (--p) + back-to-top visibility, driven by scroll. */
+    const RANGE = 140; // px of scrolling for the header to finish condensing
+    const updateScrollChrome = () => {
       const root = document.documentElement;
-      const RANGE = 140; // px of scrolling for the header to finish condensing
-      let ticking = false;
-      const update = () => {
-        ticking = false;
-        const y = Math.max(0, window.scrollY);
-        const t = Math.min(1, y / RANGE);
-        const p = t * t * (3 - 2 * t); // smoothstep: eases in and out
-        root.style.setProperty('--p', p.toFixed(3));
-        root.toggleAttribute('data-scrolled', y > 28);
-      };
-      const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
-      update();
-      window.addEventListener('scroll', onScroll, { passive: true });
+      const y = Math.max(0, window.scrollY);
+      const t = Math.min(1, y / RANGE);
+      const p = t * t * (3 - 2 * t); // smoothstep: eases in and out
+      root.style.setProperty('--p', p.toFixed(3));
+      root.toggleAttribute('data-scrolled', y > 28);
+      document.getElementById('backToTop')?.classList.toggle('visible', y > 400);
     };
-    const initBackToTop = () => { const b = document.getElementById('backToTop'); if (!b) return; window.addEventListener('scroll', () => { b.classList.toggle('visible', window.scrollY > 400); }); b.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' })); };
-    const initImages = () => { const imgs = document.querySelectorAll('img[loading="lazy"]'); if ('IntersectionObserver' in window) { const o = new IntersectionObserver(e => { e.forEach(en => { if (en.isIntersecting) { en.target.classList.add('loaded'); o.unobserve(en.target); } }); }, { rootMargin: '100px' }); imgs.forEach(i => o.observe(i)); } else { imgs.forEach(i => i.classList.add('loaded')); } const lb = document.getElementById('lightbox'), li = document.getElementById('lightbox-img'); if (!lb || !li) return; document.querySelectorAll('.markdown-content img').forEach(i => { i.addEventListener('click', () => { li.src = i.src; li.alt = i.alt; lb.classList.add('open'); document.body.style.overflow = 'hidden'; }); }); const cl = () => { lb.classList.remove('open'); document.body.style.overflow = ''; }; lb.addEventListener('click', cl); document.querySelector('.lightbox-close')?.addEventListener('click', cl); document.addEventListener('keydown', e => { if (e.key === 'Escape') cl(); }); };
-    document.addEventListener('DOMContentLoaded', () => { initTheme(); initMobileMenu(); initScrollChrome(); initBackToTop(); initImages(); });
+
+    const initBackToTop = () => {
+      document.getElementById('backToTop')?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    };
+
+    const initImages = () => {
+      const imgs = document.querySelectorAll('img[loading="lazy"]');
+      if ('IntersectionObserver' in window) {
+        const o = new IntersectionObserver(entries => {
+          entries.forEach(en => {
+            if (en.isIntersecting) { en.target.classList.add('loaded'); o.unobserve(en.target); }
+          });
+        }, { rootMargin: '100px' });
+        imgs.forEach(i => o.observe(i));
+      } else {
+        imgs.forEach(i => i.classList.add('loaded'));
+      }
+      const lb = document.getElementById('lightbox');
+      const li = document.getElementById('lightbox-img') as HTMLImageElement | null;
+      if (!lb || !li) return;
+      document.querySelectorAll<HTMLImageElement>('.markdown-content img').forEach(i => {
+        i.addEventListener('click', () => {
+          li.src = i.src; li.alt = i.alt;
+          lb.classList.add('open');
+          document.body.style.overflow = 'hidden';
+        });
+      });
+      lb.addEventListener('click', closeLightbox);
+      document.querySelector('.lightbox-close')?.addEventListener('click', closeLightbox);
+    };
+
+    /* ---- registered once ---- */
+    let scrollTicking = false;
+    window.addEventListener('scroll', () => {
+      if (scrollTicking) return;
+      scrollTicking = true;
+      requestAnimationFrame(() => { scrollTicking = false; updateScrollChrome(); });
+    }, { passive: true });
+    window.addEventListener('resize', () => { if (window.innerWidth > 768) setMenuOpen(false); });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { setMenuOpen(false); closeLightbox(); }
+    });
+
+    /* A swap replaces <html> attributes with the incoming page's, which would
+       reset the theme to the server default. Carry the current one across. */
+    document.addEventListener('astro:before-swap', e => {
+      const theme = document.documentElement.getAttribute('data-theme');
+      if (theme) (e as any).newDocument.documentElement.setAttribute('data-theme', theme);
+    });
+    document.addEventListener('astro:after-swap', updateScrollChrome);
+
+    /* Loading state: only shown when a navigation is still pending after a short
+       delay, so quick page changes never flash it. The skeleton matches the page
+       being navigated *to*. The attributes live on <html>, which the swap
+       resets, and are also cleared explicitly below. */
+    const LOADER_DELAY = 300;
+    let loaderTimer = 0;
+    const skeletonFor = (url: URL) => {
+      const path = url.pathname.replace(/\/+$/, '') || '/';
+      if (path === '/') return 'home';
+      if (path === '/categories' || path === '/tags') return 'grid';
+      if (path.startsWith('/posts/')) return 'article';
+      if (path === '/posts' || path.startsWith('/categories/') || path.startsWith('/tags/')) return 'list';
+      return 'text';
+    };
+    const stopLoader = () => {
+      window.clearTimeout(loaderTimer);
+      document.documentElement.removeAttribute('data-navigating');
+      document.documentElement.removeAttribute('data-skeleton');
+    };
+    document.addEventListener('astro:before-preparation', e => {
+      const kind = skeletonFor((e as any).to as URL);
+      window.clearTimeout(loaderTimer);
+      loaderTimer = window.setTimeout(() => {
+        document.documentElement.setAttribute('data-skeleton', kind);
+        document.documentElement.setAttribute('data-navigating', '');
+      }, LOADER_DELAY);
+    });
+    document.addEventListener('astro:after-swap', stopLoader);
+    document.addEventListener('astro:page-load', stopLoader);
+
+    /* ---- bound on every page load ---- */
+    onPageReady(() => { initTheme(); initMobileMenu(); initBackToTop(); initImages(); updateScrollChrome(); });
   </script>
 </body>
 </html>

@@ -2201,3 +2201,162 @@ select {
   }
   .nav-menu { gap: 0.2rem; } /* stacked dropdown keeps its own spacing */
 }
+
+/* ---------------------------------------------------------- Page transitions
+   <ClientRouter /> swaps the page without a reload. With no per-element
+   transition names, the browser cross-fades the whole page (old out, new in,
+   at the same time); this only tunes the timing. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 320ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+/* ---------------------------------------------------------- Loading state
+   Shown (via html[data-navigating]) only when a navigation is still pending
+   after a short delay. A progress line runs along the top and a skeleton
+   replaces the page content; both go away when the real page swaps in. */
+.nav-progress {
+  position: fixed;
+  top: env(safe-area-inset-top, 0px);
+  left: 0;
+  right: 0;
+  z-index: 3100;
+  height: 2px;
+  overflow: hidden;
+  background-color: color-mix(in srgb, var(--fg) 14%, transparent);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 200ms ease, visibility 0s linear 200ms;
+}
+
+.nav-progress::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 40%;
+  border-radius: inherit;
+  background-color: var(--fg);
+  animation: nav-progress-sweep 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+html[data-navigating] .nav-progress {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+@keyframes nav-progress-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(250%); }
+}
+
+/* Sits under the header (z 1000) so navigation stays usable, and covers the
+   old page. Padding mirrors the header + <main> offset so blocks line up with
+   where the real content will appear. */
+.skeleton-layer {
+  --sk-base: color-mix(in srgb, var(--fg) 7%, transparent);
+  --sk-hi: color-mix(in srgb, var(--fg) 14%, transparent);
+  position: fixed;
+  inset: 0;
+  z-index: 800;
+  overflow: hidden;
+  padding-top: calc(var(--header-height) + 1.2rem + var(--space-2xl));
+  background-color: var(--bg);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 180ms ease, visibility 0s linear 180ms;
+}
+
+/* light theme: the shimmer is a light sweep over a grey block, not a dark one */
+[data-theme='light'] .skeleton-layer {
+  --sk-base: color-mix(in srgb, var(--fg) 8%, transparent);
+  --sk-hi: rgba(255, 255, 255, 0.75);
+}
+
+html[data-navigating] .skeleton-layer {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+.sk-view { display: none; }
+html[data-skeleton='home'] .sk-view[data-sk='home'],
+html[data-skeleton='list'] .sk-view[data-sk='list'],
+html[data-skeleton='grid'] .sk-view[data-sk='grid'],
+html[data-skeleton='article'] .sk-view[data-sk='article'],
+html[data-skeleton='text'] .sk-view[data-sk='text'] { display: block; }
+
+.sk {
+  display: block;
+  border-radius: var(--radius-sm);
+  background-color: var(--sk-base);
+  background-image: linear-gradient(100deg, transparent 30%, var(--sk-hi) 50%, transparent 70%);
+  background-size: 250% 100%;
+  background-repeat: no-repeat;
+  animation: sk-shimmer 1.6s linear infinite;
+}
+
+@keyframes sk-shimmer {
+  from { background-position: 150% 0; }
+  to { background-position: -100% 0; }
+}
+
+.sk-row { display: flex; align-items: center; gap: var(--space-md); flex-wrap: wrap; }
+
+.sk-panel {
+  padding: var(--space-xl) var(--space-2xl);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+}
+.sk-tile { display: flex; flex-direction: column; gap: 0.7rem; padding: var(--space-lg) var(--space-xl); }
+
+/* post-card contents */
+.sk-chip { width: 4.2rem; height: 1.5rem; border-radius: 999px; }
+.sk-date { width: 6.5rem; height: 0.8rem; }
+.sk-title { height: 2.2rem; margin: var(--space-md) 0 var(--space-sm); }
+.sk-line { height: 1rem; margin-bottom: 0.7rem; }
+.sk-panel .sk-line { max-width: 60ch; } /* matches the excerpt's own max-width */
+.sk-panel .sk-line:last-of-type { margin-bottom: var(--space-md); }
+.sk-tag { width: 3.4rem; height: 1.45rem; border-radius: 999px; }
+
+@media (max-width: 640px) {
+  .sk-panel .sk-title { min-width: 72%; } /* real titles wrap to two lines on phones */
+}
+
+/* page headers */
+.sk-page-title { width: 34%; height: clamp(2rem, 6vw, 3.75rem); margin-bottom: var(--space-md); border-radius: var(--radius-md); }
+.sk-page-desc { width: 9rem; height: 0.85rem; }
+
+/* home hero */
+.sk-hero-line {
+  --sk-hero: clamp(2.75rem, 12vw, 8.5rem);
+  height: calc(var(--sk-hero) * 0.8);
+  margin-bottom: calc(var(--sk-hero) * 0.14);
+  border-radius: var(--radius-md);
+}
+.sk-hero-line:nth-of-type(2) { margin-bottom: var(--space-lg); }
+.sk-stat { width: 7rem; height: 1.9rem; }
+.sk-circle { width: min(220px, 100%); aspect-ratio: 1; border-radius: 50%; }
+
+/* article */
+.sk-post-title { height: clamp(2rem, 6.5vw, 4rem); margin: var(--space-md) 0; border-radius: var(--radius-md); }
+.sk-post-title + .sk-post-title { margin-top: 0; }
+.sk-meta { margin-top: var(--space-lg); gap: var(--space-lg); }
+.sk-body { height: 1.05rem; margin-bottom: 0.85rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-progress::after,
+  .sk { animation: none; }
+}

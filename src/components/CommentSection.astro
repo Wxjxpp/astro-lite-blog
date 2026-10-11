@@ -60,115 +60,119 @@ const isConfigured = Boolean(envId);
 </section>
 
 <script>
-  const shell = document.getElementById('commentsShell');
-  if (shell && new URLSearchParams(location.search).get('twikoo-admin') === '1') {
-    shell.dataset.adminMode = 'true';
-  }
-  if (shell && shell.dataset.env) {
-    // Use the blog's same-origin proxy instead of calling the separate
-    // Twikoo deployment directly. This avoids mobile browsers blocking the
-    // cross-origin POST with a misleading status 0 error.
-    const envId = new URL(shell.dataset.env as string, location.origin).href;
-    const path = shell.dataset.path || location.pathname;
-    const loader = document.getElementById('commentsLoader');
-    const loaderText = document.getElementById('commentsLoaderText');
-    const orb = shell.querySelector('[data-grok-orb]') as HTMLElement | null;
-    const stage = shell.querySelector('.comments-stage') as HTMLElement | null;
+  // Re-run on every client-side navigation: the comment shell is a fresh element each time.
+  const initComments = () => {
+    const shell = document.getElementById('commentsShell');
+    if (shell && new URLSearchParams(location.search).get('twikoo-admin') === '1') {
+      shell.dataset.adminMode = 'true';
+    }
+    if (shell && shell.dataset.env) {
+      // Use the blog's same-origin proxy instead of calling the separate
+      // Twikoo deployment directly. This avoids mobile browsers blocking the
+      // cross-origin POST with a misleading status 0 error.
+      const envId = new URL(shell.dataset.env as string, location.origin).href;
+      const path = shell.dataset.path || location.pathname;
+      const loader = document.getElementById('commentsLoader');
+      const loaderText = document.getElementById('commentsLoaderText');
+      const orb = shell.querySelector('[data-grok-orb]') as HTMLElement | null;
+      const stage = shell.querySelector('.comments-stage') as HTMLElement | null;
 
-    const setOrb = (next: string) => {
-      if (orb) orb.dataset.state = next;
-    };
-    const showLoader = (text?: string) => {
-      if (loaderText && text) loaderText.textContent = text;
-      loader?.classList.add('visible');
-    };
-    const hideLoader = () => loader?.classList.remove('visible');
+      const setOrb = (next: string) => {
+        if (orb) orb.dataset.state = next;
+      };
+      const showLoader = (text?: string) => {
+        if (loaderText && text) loaderText.textContent = text;
+        loader?.classList.add('visible');
+      };
+      const hideLoader = () => loader?.classList.remove('visible');
 
-    /* Repeat-click guard: the first click on the send button locks it, and the
-       lock is only released once Twikoo has reloaded the comment list (or after
-       a safety timeout), so a slow round trip can never post twice. */
-    let submitting = false;
-    let guardTimer = 0;
+      /* Repeat-click guard: the first click on the send button locks it, and the
+         lock is only released once Twikoo has reloaded the comment list (or after
+         a safety timeout), so a slow round trip can never post twice. */
+      let submitting = false;
+      let guardTimer = 0;
 
-    const releaseGuard = () => {
-      if (guardTimer) window.clearTimeout(guardTimer);
-      guardTimer = 0;
-      submitting = false;
-      stage
-        ?.querySelectorAll('.tk-submitting-guard')
-        .forEach(btn => btn.classList.remove('tk-submitting-guard'));
-    };
+      const releaseGuard = () => {
+        if (guardTimer) window.clearTimeout(guardTimer);
+        guardTimer = 0;
+        submitting = false;
+        stage
+          ?.querySelectorAll('.tk-submitting-guard')
+          .forEach(btn => btn.classList.remove('tk-submitting-guard'));
+      };
 
-    stage?.addEventListener(
-      'click',
-      event => {
-        const target = event.target as HTMLElement | null;
-        const btn = target?.closest('.tk-button--primary');
-        if (!btn) return;
-        if (submitting) {
-          event.preventDefault();
-          event.stopPropagation();
-          return;
-        }
-        submitting = true;
-        btn.classList.add('tk-submitting-guard');
-        setOrb('sending');
-        guardTimer = window.setTimeout(releaseGuard, 15000);
-      },
-      true
-    );
+      stage?.addEventListener(
+        'click',
+        event => {
+          const target = event.target as HTMLElement | null;
+          const btn = target?.closest('.tk-button--primary');
+          if (!btn) return;
+          if (submitting) {
+            event.preventDefault();
+            event.stopPropagation();
+            return;
+          }
+          submitting = true;
+          btn.classList.add('tk-submitting-guard');
+          setOrb('sending');
+          guardTimer = window.setTimeout(releaseGuard, 15000);
+        },
+        true
+      );
 
-    const loadTwikoo = () =>
-      new Promise<any>((resolve, reject) => {
-        const ready = (window as any).twikoo;
-        // The widget container has id="twikoo", so browsers expose it as
-        // window.twikoo before the client script is loaded. Only reuse the
-        // global when it is the actual Twikoo API, not that DOM element.
-        if (ready && typeof ready.init === 'function') return resolve(ready);
-        const el = document.createElement('script');
-        el.src = '/twikoo/twikoo.min.js';
-        el.async = true;
-        el.onload = () => {
-          const api = (window as any).twikoo;
-          if (api && typeof api.init === 'function') return resolve(api);
-          reject(new Error('[Twikoo] client API failed to initialize'));
-        };
-        el.onerror = () => reject(new Error('[Twikoo] client failed to load'));
-        document.head.appendChild(el);
-      });
-
-    // Keep the block from looking broken while the widget boots (the CDN path
-    // through Cloudflare can be slow).
-    showLoader('正在加载评论…');
-    setOrb('loading');
-
-    loadTwikoo()
-      .then(twikoo => {
-        if (!twikoo || !envId) throw new Error('[Twikoo] client or envId missing');
-        return twikoo.init({
-          envId,
-          el: '#twikoo',
-          path,
-          lang: 'zh-CN',
-          onCommentLoaded: () => {
-            hideLoader();
-            releaseGuard();
-            setOrb('happy');
-            window.setTimeout(() => setOrb('idle'), 1600);
-          },
+      const loadTwikoo = () =>
+        new Promise<any>((resolve, reject) => {
+          const ready = (window as any).twikoo;
+          // The widget container has id="twikoo", so browsers expose it as
+          // window.twikoo before the client script is loaded. Only reuse the
+          // global when it is the actual Twikoo API, not that DOM element.
+          if (ready && typeof ready.init === 'function') return resolve(ready);
+          const el = document.createElement('script');
+          el.src = '/twikoo/twikoo.min.js';
+          el.async = true;
+          el.onload = () => {
+            const api = (window as any).twikoo;
+            if (api && typeof api.init === 'function') return resolve(api);
+            reject(new Error('[Twikoo] client API failed to initialize'));
+          };
+          el.onerror = () => reject(new Error('[Twikoo] client failed to load'));
+          document.head.appendChild(el);
         });
-      })
-      .then(() => {
-        hideLoader();
-        releaseGuard();
-        setOrb('idle');
-      })
-      .catch(err => {
-        console.error(err);
-        if (loaderText) loaderText.textContent = '评论加载失败，请刷新重试';
-        setOrb('sad');
-      });
-  }
+
+      // Keep the block from looking broken while the widget boots (the CDN path
+      // through Cloudflare can be slow).
+      showLoader('正在加载评论…');
+      setOrb('loading');
+
+      loadTwikoo()
+        .then(twikoo => {
+          if (!twikoo || !envId) throw new Error('[Twikoo] client or envId missing');
+          return twikoo.init({
+            envId,
+            el: '#twikoo',
+            path,
+            lang: 'zh-CN',
+            onCommentLoaded: () => {
+              hideLoader();
+              releaseGuard();
+              setOrb('happy');
+              window.setTimeout(() => setOrb('idle'), 1600);
+            },
+          });
+        })
+        .then(() => {
+          hideLoader();
+          releaseGuard();
+          setOrb('idle');
+        })
+        .catch(err => {
+          console.error(err);
+          if (loaderText) loaderText.textContent = '评论加载失败，请刷新重试';
+          setOrb('sad');
+        });
+    }
+  };
+  document.addEventListener('astro:page-load', initComments);
 </script>
 
 <style>
