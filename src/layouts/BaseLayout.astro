@@ -4,6 +4,7 @@ import Header from '@components/Header.astro';
 import Footer from '@components/Footer.astro';
 import { SITE_CONFIG } from '@lib/utils';
 import { ClientRouter } from 'astro:transitions';
+import { inject } from '@vercel/analytics';
 
 interface Props {
   title?: string; description?: string; image?: string;
@@ -15,6 +16,8 @@ const { title, description = SITE_CONFIG.description, image, type = 'website', c
 const pageTitle = title ? `${title} | ${SITE_CONFIG.title}` : SITE_CONFIG.title;
 const canonicalUrl = canonical || new URL(Astro.url.pathname, SITE_CONFIG.url).toString();
 const ogImage = image || new URL('/og-image.png', SITE_CONFIG.url).toString();
+
+inject();
 ---
 <!DOCTYPE html>
 <html lang="zh-CN" data-theme="dark">
