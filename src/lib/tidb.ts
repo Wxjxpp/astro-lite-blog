@@ -12,7 +12,6 @@ export const isTiDbConfigured = Boolean(databaseUrl || hasTidbParts);
 
 type TidbConfig = { url?: string; host?: string; port?: string; username?: string; password?: string; database?: string; fullResult: true };
 let connection: Connection<TidbConfig> | undefined;
-let schemaPromise: Promise<void> | undefined;
 
 export function getTiDbConnection() {
   if (!isTiDbConfigured) throw new Error('TiDB connection variables are not configured');
@@ -22,49 +21,20 @@ export function getTiDbConnection() {
   return connection;
 }
 
+/**
+ * Schema creation is intentionally kept out of request handling.
+ * The Vercel integration user can query and write data but may not have CREATE
+ * privileges. Run the migration script or SQL editor once before deployment.
+ */
 export async function ensureTiDbSchema() {
-  if (!isTiDbConfigured) return;
-  schemaPromise ??= (async () => {
-    const db = getTiDbConnection();
-    await db.execute(`
-      CREATE TABLE IF NOT EXISTS blog_posts (
-        slug VARCHAR(255) PRIMARY KEY,
-        title TEXT NOT NULL,
-        description TEXT NOT NULL,
-        pub_date VARCHAR(40) NOT NULL,
-        updated_date VARCHAR(40) NULL,
-        category VARCHAR(255) NOT NULL,
-        tags JSON NOT NULL,
-        cover TEXT NULL,
-        draft BOOLEAN NOT NULL DEFAULT FALSE,
-        author VARCHAR(255) NULL,
-        content LONGTEXT NOT NULL,
-        created_at VARCHAR(40) NOT NULL,
-        updated_at VARCHAR(40) NOT NULL,
-        INDEX idx_blog_posts_pub_date (pub_date),
-        INDEX idx_blog_posts_category (category)
-      )
-    `);
-    await db.execute(`
-      CREATE TABLE IF NOT EXISTS blog_post_deletions (
-        slug VARCHAR(255) PRIMARY KEY,
-        deleted_at VARCHAR(40) NOT NULL
-      )
-    `);
-  })().catch(error => {
-    schemaPromise = undefined;
-    throw error;
-  });
-  return schemaPromise;
+  return undefined;
 }
 
 export async function tidbQuery<T extends Record<string, unknown> = Record<string, unknown>>(sql: string, args: unknown[] = []) {
-  await ensureTiDbSchema();
   const result = await getTiDbConnection().execute(sql, args);
   return ((result as FullResult).rows || []) as T[];
 }
 
 export async function tidbExecute(sql: string, args: unknown[] = []) {
-  await ensureTiDbSchema();
   return getTiDbConnection().execute(sql, args);
 }
