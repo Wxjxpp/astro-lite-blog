@@ -1,15 +1,24 @@
 import { connect, type Connection, type FullResult } from '@tidbcloud/serverless';
 
 const databaseUrl = import.meta.env.DATABASE_URL;
+const host = import.meta.env.TIDB_HOST;
+const port = import.meta.env.TIDB_PORT;
+const username = import.meta.env.TIDB_USER;
+const password = import.meta.env.TIDB_PASSWORD;
+const database = import.meta.env.TIDB_DATABASE;
 
-let connection: Connection<{ url: string; fullResult: true }> | undefined;
+const hasTidbParts = Boolean(host && username && password && database);
+export const isTiDbConfigured = Boolean(databaseUrl || hasTidbParts);
+
+type TidbConfig = { url?: string; host?: string; port?: string; username?: string; password?: string; database?: string; fullResult: true };
+let connection: Connection<TidbConfig> | undefined;
 let schemaPromise: Promise<void> | undefined;
 
-export const isTiDbConfigured = Boolean(databaseUrl);
-
 export function getTiDbConnection() {
-  if (!databaseUrl) throw new Error('DATABASE_URL is not configured');
-  connection ??= connect({ url: databaseUrl, fullResult: true });
+  if (!isTiDbConfigured) throw new Error('TiDB connection variables are not configured');
+  connection ??= connect(databaseUrl
+    ? { url: databaseUrl, fullResult: true }
+    : { host, port, username, password, database, fullResult: true });
   return connection;
 }
 

@@ -3,11 +3,19 @@ import { connect } from '@tidbcloud/serverless';
 
 const mongoUri = process.env.BLOG_MONGODB_URI;
 const databaseUrl = process.env.DATABASE_URL;
+const tidbConfig = databaseUrl ? { url: databaseUrl, fullResult: true } : {
+  host: process.env.TIDB_HOST,
+  port: process.env.TIDB_PORT,
+  username: process.env.TIDB_USER,
+  password: process.env.TIDB_PASSWORD,
+  database: process.env.TIDB_DATABASE,
+  fullResult: true,
+};
 const dbName = process.env.BLOG_MONGODB_DATABASE || 'astro_blog';
-if (!mongoUri || !databaseUrl) throw new Error('需要设置 BLOG_MONGODB_URI 和 DATABASE_URL；脚本只会复制数据，不会删除 MongoDB 数据。');
+if (!mongoUri || (!databaseUrl && !(tidbConfig.host && tidbConfig.username && tidbConfig.password && tidbConfig.database))) throw new Error('需要设置 BLOG_MONGODB_URI 和 DATABASE_URL，或完整的 TIDB_HOST/TIDB_PORT/TIDB_USER/TIDB_PASSWORD/TIDB_DATABASE；脚本只会复制数据，不会删除 MongoDB 数据。');
 const iso = value => value ? new Date(value).toISOString() : null;
 
-const tidb = connect({ url: databaseUrl, fullResult: true });
+const tidb = connect(tidbConfig);
 await tidb.execute(`CREATE TABLE IF NOT EXISTS blog_posts (
   slug VARCHAR(255) PRIMARY KEY, title TEXT NOT NULL, description TEXT NOT NULL,
   pub_date VARCHAR(40) NOT NULL, updated_date VARCHAR(40) NULL, category VARCHAR(255) NOT NULL,
