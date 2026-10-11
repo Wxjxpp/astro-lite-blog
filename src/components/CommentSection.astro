@@ -60,6 +60,43 @@ const isConfigured = Boolean(envId);
 </section>
 
 <script>
+  /* Twikoo injects its whole stylesheet as a single <style data-twikoo> in <head>
+     when twikoo.min.js is first executed, and never again. <ClientRouter /> swaps
+     <head> on every navigation and drops that tag, while window.twikoo (and so the
+     script) stays alive: from the second page on the widget renders unstyled and its
+     avatars, emoji packs and icons blow up to their natural size.
+     Fix: mark the tag as persistent and make sure the incoming head carries a twin so
+     Astro keeps the existing node; re-attach it as a last resort. */
+  const TK_STYLE_KEY = 'twikoo-style';
+  const w = window as any;
+
+  const findTwikooStyle = (): HTMLStyleElement | null =>
+    document.head.querySelector<HTMLStyleElement>('style[data-twikoo]');
+
+  const keepTwikooStyle = () => {
+    const live = findTwikooStyle();
+    if (live) {
+      live.setAttribute('data-astro-transition-persist', TK_STYLE_KEY);
+      w.__twikooStyle = live;
+    } else if (w.__twikooStyle) {
+      document.head.appendChild(w.__twikooStyle);
+    }
+  };
+
+  if (!w.__twikooStyleGuard) {
+    w.__twikooStyleGuard = true;
+    document.addEventListener('astro:before-swap', event => {
+      keepTwikooStyle();
+      const saved = w.__twikooStyle as HTMLStyleElement | undefined;
+      if (!saved) return;
+      const head = (event as any).newDocument?.head as HTMLElement | undefined;
+      if (head && !head.querySelector(`[data-astro-transition-persist="${TK_STYLE_KEY}"]`)) {
+        head.appendChild(saved.cloneNode(true));
+      }
+    });
+    document.addEventListener('astro:after-swap', keepTwikooStyle);
+  }
+
   // Re-run on every client-side navigation: the comment shell is a fresh element each time.
   const initComments = () => {
     const shell = document.getElementById('commentsShell');
@@ -79,6 +116,14 @@ const isConfigured = Boolean(envId);
 
       const setOrb = (next: string) => {
         if (orb) orb.dataset.state = next;
+      };
+      const orbIs = (...names: string[]) => !!orb && names.includes(orb.dataset.state || '');
+      /* Play a one-off reaction, then fall back to idle (unless something else took over). */
+      const react = (name: string, ms: number) => {
+        setOrb(name);
+        window.setTimeout(() => {
+          if (orbIs(name)) setOrb('idle');
+        }, ms);
       };
       const showLoader = (text?: string) => {
         if (loaderText && text) loaderText.textContent = text;
@@ -115,10 +160,27 @@ const isConfigured = Boolean(envId);
           submitting = true;
           btn.classList.add('tk-submitting-guard');
           setOrb('sending');
-          guardTimer = window.setTimeout(releaseGuard, 15000);
+          guardTimer = window.setTimeout(() => {
+            // Still locked after 15 s: the comment never came back, treat it as a failure.
+            if (!submitting) return;
+            releaseGuard();
+            react('sad', 3000);
+          }, 15000);
         },
         true
       );
+
+      stage?.addEventListener('focusin', event => {
+        const el = event.target as HTMLElement | null;
+        if (!submitting && el?.matches('textarea, input')) setOrb('listening');
+      });
+      stage?.addEventListener('input', event => {
+        const el = event.target as HTMLElement | null;
+        if (!submitting && el?.matches('textarea')) setOrb('writing');
+      });
+      stage?.addEventListener('focusout', () => {
+        if (!submitting && orbIs('listening', 'writing')) setOrb('idle');
+      });
 
       const loadTwikoo = () =>
         new Promise<any>((resolve, reject) => {
@@ -147,23 +209,27 @@ const isConfigured = Boolean(envId);
       loadTwikoo()
         .then(twikoo => {
           if (!twikoo || !envId) throw new Error('[Twikoo] client or envId missing');
+          keepTwikooStyle();
           return twikoo.init({
             envId,
             el: '#twikoo',
             path,
             lang: 'zh-CN',
             onCommentLoaded: () => {
+              // Twikoo reloads the list after a successful send: that is our "sent!" signal.
+              const justSent = submitting;
               hideLoader();
               releaseGuard();
-              setOrb('happy');
-              window.setTimeout(() => setOrb('idle'), 1600);
+              if (justSent) react('celebrate', 3200);
+              else react('happy', 1600);
             },
           });
         })
         .then(() => {
+          keepTwikooStyle();
           hideLoader();
           releaseGuard();
-          setOrb('idle');
+          if (orbIs('loading')) setOrb('idle');
         })
         .catch(err => {
           console.error(err);

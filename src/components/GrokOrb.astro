@@ -36,6 +36,7 @@ const {
   tabindex="0"
   aria-label="点击切换小球形状"
   data-state={state}
+  data-base-state={state}
   data-mood={mood}
   data-shape={shape}
   data-follow={follow ? '1' : '0'}
@@ -80,7 +81,9 @@ const {
   function initOrbs() {
     const nodes = document.querySelectorAll<HTMLElement>('[data-grok-orb]');
     if (!nodes.length) return;
-    const SHAPES = ['blob', 'pebble', 'squircle', 'tablet', 'wedge', 'hex', 'cloud', 'teardrop'];
+    // Triangle (wedge), hexagon (hex) and horizontal capsule (tablet) were removed;
+    // vertical capsule, leaf and bean were added.
+    const SHAPES = ['blob', 'pebble', 'squircle', 'capsule', 'leaf', 'bean', 'cloud', 'teardrop'];
     const storedShape = (() => {
       try {
         const value = localStorage.getItem('grok-shape');
@@ -124,7 +127,8 @@ const {
                 const character = (item as any)._grok;
                 if (character && typeof character.setShape === 'function') character.setShape(shape);
                 item.dataset.state = 'happy';
-                window.setTimeout(() => { if (item.dataset.state === 'happy') item.dataset.state = 'idle'; }, 1200);
+                const back = item.dataset.baseState || 'idle';
+                window.setTimeout(() => { if (item.dataset.state === 'happy') item.dataset.state = back; }, 1200);
               });
             };
             if (!(node as any)._grokShapeBound) {

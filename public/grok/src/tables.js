@@ -81,7 +81,7 @@
   const V_T = new Set(["happy", "excited", "proud"]);
   const B_T = new Set(["playful"]);
   const WINK_STATES = new Set(["idle", "happy", "excited", "curious", "playful"]);
-  const SHAPE_ZOOM = { blob: 0.92, pebble: 0.96, squircle: 0.84, tablet: 1, wedge: 0.94, hex: 0.94, cloud: 1, teardrop: 1 };
+  const SHAPE_ZOOM = { blob: 0.92, pebble: 0.96, squircle: 0.84, capsule: 1, bean: 0.96, leaf: 1, cloud: 1, teardrop: 1 };
   const VIEW_SCALE = 259 / 229;
   const shapeZoom = (name) => SHAPE_ZOOM[name] ?? 1;
   const poseScale = (name) => shapeZoom(name) * VIEW_SCALE;
