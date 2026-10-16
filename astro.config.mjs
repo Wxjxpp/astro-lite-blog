@@ -6,13 +6,13 @@ import rehypeKatex from 'rehype-katex';
 import rehypeHighlight from 'rehype-highlight';
 import rehypeSlug from 'rehype-slug';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
-import edgeone from '@edgeone/astro-adapter'; // 腾讯云 EdgeOne 适配器
+import edgeone from '@edgeone/astro'; // 正确的包名
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://your-blog-domain.vercel.app', // 建议改为你的腾讯云域名
-  output: 'server', // 关键修改：从 static 改为 server
-  adapter: edgeone(), // 添加腾讯云适配器
+  site: 'https://astro-lite-blog-cuajtqlb.edgeone.cool', // 建议改为你的 EdgeOne 域名
+  output: 'server', // 保持 server 模式
+  adapter: edgeone(), // 使用正确的适配器
   security: {
     checkOrigin: false,
   },

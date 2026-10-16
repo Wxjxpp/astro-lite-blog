@@ -1,0 +1,88 @@
+{
+  "version": 3,
+  "conf": {
+    "redirects": []
+  },
+  "routes": [
+    {
+      "src": "^/([^.]+[^/.])$",
+      "dest": "/$1/",
+      "continue": true
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "^/_server-islands/([^/]+?)/?$"
+    },
+    {
+      "src": "^/_image/?$"
+    },
+    {
+      "src": "^/404/?$"
+    },
+    {
+      "src": "^/500/?$"
+    },
+    {
+      "src": "^/about/?$"
+    },
+    {
+      "src": "^/api/admin/posts/([^/]+?)/?$"
+    },
+    {
+      "src": "^/api/admin/posts/?$"
+    },
+    {
+      "src": "^/api/admin/upload/?$"
+    },
+    {
+      "src": "^/api/auth/callback/?$"
+    },
+    {
+      "src": "^/api/auth/github/callback/?$"
+    },
+    {
+      "src": "^/api/auth/github/?$"
+    },
+    {
+      "src": "^/api/auth/logout/?$"
+    },
+    {
+      "src": "^/api/twikoo/?$"
+    },
+    {
+      "src": "^/categories/([^/]+?)/?$"
+    },
+    {
+      "src": "^/categories/?$"
+    },
+    {
+      "src": "^/posts/([^/]+?)/?$"
+    },
+    {
+      "src": "^/posts/?$"
+    },
+    {
+      "src": "^/rss\\.xml/?$"
+    },
+    {
+      "src": "^/sitemap\\.xml/?$"
+    },
+    {
+      "src": "^/tags/([^/]+?)/?$"
+    },
+    {
+      "src": "^/tags/?$"
+    },
+    {
+      "src": "^/$"
+    },
+    {
+      "src": "^(?:/(.*?))?/?$"
+    },
+    {
+      "src": "^/(.*)$"
+    }
+  ]
+}
