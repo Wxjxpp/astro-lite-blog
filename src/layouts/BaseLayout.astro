@@ -5,6 +5,7 @@ import Footer from '@components/Footer.astro';
 import { SITE_CONFIG } from '@lib/utils';
 import { ClientRouter } from 'astro:transitions';
 import { inject } from '@vercel/analytics';
+import SpeedInsights from '@vercel/speed-insights/astro';
 
 interface Props {
   title?: string; description?: string; image?: string;
@@ -296,5 +297,6 @@ inject();
     /* ---- bound on every page load ---- */
     onPageReady(() => { initTheme(); initMobileMenu(); initBackToTop(); initImages(); updateScrollChrome(); });
   </script>
+  <SpeedInsights />
 </body>
 </html>
