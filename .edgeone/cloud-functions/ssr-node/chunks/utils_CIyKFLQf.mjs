@@ -1,5 +1,5 @@
 const SITE_CONFIG = {
-  title: "Wxjxpp Blog",
+  title: "Wxjxpp",
   description: "A full-featured Astro blog",
   url: "https://your-blog-domain.vercel.app",
   postsPerPage: 10};

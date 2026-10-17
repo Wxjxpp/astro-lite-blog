@@ -241,10 +241,4 @@ const isConfigured = Boolean(envId);
   document.addEventListener('astro:page-load', initComments);
 </script>
 
-<style>
-  /* Do not expose the Twikoo admin entry to ordinary visitors. Add
-     ?twikoo-admin=1 when the administrator needs to open the password gate. */
-  .comments-shell:not([data-admin-mode='true']) :global(.tk-comments-actions .tk-icon:last-child) {
-    display: none;
-  }
 </style>
