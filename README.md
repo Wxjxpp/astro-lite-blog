@@ -86,7 +86,7 @@ Twikoo 云函数原生支持两类邮件提醒，并会在邮件中带上文章�
 - 新用户评论：发送给站长邮箱
 - 站长或其他用户回复：发送给被回复评论留下的邮箱
 
-在公开评论页追加 `?twikoo-admin=1`，点击评论区右下角的管理入口并输入 Twikoo 管理密码，然后进入“配置管理 → 邮件通知”填写 SMTP 配置。常用配置项包括：
+点击评论区右下角的管理入口并输入 Twikoo 管理密码，然后进入“配置管理 → 邮件通知”填写 SMTP 配置。常用配置项包括：
 
 `BLOGGER_EMAIL`（站长收件箱）、`SENDER_EMAIL`、`SENDER_NAME`、`SMTP_SERVICE`、`SMTP_USER`、`SMTP_PASS`。
 

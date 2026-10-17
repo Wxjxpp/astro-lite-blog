@@ -10,7 +10,7 @@ import edgeone from '@edgeone/astro'; // 正确的包名
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://astro-lite-blog-cuajtqlb.edgeone.cool', // 建议改为你的 EdgeOne 域名
+  site: 'https://www.wxjxpp.online', // 建议改为你的 EdgeOne 域名
   output: 'server', // 保持 server 模式
   adapter: edgeone(), // 使用正确的适配器
   security: {
