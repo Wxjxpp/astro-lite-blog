@@ -1,7 +1,7 @@
 import type { PostItem, CategoryInfo, TagInfo } from '@types/index';
 
 export const SITE_CONFIG = {
-  title: import.meta.env.SITE_NAME || 'Astro Lite Blog',
+  title: import.meta.env.SITE_NAME || 'Wxjxpp Blog',
   description: import.meta.env.SITE_DESCRIPTION || 'A full-featured Astro blog',
   url: import.meta.env.SITE_URL || 'https://your-blog-domain.vercel.app',
   author: 'Blog Author', locale: 'zh-CN', postsPerPage: 10, commentsPerPage: 20,
