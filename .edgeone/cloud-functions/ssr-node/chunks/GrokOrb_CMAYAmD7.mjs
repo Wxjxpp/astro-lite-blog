@@ -2,7 +2,7 @@ import { b as createAstro, c as createComponent, m as maybeRenderHead, e as addA
 import 'piccolore';
 import 'clsx';
 
-const $$Astro = createAstro("https://astro-lite-blog-cuajtqlb.edgeone.cool");
+const $$Astro = createAstro("https://www.wxjxpp.online");
 const $$GrokOrb = createComponent(($$result, $$props, $$slots) => {
   const Astro2 = $$result.createAstro($$Astro, $$props, $$slots);
   Astro2.self = $$GrokOrb;

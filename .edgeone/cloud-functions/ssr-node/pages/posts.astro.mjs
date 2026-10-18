@@ -1,12 +1,12 @@
 import { b as createAstro, c as createComponent, r as renderComponent, a as renderTemplate, m as maybeRenderHead } from '../chunks/astro/server_CbsihVi2.mjs';
 import 'piccolore';
-import { $ as $$BaseLayout } from '../chunks/BaseLayout_C8NlbvFw.mjs';
-import { $ as $$PostList } from '../chunks/PostList_BlDTBLvK.mjs';
-import { c as getAllPosts } from '../chunks/posts_B2Dt8GmW.mjs';
-import { p as paginate, S as SITE_CONFIG } from '../chunks/utils_CIyKFLQf.mjs';
+import { $ as $$BaseLayout } from '../chunks/BaseLayout_DOUEFYAw.mjs';
+import { $ as $$PostList } from '../chunks/PostList_7REOhxlh.mjs';
+import { c as getAllPosts } from '../chunks/posts_CFHJMtSw.mjs';
+import { p as paginate, S as SITE_CONFIG } from '../chunks/utils_CLDqqa5S.mjs';
 export { renderers } from '../renderers.mjs';
 
-const $$Astro = createAstro("https://astro-lite-blog-cuajtqlb.edgeone.cool");
+const $$Astro = createAstro("https://www.wxjxpp.online");
 const $$Index = createComponent(async ($$result, $$props, $$slots) => {
   const Astro2 = $$result.createAstro($$Astro, $$props, $$slots);
   Astro2.self = $$Index;

@@ -1,5 +1,5 @@
-import { g as getCollection } from '../chunks/_astro_content_CVBcNLRR.mjs';
-import { S as SITE_CONFIG } from '../chunks/utils_CIyKFLQf.mjs';
+import { g as getCollection } from '../chunks/_astro_content_oeYHbLl8.mjs';
+import { S as SITE_CONFIG } from '../chunks/utils_CLDqqa5S.mjs';
 export { renderers } from '../renderers.mjs';
 
 const GET = async ({ site }) => {

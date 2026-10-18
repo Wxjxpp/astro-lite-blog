@@ -1,7 +1,7 @@
 import { c as createComponent, r as renderComponent, a as renderTemplate, m as maybeRenderHead } from '../chunks/astro/server_CbsihVi2.mjs';
 import 'piccolore';
-import { $ as $$BaseLayout } from '../chunks/BaseLayout_C8NlbvFw.mjs';
-import { $ as $$GrokOrb } from '../chunks/GrokOrb_CaKqlv8g.mjs';
+import { $ as $$BaseLayout } from '../chunks/BaseLayout_DOUEFYAw.mjs';
+import { $ as $$GrokOrb } from '../chunks/GrokOrb_CMAYAmD7.mjs';
 export { renderers } from '../renderers.mjs';
 
 const $$500 = createComponent(($$result, $$props, $$slots) => {

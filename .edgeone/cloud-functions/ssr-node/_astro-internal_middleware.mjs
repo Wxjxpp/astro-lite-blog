@@ -1,6 +1,7 @@
-import { e as defineMiddleware, s as sequence } from './chunks/render-context_C76EjHDt.mjs';
+import { e as defineMiddleware, s as sequence } from './chunks/render-context_cVnyMgup.mjs';
 import 'es-module-lexer';
-import './chunks/astro-designed-error-pages_CMEqKfY-.mjs';
+import './chunks/astro-designed-error-pages_C8AyVh_4.mjs';
+import '@astrojs/internal-helpers/path';
 import 'piccolore';
 import './chunks/astro/server_CbsihVi2.mjs';
 import 'clsx';

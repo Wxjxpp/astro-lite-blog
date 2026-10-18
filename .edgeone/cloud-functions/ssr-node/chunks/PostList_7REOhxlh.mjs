@@ -1,9 +1,9 @@
 import { b as createAstro, c as createComponent, m as maybeRenderHead, e as addAttribute, a as renderTemplate, r as renderComponent, F as Fragment } from './astro/server_CbsihVi2.mjs';
 import 'piccolore';
-import { $ as $$PostCard } from './PostCard_C4Cor7Wg.mjs';
+import { $ as $$PostCard } from './PostCard_YizaGNIT.mjs';
 import 'clsx';
 
-const $$Astro$1 = createAstro("https://astro-lite-blog-cuajtqlb.edgeone.cool");
+const $$Astro$1 = createAstro("https://www.wxjxpp.online");
 const $$Pagination = createComponent(($$result, $$props, $$slots) => {
   const Astro2 = $$result.createAstro($$Astro$1, $$props, $$slots);
   Astro2.self = $$Pagination;
@@ -30,7 +30,7 @@ const $$Pagination = createComponent(($$result, $$props, $$slots) => {
   )}<a${addAttribute(page < totalPages ? getPageUrl(page + 1) : "#", "href")} class="pagination-btn" aria-label="下一页"${addAttribute(page === totalPages, "aria-disabled")}${addAttribute(page === totalPages ? "pointer-events: none;" : "", "style")}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></a></nav>`}`;
 }, "D:/git/Tencent/astro-lite-blog/src/components/Pagination.astro", void 0);
 
-const $$Astro = createAstro("https://astro-lite-blog-cuajtqlb.edgeone.cool");
+const $$Astro = createAstro("https://www.wxjxpp.online");
 const $$PostList = createComponent(($$result, $$props, $$slots) => {
   const Astro2 = $$result.createAstro($$Astro, $$props, $$slots);
   Astro2.self = $$PostList;

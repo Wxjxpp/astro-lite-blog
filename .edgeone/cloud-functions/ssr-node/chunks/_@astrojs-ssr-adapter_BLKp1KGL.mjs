@@ -1,10 +1,10 @@
-import { f as fileExtension, j as joinPaths, s as slash, p as prependForwardSlash, a as removeTrailingForwardSlash, b as appendForwardSlash, c as isInternalPath, d as collapseDuplicateTrailingSlashes, h as hasFileExtension } from './path_Bl04Vi8h.mjs';
-import { m as matchPattern } from './remote_DVMROsal.mjs';
-import { r as requestIs404Or500, i as isRequestServerIsland, n as notFound, a as normalizeTheLocale, b as redirectToFallback, c as redirectToDefaultLocale, d as requestHasLocale, e as defineMiddleware, S as SERVER_ISLAND_COMPONENT, f as SERVER_ISLAND_ROUTE, g as createEndpoint, R as RouteCache, s as sequence, h as findRouteToRewrite, v as validateAndDecodePathname, m as matchRoute, j as RenderContext, P as PERSIST_SYMBOL, k as getSetCookiesFromResponse } from './render-context_C76EjHDt.mjs';
+import { fileExtension, joinPaths, slash, prependForwardSlash, removeTrailingForwardSlash, appendForwardSlash, isInternalPath, collapseDuplicateTrailingSlashes, hasFileExtension } from '@astrojs/internal-helpers/path';
+import { matchPattern } from '@astrojs/internal-helpers/remote';
+import { r as requestIs404Or500, i as isRequestServerIsland, n as notFound, a as normalizeTheLocale, b as redirectToFallback, c as redirectToDefaultLocale, d as requestHasLocale, e as defineMiddleware, S as SERVER_ISLAND_COMPONENT, f as SERVER_ISLAND_ROUTE, g as createEndpoint, R as RouteCache, s as sequence, h as findRouteToRewrite, v as validateAndDecodePathname, m as matchRoute, j as RenderContext, P as PERSIST_SYMBOL, k as getSetCookiesFromResponse } from './render-context_cVnyMgup.mjs';
 import { q as ROUTE_TYPE_HEADER, s as REROUTE_DIRECTIVE_HEADER, D as DEFAULT_404_COMPONENT, A as AstroError, t as ActionNotFoundError, v as clientAddressSymbol, L as LocalsNotAnObject, w as FailedToFindPageMapSSR, x as REROUTABLE_STATUS_CODES, y as responseSentSymbol } from './astro/server_CbsihVi2.mjs';
 import colors from 'piccolore';
 import { N as NOOP_MIDDLEWARE_FN } from './noop-middleware_CyWEZ2nA.mjs';
-import { D as DEFAULT_404_ROUTE, d as default404Instance, e as ensure404Route } from './astro-designed-error-pages_CMEqKfY-.mjs';
+import { D as DEFAULT_404_ROUTE, d as default404Instance, e as ensure404Route } from './astro-designed-error-pages_C8AyVh_4.mjs';
 
 function createI18nMiddleware(i18n, base, trailingSlash, format) {
   if (!i18n) return (_, next) => next();

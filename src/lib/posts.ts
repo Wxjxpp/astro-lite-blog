@@ -38,10 +38,12 @@ async function getDatabaseRecords(): Promise<PostRecord[]> {
   if (!isBlogDatabaseConfigured) return [];
   try {
     const posts = await listBlogPosts();
-    return posts.filter(post => import.meta.env.PROD ? post.draft !== true : true).map(post => fromDatabase(post)!).filter(Boolean);
-  } catch (error) {
-    console.error('[Blog DB] failed to load posts; falling back to Markdown files', error);
-    return [];
+    // 注意：草稿过滤逻辑保留，但建议去掉 import.meta.env.PROD 限制，确保后台能拿到全部数据
+    return posts.map(post => fromDatabase(post)!).filter(Boolean);
+  } catch (error: any) {
+    console.error('[Blog DB] 读取 TiDB 崩溃了！', error);
+    // 修复把错误抛出去，让 API 返回 500，这样你能在浏览器 Network 里直接看到原因
+    throw new Error(`TiDB 读取失败: ${error.message || error}`);
   }
 }
 

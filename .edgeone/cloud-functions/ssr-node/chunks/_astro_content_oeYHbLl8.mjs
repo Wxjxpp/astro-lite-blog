@@ -2,7 +2,7 @@ import { escape } from 'html-escaper';
 import { Traverse } from 'neotraverse/modern';
 import pLimit from 'p-limit';
 import { z } from 'zod';
-import { r as removeBase, i as isRemotePath, p as prependForwardSlash } from './path_Bl04Vi8h.mjs';
+import { removeBase, isRemotePath, prependForwardSlash } from '@astrojs/internal-helpers/path';
 import { V as VALID_INPUT_FORMATS } from './consts_Bd-1c2lz.mjs';
 import { A as AstroError, U as UnknownContentCollectionError, c as createComponent, R as RenderUndefinedEntryError, u as unescapeHTML, a as renderTemplate, h as renderUniqueStylesheet, i as renderScriptElement, j as createHeadAndContent, r as renderComponent } from './astro/server_CbsihVi2.mjs';
 import 'piccolore';
@@ -66,7 +66,7 @@ class ImmutableDataStore {
    */
   static async fromModule() {
     try {
-      const data = await import('./_astro_data-layer-content_DfrBmKXt.mjs');
+      const data = await import('./_astro_data-layer-content_Ei5mtuma.mjs');
       if (data.default instanceof Map) {
         return ImmutableDataStore.fromMap(data.default);
       }
@@ -98,7 +98,7 @@ function dataStoreSingleton() {
 }
 const globalDataStore = dataStoreSingleton();
 
-const __vite_import_meta_env__ = {"ASSETS_PREFIX": undefined, "BASE_URL": "/", "DEV": false, "MODE": "production", "PROD": true, "SITE": "https://astro-lite-blog-cuajtqlb.edgeone.cool", "SSR": true};
+const __vite_import_meta_env__ = {"ASSETS_PREFIX": undefined, "BASE_URL": "/", "DEV": false, "MODE": "production", "PROD": true, "SITE": "https://www.wxjxpp.online", "SSR": true};
 function createCollectionToGlobResultMap({
   globResult,
   contentDir
@@ -307,7 +307,7 @@ const CONTENT_LAYER_IMAGE_REGEX = /__ASTRO_IMAGE_="([^"]+)"/g;
 async function updateImageReferencesInBody(html, fileName) {
   const { default: imageAssetMap } = await import('./content-assets_DleWbedO.mjs');
   const imageObjects = /* @__PURE__ */ new Map();
-  const { getImage } = await import('./_astro_assets_CANsRiY2.mjs').then(n => n._);
+  const { getImage } = await import('./_astro_assets_n41Lfhli.mjs').then(n => n._);
   for (const [_full, imagePath] of html.matchAll(CONTENT_LAYER_IMAGE_REGEX)) {
     try {
       const decodedImagePath = JSON.parse(imagePath.replaceAll("&#x22;", '"'));

@@ -1,9 +1,9 @@
 import { b as createAstro, c as createComponent, m as maybeRenderHead, e as addAttribute, a as renderTemplate } from './astro/server_CbsihVi2.mjs';
 import 'piccolore';
 import 'clsx';
-import { s as slugify } from './utils_CIyKFLQf.mjs';
+import { s as slugify } from './utils_CLDqqa5S.mjs';
 
-const $$Astro = createAstro("https://astro-lite-blog-cuajtqlb.edgeone.cool");
+const $$Astro = createAstro("https://www.wxjxpp.online");
 const $$TagBadge = createComponent(($$result, $$props, $$slots) => {
   const Astro2 = $$result.createAstro($$Astro, $$props, $$slots);
   Astro2.self = $$TagBadge;

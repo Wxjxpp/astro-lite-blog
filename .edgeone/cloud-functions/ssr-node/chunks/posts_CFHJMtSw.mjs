@@ -1,4 +1,4 @@
-import { g as getCollection, a as getEntry } from './_astro_content_CVBcNLRR.mjs';
+import { g as getCollection, a as getEntry } from './_astro_content_oeYHbLl8.mjs';
 import { createClient } from '@vercel/kv';
 import 'mongodb';
 import { connect } from '@tidbcloud/serverless';

@@ -1,35 +1,34 @@
 import { b as createAstro, c as createComponent, m as maybeRenderHead, e as addAttribute, r as renderComponent, F as Fragment, a as renderTemplate, d as renderScript, u as unescapeHTML } from '../../chunks/astro/server_CbsihVi2.mjs';
 import 'piccolore';
-import { $ as $$BaseLayout } from '../../chunks/BaseLayout_C8NlbvFw.mjs';
-import { $ as $$TagBadge } from '../../chunks/TagBadge_CLd_AhJg.mjs';
-import { $ as $$GrokOrb } from '../../chunks/GrokOrb_CaKqlv8g.mjs';
-/* empty css                                     */
-import { g as getPostBySlug, j as getRelatedPosts, k as getPrevNextPosts } from '../../chunks/posts_B2Dt8GmW.mjs';
-import { s as slugify, f as formatDate } from '../../chunks/utils_CIyKFLQf.mjs';
-import { r as renderEntry } from '../../chunks/_astro_content_CVBcNLRR.mjs';
+import { $ as $$BaseLayout } from '../../chunks/BaseLayout_DOUEFYAw.mjs';
+import { $ as $$TagBadge } from '../../chunks/TagBadge_CBOr_2Ha.mjs';
+import { $ as $$GrokOrb } from '../../chunks/GrokOrb_CMAYAmD7.mjs';
+import { g as getPostBySlug, j as getRelatedPosts, k as getPrevNextPosts } from '../../chunks/posts_CFHJMtSw.mjs';
+import { s as slugify, f as formatDate } from '../../chunks/utils_CLDqqa5S.mjs';
+import { r as renderEntry } from '../../chunks/_astro_content_oeYHbLl8.mjs';
 import { marked } from 'marked';
 import hljs from 'highlight.js/lib/common';
 export { renderers } from '../../renderers.mjs';
 
-const $$Astro$1 = createAstro("https://astro-lite-blog-cuajtqlb.edgeone.cool");
+const $$Astro$1 = createAstro("https://www.wxjxpp.online");
 const $$CommentSection = createComponent(($$result, $$props, $$slots) => {
   const Astro2 = $$result.createAstro($$Astro$1, $$props, $$slots);
   Astro2.self = $$CommentSection;
   const { term } = Astro2.props;
   const envId = undefined                                    ;
   const isConfigured = Boolean(envId);
-  return renderTemplate`${maybeRenderHead()}<section class="comments-section" id="comments" data-astro-cid-fdrkzv5s> <div class="comments-header" data-astro-cid-fdrkzv5s> <h2 class="comments-title" data-astro-cid-fdrkzv5s>Comments</h2> <span class="label" data-astro-cid-fdrkzv5s>Powered by Twikoo</span> </div> <div class="comments-shell" id="commentsShell"${addAttribute("", "data-env")}${addAttribute(term || "", "data-path")}${addAttribute(Astro2.url.searchParams.get("twikoo-admin") === "1" ? "true" : void 0, "data-admin-mode")} data-astro-cid-fdrkzv5s> <div class="comments-mascot" data-astro-cid-fdrkzv5s> ${renderComponent($$result, "GrokOrb", $$GrokOrb, { "size": 72, "mood": "hold", "state": isConfigured ? "loading" : "curious", "follow": true, "data-astro-cid-fdrkzv5s": true })} </div> <div class="comments-stage" data-astro-cid-fdrkzv5s> ${isConfigured ? renderTemplate`${renderComponent($$result, "Fragment", Fragment, { "data-astro-cid-fdrkzv5s": true }, { "default": ($$result2) => renderTemplate` <div id="twikoo" data-astro-cid-fdrkzv5s></div> <div class="comments-loader" id="commentsLoader" data-astro-cid-fdrkzv5s> <span class="comments-spinner" aria-hidden="true" data-astro-cid-fdrkzv5s></span> <span class="comments-loader-text" id="commentsLoaderText" data-astro-cid-fdrkzv5s>
+  return renderTemplate`${maybeRenderHead()}<section class="comments-section" id="comments"> <div class="comments-header"> <h2 class="comments-title">Comments</h2> <span class="label">Powered by Twikoo</span> </div> <div class="comments-shell" id="commentsShell"${addAttribute("", "data-env")}${addAttribute(term || "", "data-path")}${addAttribute(Astro2.url.searchParams.get("twikoo-admin") === "1" ? "true" : void 0, "data-admin-mode")}> <div class="comments-mascot"> ${renderComponent($$result, "GrokOrb", $$GrokOrb, { "size": 72, "mood": "hold", "state": isConfigured ? "loading" : "curious", "follow": true })} </div> <div class="comments-stage"> ${isConfigured ? renderTemplate`${renderComponent($$result, "Fragment", Fragment, {}, { "default": ($$result2) => renderTemplate` <div id="twikoo"></div> <div class="comments-loader" id="commentsLoader"> <span class="comments-spinner" aria-hidden="true"></span> <span class="comments-loader-text" id="commentsLoaderText">
 正在加载评论…
-</span> </div> ` })}` : renderTemplate`<div class="comments-config-hint" data-astro-cid-fdrkzv5s> <p data-astro-cid-fdrkzv5s>
-评论功能尚未配置。请在部署时为环境变量 <code data-astro-cid-fdrkzv5s>PUBLIC_TWIKOO_ENV_ID</code> 赋值后重新部署：
-</p> <p data-astro-cid-fdrkzv5s>
-该变量是 Twikoo 云函数的访问地址（形如 <code data-astro-cid-fdrkzv5s>https://xxx.vercel.app</code>
-）。云函数需要单独建一个 Vercel 项目部署（官方 <code data-astro-cid-fdrkzv5s>templates/vercel-min</code>），并绑定
+</span> </div> ` })}` : renderTemplate`<div class="comments-config-hint"> <p>
+评论功能尚未配置。请在部署时为环境变量 <code>PUBLIC_TWIKOO_ENV_ID</code> 赋值后重新部署：
+</p> <p>
+该变量是 Twikoo 云函数的访问地址（形如 <code>https://xxx.vercel.app</code>
+）。云函数需要单独建一个 Vercel 项目部署（官方 <code>templates/vercel-min</code>），并绑定
               MongoDB Atlas。
 </p> </div>`} </div> </div> </section> ${renderScript($$result, "D:/git/Tencent/astro-lite-blog/src/components/CommentSection.astro?astro&type=script&index=0&lang.ts")} `;
 }, "D:/git/Tencent/astro-lite-blog/src/components/CommentSection.astro", void 0);
 
-const $$Astro = createAstro("https://astro-lite-blog-cuajtqlb.edgeone.cool");
+const $$Astro = createAstro("https://www.wxjxpp.online");
 const $$slug = createComponent(async ($$result, $$props, $$slots) => {
   const Astro2 = $$result.createAstro($$Astro, $$props, $$slots);
   Astro2.self = $$slug;

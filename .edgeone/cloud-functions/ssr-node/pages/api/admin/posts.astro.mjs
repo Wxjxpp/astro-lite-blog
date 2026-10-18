@@ -1,5 +1,5 @@
 import { i as isAdminAuthenticated } from '../../../chunks/admin-auth_BWornRI-.mjs';
-import { i as isBlogDatabaseConfigured, b as getAllPostRecords, s as saveBlogPost } from '../../../chunks/posts_B2Dt8GmW.mjs';
+import { i as isBlogDatabaseConfigured, b as getAllPostRecords, s as saveBlogPost } from '../../../chunks/posts_CFHJMtSw.mjs';
 export { renderers } from '../../../renderers.mjs';
 
 const json = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } });

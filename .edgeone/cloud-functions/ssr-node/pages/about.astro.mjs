@@ -1,10 +1,10 @@
 import { b as createAstro, c as createComponent, r as renderComponent, a as renderTemplate, m as maybeRenderHead } from '../chunks/astro/server_CbsihVi2.mjs';
 import 'piccolore';
-import { $ as $$BaseLayout } from '../chunks/BaseLayout_C8NlbvFw.mjs';
-import { S as SITE_CONFIG } from '../chunks/utils_CIyKFLQf.mjs';
+import { $ as $$BaseLayout } from '../chunks/BaseLayout_DOUEFYAw.mjs';
+import { S as SITE_CONFIG } from '../chunks/utils_CLDqqa5S.mjs';
 export { renderers } from '../renderers.mjs';
 
-const $$Astro = createAstro("https://astro-lite-blog-cuajtqlb.edgeone.cool");
+const $$Astro = createAstro("https://www.wxjxpp.online");
 const $$About = createComponent(($$result, $$props, $$slots) => {
   const Astro2 = $$result.createAstro($$Astro, $$props, $$slots);
   Astro2.self = $$About;

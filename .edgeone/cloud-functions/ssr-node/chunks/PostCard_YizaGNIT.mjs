@@ -1,9 +1,9 @@
 import { b as createAstro, c as createComponent, m as maybeRenderHead, e as addAttribute, r as renderComponent, a as renderTemplate } from './astro/server_CbsihVi2.mjs';
 import 'piccolore';
-import { f as formatDate } from './utils_CIyKFLQf.mjs';
-import { $ as $$TagBadge } from './TagBadge_CLd_AhJg.mjs';
+import { f as formatDate } from './utils_CLDqqa5S.mjs';
+import { $ as $$TagBadge } from './TagBadge_CBOr_2Ha.mjs';
 
-const $$Astro = createAstro("https://astro-lite-blog-cuajtqlb.edgeone.cool");
+const $$Astro = createAstro("https://www.wxjxpp.online");
 const $$PostCard = createComponent(($$result, $$props, $$slots) => {
   const Astro2 = $$result.createAstro($$Astro, $$props, $$slots);
   Astro2.self = $$PostCard;

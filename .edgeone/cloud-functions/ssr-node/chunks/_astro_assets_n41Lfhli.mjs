@@ -1,5 +1,5 @@
-import { j as joinPaths, i as isRemotePath } from './path_Bl04Vi8h.mjs';
-import { i as isRemoteAllowed } from './remote_DVMROsal.mjs';
+import { joinPaths, isRemotePath } from '@astrojs/internal-helpers/path';
+import { isRemoteAllowed } from '@astrojs/internal-helpers/remote';
 import { A as AstroError, ag as ExpectedImage, ah as LocalImageUsedWrongly, ai as MissingImageDimension, aj as UnsupportedImageFormat, ak as IncompatibleDescriptorOptions, al as UnsupportedImageConversion, am as toStyleString, an as NoImageMetadata, ao as FailedToFetchRemoteImageDimensions, ap as RemoteImageNotAllowed, aq as ExpectedImageOptions, ar as ExpectedNotESMImage, as as InvalidImageService, b as createAstro, c as createComponent, at as ImageMissingAlt, m as maybeRenderHead, e as addAttribute, au as spreadAttributes, a as renderTemplate, av as ExperimentalFontsNotEnabled, aw as FontFamilyNotFound, u as unescapeHTML } from './astro/server_CbsihVi2.mjs';
 import { D as DEFAULT_OUTPUT_FORMAT, a as VALID_SUPPORTED_FORMATS, b as DEFAULT_HASH_PROPS } from './consts_Bd-1c2lz.mjs';
 import * as mime from 'mrmime';
@@ -1441,7 +1441,7 @@ async function getConfiguredImageService() {
   if (!globalThis?.astroAsset?.imageService) {
     const { default: service } = await import(
       // @ts-expect-error
-      './sharp_BenWlyUC.mjs'
+      './sharp_DuDhZsYV.mjs'
     ).catch((e) => {
       const error = new AstroError(InvalidImageService);
       error.cause = e;
@@ -1604,7 +1604,7 @@ async function getImage$1(options, imageConfig) {
   };
 }
 
-const $$Astro$2 = createAstro("https://astro-lite-blog-cuajtqlb.edgeone.cool");
+const $$Astro$2 = createAstro("https://www.wxjxpp.online");
 const $$Image = createComponent(async ($$result, $$props, $$slots) => {
   const Astro2 = $$result.createAstro($$Astro$2, $$props, $$slots);
   Astro2.self = $$Image;
@@ -1633,7 +1633,7 @@ const $$Image = createComponent(async ($$result, $$props, $$slots) => {
   return renderTemplate`${maybeRenderHead()}<img${addAttribute(image.src, "src")}${spreadAttributes(attributes)}${addAttribute(className, "class")}>`;
 }, "D:/git/Tencent/astro-lite-blog/node_modules/astro/components/Image.astro", void 0);
 
-const $$Astro$1 = createAstro("https://astro-lite-blog-cuajtqlb.edgeone.cool");
+const $$Astro$1 = createAstro("https://www.wxjxpp.online");
 const $$Picture = createComponent(async ($$result, $$props, $$slots) => {
   const Astro2 = $$result.createAstro($$Astro$1, $$props, $$slots);
   Astro2.self = $$Picture;
@@ -1743,7 +1743,7 @@ function checkWeight(input, target) {
   return input === target;
 }
 
-const $$Astro = createAstro("https://astro-lite-blog-cuajtqlb.edgeone.cool");
+const $$Astro = createAstro("https://www.wxjxpp.online");
 const $$Font = createComponent(($$result, $$props, $$slots) => {
   const Astro2 = $$result.createAstro($$Astro, $$props, $$slots);
   Astro2.self = $$Font;
