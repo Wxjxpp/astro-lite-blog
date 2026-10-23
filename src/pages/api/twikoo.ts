@@ -59,8 +59,7 @@ export const POST: APIRoute = async context => {
     });
   } catch (error) {
     console.error('[Twikoo proxy] upstream request failed', error);
-    /* return new Response(JSON.stringify({ code: -1, message: 'Twikoo backend request failed' }), { */
-    return new Response(JSON.stringify({ code: -1, message: error }), {
+    return new Response(JSON.stringify({ code: -1, message: 'Twikoo backend request failed' }), {
       status: 502,
       headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' },
     });
