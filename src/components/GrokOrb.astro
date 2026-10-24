@@ -46,6 +46,8 @@ const {
 </div>
 
 <script>
+  import { HALLOWEEN_ICONS } from '../lib/halloween-icons';
+
   const ENGINE = [
     '/grok/geometry-data.js',
     '/grok/src/math.js',
@@ -78,9 +80,61 @@ const {
     return w.__grokEngine;
   }
 
+  /* ---- Halloween easter egg ------------------------------------------------
+     Only between 20 and 31 October (visitor's local date). Click the orb
+     HALLOWEEN_CLICKS times in a row (each click within HALLOWEEN_GAP ms of the
+     last) and it turns into a Halloween icon; further clicks cycle the icons.
+     Nothing is persisted, so a reload (or leaving the page) restores the orb. */
+  const HALLOWEEN_CLICKS = 10;
+  const HALLOWEEN_GAP = 3000;
+  const isHalloweenSeason = () => {
+    const now = new Date();
+    return now.getMonth() === 9 && now.getDate() >= 20 && now.getDate() <= 31;
+  };
+
   function initOrbs() {
     const nodes = document.querySelectorAll<HTMLElement>('[data-grok-orb]');
     if (!nodes.length) return;
+
+    const hw = { count: 0, last: 0, on: false, index: 0 };
+    const showHalloweenIcon = (restartPop: boolean) => {
+      const icon = HALLOWEEN_ICONS[hw.index % HALLOWEEN_ICONS.length];
+      nodes.forEach(node => {
+        let layer = node.querySelector<HTMLElement>('.grok-halloween');
+        if (!layer) {
+          layer = document.createElement('div');
+          layer.className = 'grok-halloween';
+          layer.setAttribute('aria-hidden', 'true');
+          node.appendChild(layer);
+        }
+        layer.innerHTML = icon.svg;
+        layer.dataset.icon = icon.name;
+        node.classList.add('is-halloween');
+        node.setAttribute('aria-label', `万圣夜彩蛋：${icon.label}，点击切换`);
+        if (restartPop) {
+          layer.classList.remove('pop');
+          void layer.offsetWidth; // restart the CSS animation
+          layer.classList.add('pop');
+        }
+      });
+    };
+    /** Returns true when the click was consumed by the Halloween egg. */
+    const halloweenClick = () => {
+      if (hw.on) {
+        hw.index = (hw.index + 1) % HALLOWEEN_ICONS.length;
+        showHalloweenIcon(true);
+        return true;
+      }
+      if (!isHalloweenSeason()) return false;
+      const now = Date.now();
+      hw.count = now - hw.last <= HALLOWEEN_GAP ? hw.count + 1 : 1;
+      hw.last = now;
+      if (hw.count < HALLOWEEN_CLICKS) return false;
+      hw.on = true;
+      hw.index = 0;
+      showHalloweenIcon(true);
+      return true;
+    };
     // Triangle (wedge), hexagon (hex) and horizontal capsule (tablet) were removed;
     // vertical capsule, leaf and bean were added.
     const SHAPES = ['blob', 'pebble', 'squircle', 'capsule', 'leaf', 'bean', 'cloud', 'teardrop'];
@@ -133,6 +187,7 @@ const {
             };
             if (!(node as any)._grokShapeBound) {
               const cycleShape = () => {
+                if (halloweenClick()) return;
                 const current = node.dataset.shape || 'blob';
                 const next = SHAPES[(SHAPES.indexOf(current) + 1) % SHAPES.length];
                 try { localStorage.setItem('grok-shape', next); } catch { /* ignore */ }
