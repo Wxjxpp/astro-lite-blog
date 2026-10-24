@@ -8,6 +8,8 @@ import type { PostFrontmatter } from '@types/index';
 import { render } from 'astro:content';
 import { marked } from 'marked';
 import hljs from 'highlight.js/lib/common';
+import markedKatex from 'marked-katex-extension';
+import markedFootnote from 'marked-footnote';
 
 // SSR 模式下从 URL 参数动态获取文章（Astro 5 Content Layer）
 const { slug } = Astro.params;
@@ -19,6 +21,8 @@ if (!post) {
 
 const Content = post.source === 'file' && post.entry ? (await render(post.entry)).Content : undefined;
 const data = post.data as PostFrontmatter;
+marked.use(markedKatex({ throwOnError: false, nonStandard: true }));
+marked.use(markedFootnote());
 marked.use({
   renderer: {
     code({ text, lang }) {

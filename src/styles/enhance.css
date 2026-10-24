@@ -223,3 +223,19 @@ html.hw-night body { transition: background-color 1.2s ease; }
   .hw-web path { animation: none; stroke-dashoffset: 0; }
   .hw-spider { animation: none; transform: translateY(0); }
 }
+
+/* ---------------------------------------------------------- Hero title: 思源宋体
+   (ClaudeSans is not available, so the serif is the fallback for display text.) */
+.hero-title, .site-logo, .page-title {
+  font-family: 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', 'STSong', serif;
+  font-weight: 700;
+}
+
+/* ---------------------------------------------------------- Callout boxes written as inline-styled HTML
+   They bring their own light background, so their text must not inherit the
+   (light) theme colour in dark mode. */
+.markdown-content div[style*="background"],
+.markdown-content blockquote[style*="background"],
+.markdown-content p[style*="background"] { color: #1f2937; }
+.markdown-content div[style*="background"] a { color: inherit; text-decoration: underline; }
+.markdown-content .katex-display { overflow-x: auto; overflow-y: hidden; padding: 0.4rem 0; }
