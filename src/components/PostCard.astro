@@ -8,7 +8,7 @@ const postUrl = `/posts/${post.slug}`;
 const viewCount = new Intl.NumberFormat('zh-CN').format(post.viewCount ?? 0);
 ---
 
-<a href={postUrl} class="post-card" data-category={post.category} data-tags={JSON.stringify(post.tags)}>  <div class="post-card-header">
+<a href={postUrl} class="post-card" data-astro-prefetch="viewport" data-category={post.category} data-tags={JSON.stringify(post.tags)}>  <div class="post-card-header">
     <span class="post-card-category">{post.category}</span>
     <div class="post-card-header-end">
       {post.pinned && <span class="post-card-pin">置顶</span>}

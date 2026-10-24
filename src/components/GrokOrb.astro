@@ -47,6 +47,7 @@ const {
 
 <script>
   import { HALLOWEEN_ICONS } from '../lib/halloween-icons';
+  import { startHalloweenNight } from '../lib/halloween-scene';
 
   const ENGINE = [
     '/grok/geometry-data.js',
@@ -133,6 +134,7 @@ const {
       hw.on = true;
       hw.index = 0;
       showHalloweenIcon(true);
+      startHalloweenNight();
       return true;
     };
     // Triangle (wedge), hexagon (hex) and horizontal capsule (tablet) were removed;

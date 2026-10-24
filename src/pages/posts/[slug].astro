@@ -33,7 +33,8 @@ marked.use({
 });
 const databaseHtml = post.source === 'database' ? await marked.parse(post.body || '') : '';
 
-const relatedPosts = await getRelatedPosts(post.id, 4);
+const RELATED_VISIBLE = 3;
+const relatedPosts = await getRelatedPosts(post.id, 8);
 const { prev, next } = await getPrevNextPosts(post.id);
 ---
 
@@ -124,19 +125,37 @@ const { prev, next } = await getPrevNextPosts(post.id);
       </nav>
     )}
 
-    <!-- 相关文章 -->
+    <!-- 相关文章：行式列表，默认只显示前 3 条，其余折叠 -->
     {relatedPosts.length > 0 && (
-      <section style="margin-top: var(--space-3xl);">
+      <section class="related-section">
         <h2 class="post-section-title">相关文章</h2>
-        <div class="related-grid">
-          {relatedPosts.map(rp => (
-            <a href={`/posts/${rp.slug}`} class="related-card">
-              <span class="post-card-category">{rp.category}</span>
-              <div class="related-title">{rp.title}</div>
-              <div class="related-date">{formatDate(rp.pubDate)}</div>
-            </a>
+        <ul class="related-list">
+          {relatedPosts.slice(0, RELATED_VISIBLE).map(rp => (
+            <li>
+              <a href={`/posts/${rp.slug}`} class="related-row">
+                <span class="related-cat">{rp.category}</span>
+                <span class="related-name">{rp.title}</span>
+                <time class="related-when">{formatDate(rp.pubDate)}</time>
+              </a>
+            </li>
           ))}
-        </div>
+        </ul>
+        {relatedPosts.length > RELATED_VISIBLE && (
+          <details class="related-more">
+            <summary><span class="when-closed">展开更多（{relatedPosts.length - RELATED_VISIBLE}）</span><span class="when-open">收起</span></summary>
+            <ul class="related-list">
+              {relatedPosts.slice(RELATED_VISIBLE).map(rp => (
+                <li>
+                  <a href={`/posts/${rp.slug}`} class="related-row">
+                    <span class="related-cat">{rp.category}</span>
+                    <span class="related-name">{rp.title}</span>
+                    <time class="related-when">{formatDate(rp.pubDate)}</time>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
       </section>
     )}
 

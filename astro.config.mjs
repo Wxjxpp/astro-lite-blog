@@ -13,6 +13,7 @@ export default defineConfig({
   site: 'https://www.wxjxpp.online', // 建议改为你的 EdgeOne 域名
   output: 'server', // 保持 server 模式
   adapter: edgeone(), // 使用正确的适配器
+  prefetch: { prefetchAll: false, defaultStrategy: 'hover' },
   security: {
     checkOrigin: false,
   },

@@ -2306,12 +2306,7 @@ html[data-navigating] .skeleton-layer {
   transition-delay: 0s;
 }
 
-.sk-view { display: none; }
-html[data-skeleton='home'] .sk-view[data-sk='home'],
-html[data-skeleton='list'] .sk-view[data-sk='list'],
-html[data-skeleton='grid'] .sk-view[data-sk='grid'],
-html[data-skeleton='article'] .sk-view[data-sk='article'],
-html[data-skeleton='text'] .sk-view[data-sk='text'] { display: block; }
+.sk-view { display: block; }
 
 .sk {
   display: block;

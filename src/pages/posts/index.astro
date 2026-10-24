@@ -56,10 +56,10 @@ const hasFilters = Boolean(query || selectedCategory || sort !== 'newest');
   <div class="container">
     <div class="page-header">
       <h1 class="page-title">所有文章</h1>
-      <p class="page-description">{hasFilters ? `找到 ${filteredPosts.length} / ${allPosts.length} 篇文章` : `共 ${allPosts.length} 篇文章`}</p>
+      <p class="page-description" id="postCount">{hasFilters ? `找到 ${filteredPosts.length} / ${allPosts.length} 篇文章` : `共 ${allPosts.length} 篇文章`}</p>
     </div>
 
-    <form class="post-discovery" action="/posts" method="get">
+    <form class="post-discovery" id="postForm" action="/posts" method="get" data-astro-reload>
       <label class="post-search-field">
         <span class="sr-only">搜索文章</span>
         <input type="search" name="q" value={query} placeholder="搜索标题、摘要、正文、分类或标签" />
@@ -83,9 +83,82 @@ const hasFilters = Boolean(query || selectedCategory || sort !== 'newest');
       {hasFilters && <a class="post-discovery-reset" href="/posts">重置</a>}
     </form>
 
+    <div id="postResults" aria-live="polite">
     <PostList posts={posts} page={page} totalPages={totalPages} baseUrl={baseUrl} emptyMessage="没有找到匹配的文章，试试其他关键词或分类。" />
+    </div>
   </div>
 </BaseLayout>
+
+<script>
+  /* Search / filter without a page reload: fetch the same URL, then swap only
+     the result list (and the count line). Pagination links work the same way. */
+  const initPostSearch = () => {
+    const form = document.getElementById('postForm') as HTMLFormElement | null;
+    const box = document.getElementById('postResults');
+    if (!form || !box || form.dataset.live) return;
+    form.dataset.live = '1';
+
+    let timer = 0;
+    let ctrl: AbortController | null = null;
+
+    const urlFromForm = () => {
+      const params = new URLSearchParams();
+      new FormData(form).forEach((v, k) => {
+        const val = String(v).trim();
+        if (val && !(k === 'sort' && val === 'newest')) params.set(k, val);
+      });
+      const qs = params.toString();
+      return '/posts' + (qs ? `?${qs}` : '');
+    };
+
+    const load = async (url: string, push = false) => {
+      ctrl?.abort();
+      ctrl = new AbortController();
+      box.setAttribute('aria-busy', 'true');
+      try {
+        const res = await fetch(url, { signal: ctrl.signal, headers: { 'x-requested-with': 'live-search' } });
+        if (!res.ok) throw new Error(String(res.status));
+        const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+        const nextBox = doc.getElementById('postResults');
+        if (!nextBox) throw new Error('no results box');
+        box.innerHTML = nextBox.innerHTML;
+        const count = doc.getElementById('postCount');
+        const countEl = document.getElementById('postCount');
+        if (count && countEl) countEl.textContent = count.textContent;
+        history[push ? 'pushState' : 'replaceState'](history.state, '', url);
+      } catch (e) {
+        if ((e as Error).name !== 'AbortError') location.href = url; // fall back to a normal load
+        return;
+      } finally {
+        box.removeAttribute('aria-busy');
+      }
+    };
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      window.clearTimeout(timer);
+      load(urlFromForm());
+      (document.activeElement as HTMLElement | null)?.blur?.(); // hide the mobile keyboard
+    });
+    form.addEventListener('input', e => {
+      if ((e.target as HTMLElement).tagName !== 'INPUT') return;
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => load(urlFromForm()), 300);
+    });
+    form.addEventListener('change', e => {
+      if ((e.target as HTMLElement).tagName === 'SELECT') load(urlFromForm());
+    });
+    box.addEventListener('click', e => {
+      const a = (e.target as HTMLElement).closest<HTMLAnchorElement>('a[href^="/posts?"], a[href="/posts"]');
+      if (!a || !box.contains(a) || a.classList.contains('post-card')) return;
+      e.preventDefault();
+      load(a.getAttribute('href')!, true);
+      window.scrollTo({ top: form.offsetTop - 80, behavior: 'smooth' });
+    });
+  };
+  initPostSearch();
+  document.addEventListener('astro:page-load', initPostSearch);
+</script>
 
 <style>
   .post-discovery { display:grid; grid-template-columns:minmax(12rem,1fr) minmax(8rem,12rem) minmax(10rem,13rem) auto auto; gap:.65rem; margin:var(--space-xl) 0; align-items:center; }

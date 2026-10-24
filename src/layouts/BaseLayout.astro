@@ -1,5 +1,13 @@
 ---
+import '@fontsource/noto-serif-sc/400.css';
+import '@fontsource/noto-serif-sc/700.css';
+import '@fontsource/mona-sans/400.css';
+import '@fontsource/mona-sans/600.css';
+import '@fontsource/mona-sans/700.css';
+import '@fontsource/geist-mono/400.css';
+import '@fontsource/geist-mono/600.css';
 import '@styles/global.css';
+import '@styles/enhance.css';
 import Header from '@components/Header.astro';
 import Footer from '@components/Footer.astro';
 import SearchDialog from '@components/SearchDialog.astro';
@@ -42,12 +50,6 @@ const ogImage = image || new URL('/og-image.png', SITE_CONFIG.url).toString();
   <meta name="twitter:image" content={ogImage} />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="alternate" type="application/rss+xml" title={SITE_CONFIG.title} href="/rss.xml" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=Geist:wght@400;500;600;700&display=swap"
-  />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
   <script is:inline>
     /* Dark-first: default to dark unless the visitor explicitly chose light. */
@@ -71,76 +73,7 @@ const ogImage = image || new URL('/og-image.png', SITE_CONFIG.url).toString();
   <!-- Loading state for slow client-side navigations: a progress line plus a
        skeleton that stands in for the page content until the real page swaps in. -->
   <div class="nav-progress" aria-hidden="true"></div>
-  <div class="skeleton-layer" aria-hidden="true">
-    <div class="container sk-view" data-sk="home">
-      <section class="hero-section">
-        <div class="hero-copy">
-          <span class="sk sk-hero-line" style="width:40%"></span>
-          <span class="sk sk-hero-line" style="width:70%"></span>
-          <div class="hero-stats">
-            <span class="sk sk-stat"></span><span class="sk sk-stat"></span><span class="sk sk-stat"></span>
-          </div>
-        </div>
-        <div class="hero-orb-wrap"><span class="sk sk-circle"></span></div>
-      </section>
-      <div class="section-head"><span class="sk" style="width:7rem;height:1.6rem"></span><span class="sk" style="width:6rem;height:1rem"></span></div>
-      <div class="posts-list">
-        <div class="sk-panel"><div class="sk-row"><span class="sk sk-chip"></span><span class="sk sk-date"></span></div><span class="sk sk-title" style="width:62%"></span><span class="sk sk-line" style="width:92%"></span><span class="sk sk-line" style="width:64%"></span><div class="sk-row"><span class="sk sk-tag"></span><span class="sk sk-tag"></span><span class="sk sk-tag"></span></div></div>
-        <div class="sk-panel"><div class="sk-row"><span class="sk sk-chip"></span><span class="sk sk-date"></span></div><span class="sk sk-title" style="width:48%"></span><span class="sk sk-line" style="width:88%"></span><span class="sk sk-line" style="width:56%"></span><div class="sk-row"><span class="sk sk-tag"></span><span class="sk sk-tag"></span></div></div>
-      </div>
-    </div>
-
-    <div class="container sk-view" data-sk="list">
-      <div class="page-header"><span class="sk sk-page-title"></span><span class="sk sk-page-desc"></span></div>
-      <div class="posts-list">
-        <div class="sk-panel"><div class="sk-row"><span class="sk sk-chip"></span><span class="sk sk-date"></span></div><span class="sk sk-title" style="width:62%"></span><span class="sk sk-line" style="width:92%"></span><span class="sk sk-line" style="width:64%"></span><div class="sk-row"><span class="sk sk-tag"></span><span class="sk sk-tag"></span><span class="sk sk-tag"></span></div></div>
-        <div class="sk-panel"><div class="sk-row"><span class="sk sk-chip"></span><span class="sk sk-date"></span></div><span class="sk sk-title" style="width:48%"></span><span class="sk sk-line" style="width:88%"></span><span class="sk sk-line" style="width:56%"></span><div class="sk-row"><span class="sk sk-tag"></span><span class="sk sk-tag"></span></div></div>
-        <div class="sk-panel"><div class="sk-row"><span class="sk sk-chip"></span><span class="sk sk-date"></span></div><span class="sk sk-title" style="width:70%"></span><span class="sk sk-line" style="width:90%"></span><span class="sk sk-line" style="width:60%"></span><div class="sk-row"><span class="sk sk-tag"></span><span class="sk sk-tag"></span><span class="sk sk-tag"></span></div></div>
-      </div>
-    </div>
-
-    <div class="container sk-view" data-sk="grid">
-      <div class="page-header"><span class="sk sk-page-title"></span><span class="sk sk-page-desc"></span></div>
-      <div class="category-grid">
-        <div class="sk-panel sk-tile"><span class="sk" style="width:46%;height:1.2rem"></span><span class="sk" style="width:30%;height:0.85rem"></span></div>
-        <div class="sk-panel sk-tile"><span class="sk" style="width:38%;height:1.2rem"></span><span class="sk" style="width:30%;height:0.85rem"></span></div>
-        <div class="sk-panel sk-tile"><span class="sk" style="width:52%;height:1.2rem"></span><span class="sk" style="width:30%;height:0.85rem"></span></div>
-        <div class="sk-panel sk-tile"><span class="sk" style="width:42%;height:1.2rem"></span><span class="sk" style="width:30%;height:0.85rem"></span></div>
-        <div class="sk-panel sk-tile"><span class="sk" style="width:34%;height:1.2rem"></span><span class="sk" style="width:30%;height:0.85rem"></span></div>
-        <div class="sk-panel sk-tile"><span class="sk" style="width:48%;height:1.2rem"></span><span class="sk" style="width:30%;height:0.85rem"></span></div>
-      </div>
-    </div>
-
-    <div class="container-narrow sk-view" data-sk="article">
-      <div class="post-header">
-        <span class="sk sk-chip"></span>
-        <span class="sk sk-post-title" style="width:94%"></span>
-        <span class="sk sk-post-title" style="width:58%"></span>
-        <div class="sk-row sk-meta"><span class="sk" style="width:6.5rem;height:0.85rem"></span><span class="sk" style="width:5rem;height:0.85rem"></span><span class="sk" style="width:5.5rem;height:0.85rem"></span></div>
-      </div>
-      <span class="sk sk-line sk-body" style="width:100%"></span>
-      <span class="sk sk-line sk-body" style="width:96%"></span>
-      <span class="sk sk-line sk-body" style="width:88%"></span>
-      <span class="sk sk-line sk-body" style="width:100%"></span>
-      <span class="sk sk-line sk-body" style="width:42%;margin-bottom:2.2rem"></span>
-      <span class="sk" style="width:36%;height:1.7rem;margin-bottom:1.2rem"></span>
-      <span class="sk sk-line sk-body" style="width:100%"></span>
-      <span class="sk sk-line sk-body" style="width:92%"></span>
-      <span class="sk sk-line sk-body" style="width:97%"></span>
-      <span class="sk sk-line sk-body" style="width:64%"></span>
-    </div>
-
-    <div class="container-narrow sk-view" data-sk="text">
-      <div class="page-header"><span class="sk sk-page-title" style="width:40%"></span><span class="sk sk-page-desc"></span></div>
-      <span class="sk sk-line sk-body" style="width:100%"></span>
-      <span class="sk sk-line sk-body" style="width:94%"></span>
-      <span class="sk sk-line sk-body" style="width:98%"></span>
-      <span class="sk sk-line sk-body" style="width:56%;margin-bottom:2.2rem"></span>
-      <span class="sk sk-line sk-body" style="width:100%"></span>
-      <span class="sk sk-line sk-body" style="width:90%"></span>
-      <span class="sk sk-line sk-body" style="width:72%"></span>
-    </div>
-  </div>
+  <div class="skeleton-layer" aria-hidden="true"></div>
   <script>
     /* With <ClientRouter /> the <body> is swapped on every navigation but this
        module only runs once. So: element-level listeners are (re)bound on each
@@ -277,6 +210,26 @@ const ogImage = image || new URL('/og-image.png', SITE_CONFIG.url).toString();
       if (path === '/posts' || path.startsWith('/categories/') || path.startsWith('/tags/')) return 'list';
       return 'text';
     };
+
+    /* ---- Skeleton markup is built here, not shipped in every HTML page ---- */
+    const sk = (w: string, h = '', cls = '') => `<span class="sk ${cls}" style="width:${w};${h ? `height:${h}` : ''}"></span>`;
+    const skCard = (t: string, l1: string, l2: string, tags: number) =>
+      `<div class="sk-panel"><div class="sk-row"><span class="sk sk-chip"></span><span class="sk sk-date"></span></div>${sk(t, '', 'sk-title')}${sk(l1, '', 'sk-line')}${sk(l2, '', 'sk-line')}<div class="sk-row">${'<span class="sk sk-tag"></span>'.repeat(tags)}</div></div>`;
+    const skHead = (w = '') => `<div class="page-header"><span class="sk sk-page-title" ${w ? `style="width:${w}"` : ''}></span><span class="sk sk-page-desc"></span></div>`;
+    const skBody = (ws: string[]) => ws.map(w => sk(w, '', 'sk-line sk-body')).join('');
+    const SKELETONS: Record<string, () => string> = {
+      home: () => `<div class="container sk-view"><section class="hero-section"><div class="hero-copy">${sk('40%', '', 'sk-hero-line')}${sk('70%', '', 'sk-hero-line')}<div class="hero-stats">${'<span class="sk sk-stat"></span>'.repeat(3)}</div></div><div class="hero-orb-wrap"><span class="sk sk-circle"></span></div></section><div class="section-head">${sk('7rem', '1.6rem')}${sk('6rem', '1rem')}</div><div class="posts-list">${skCard('62%', '92%', '64%', 3)}${skCard('48%', '88%', '56%', 2)}</div></div>`,
+      list: () => `<div class="container sk-view">${skHead()}<div class="posts-list">${skCard('62%', '92%', '64%', 3)}${skCard('48%', '88%', '56%', 2)}${skCard('70%', '90%', '60%', 3)}</div></div>`,
+      grid: () => `<div class="container sk-view">${skHead()}<div class="category-grid">${['46', '38', '52', '42', '34', '48'].map(w => `<div class="sk-panel sk-tile">${sk(w + '%', '1.2rem')}${sk('30%', '0.85rem')}</div>`).join('')}</div></div>`,
+      article: () => `<div class="container-narrow sk-view"><div class="post-header"><span class="sk sk-chip"></span>${sk('94%', '', 'sk-post-title')}${sk('58%', '', 'sk-post-title')}<div class="sk-row sk-meta">${sk('6.5rem', '0.85rem')}${sk('5rem', '0.85rem')}${sk('5.5rem', '0.85rem')}</div></div>${skBody(['100%', '96%', '88%', '100%', '42%'])}${sk('36%', '1.7rem')}${skBody(['100%', '92%', '97%', '64%'])}</div>`,
+      text: () => `<div class="container-narrow sk-view">${skHead('40%')}${skBody(['100%', '94%', '98%', '56%', '100%', '90%', '72%'])}</div>`,
+    };
+    const ensureSkeleton = (kind: string) => {
+      const layer = document.querySelector<HTMLElement>('.skeleton-layer');
+      if (!layer || layer.dataset.kind === kind) return;
+      layer.innerHTML = (SKELETONS[kind] || SKELETONS.text)();
+      layer.dataset.kind = kind;
+    };
     const stopLoader = () => {
       window.clearTimeout(loaderTimer);
       document.documentElement.removeAttribute('data-navigating');
@@ -286,6 +239,7 @@ const ogImage = image || new URL('/og-image.png', SITE_CONFIG.url).toString();
       const kind = skeletonFor((e as any).to as URL);
       window.clearTimeout(loaderTimer);
       loaderTimer = window.setTimeout(() => {
+        ensureSkeleton(kind);
         document.documentElement.setAttribute('data-skeleton', kind);
         document.documentElement.setAttribute('data-navigating', '');
       }, LOADER_DELAY);
