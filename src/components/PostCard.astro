@@ -2,24 +2,33 @@
 import type { PostItem } from '@types/index';
 import { formatDate } from '@lib/utils';
 import TagBadge from './TagBadge.astro';
-
 interface Props { post: PostItem; }
 const { post } = Astro.props;
 const postUrl = `/posts/${post.slug}`;
+const viewCount = new Intl.NumberFormat('zh-CN').format(post.viewCount ?? 0);
 ---
-
 <a href={postUrl} class="post-card">
   <div class="post-card-header">
     <span class="post-card-category">{post.category}</span>
-    <time datetime={post.pubDate.toISOString()}>{formatDate(post.pubDate)}</time>
+    <div class="post-card-header-end">
+      {post.pinned && <span class="post-card-pin">置顶</span>}
+      <time datetime={post.pubDate.toISOString()}>{formatDate(post.pubDate)}</time>
+    </div>
   </div>
   <h2 class="post-card-title">{post.title}</h2>
   <p class="post-card-excerpt">{post.description}</p>
-  {post.tags.length > 0 && (
-    <div class="post-card-footer">
-      <div class="post-card-tags">
-        {post.tags.slice(0, 4).map(tag => (<TagBadge tag={tag} link={false} />))}
-      </div>
+  <div class="post-card-footer">
+    <div class="post-card-tags">
+      {post.tags.slice(0, 4).map(tag => (<TagBadge tag={tag} link={false} />))}
     </div>
-  )}
+    <span class="post-card-view-count" aria-label={`${viewCount} 次点击`}>点击 {viewCount}</span>
+  </div>
 </a>
+
+<style>
+  .post-card-header { justify-content:space-between; }
+  .post-card-header-end { display:flex; align-items:center; gap:.65rem; }
+  .post-card-pin { padding:.18rem .55rem; border:1px solid color-mix(in srgb,var(--accent) 45%,var(--border)); border-radius:999px; color:var(--accent); font-family:var(--font-sans); font-size:.7rem; letter-spacing:0; white-space:nowrap; }
+  .post-card-view-count { color:var(--fg-dim); font-family:var(--font-mono); font-size:.72rem; white-space:nowrap; }
+  @media(max-width:480px) { .post-card { padding:var(--space-lg); } .post-card-header-end { gap:.4rem; } }
+</style>

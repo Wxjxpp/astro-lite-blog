@@ -1,15 +1,99 @@
 ---
 import BaseLayout from '@layouts/BaseLayout.astro';
 import PostList from '@components/PostList.astro';
-import { getAllPosts } from '@lib/posts';
+import { getAllPostRecords } from '@lib/posts';
+import { getBlogPostStats } from '@lib/blog-db';
 import { SITE_CONFIG, paginate } from '@lib/utils';
-const allPosts = await getAllPosts();
-const page = Number(Astro.url.searchParams.get('page')) || 1;
-const { items: posts, totalPages } = paginate(allPosts, page, SITE_CONFIG.postsPerPage);
+
+const records = await getAllPostRecords();
+let stats: Awaited<ReturnType<typeof getBlogPostStats>> = {};
+try {
+  stats = await getBlogPostStats(records.map(post => post.id));
+} catch (error) {
+  console.error('[Blog stats] unable to read MongoDB post_stats collection', error);
+}
+
+const query = (Astro.url.searchParams.get('q') || '').trim().slice(0, 120);
+const selectedCategory = (Astro.url.searchParams.get('category') || '').trim();
+const requestedSort = Astro.url.searchParams.get('sort');
+const sort = requestedSort === 'oldest' || requestedSort === 'views' ? requestedSort : 'newest';
+const allPosts = records.map(record => {
+  const stat = stats[record.id];
+  const post = {
+    slug: record.id,
+    ...record.data,
+    tags: record.data.tags || [],
+    pinned: stat?.pinned || false,
+    viewCount: stat?.viewCount || 0,
+  };
+  const body = record.body ?? record.entry?.body ?? '';
+  return { ...post, searchText: [post.title, post.description, post.category, ...post.tags, body].join(' ').toLocaleLowerCase() };
+});
+const categories = [...new Set(allPosts.map(post => post.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'zh-CN'));
+const normalizedQuery = query.toLocaleLowerCase();
+const filteredPosts = allPosts
+  .filter(post => (!normalizedQuery || post.searchText.includes(normalizedQuery)) && (!selectedCategory || post.category === selectedCategory))
+  .sort((a, b) => {
+    if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+    if (sort === 'oldest') return new Date(a.pubDate).getTime() - new Date(b.pubDate).getTime();
+    if (sort === 'views') return (b.viewCount || 0) - (a.viewCount || 0) || new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime();
+    return new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime();
+  });
+const pageCount = Math.max(1, Math.ceil(filteredPosts.length / SITE_CONFIG.postsPerPage));
+const page = Math.min(pageCount, Math.max(1, Number(Astro.url.searchParams.get('page')) || 1));
+const start = (page - 1) * SITE_CONFIG.postsPerPage;
+const posts = filteredPosts.slice(start, start + SITE_CONFIG.postsPerPage);
+const totalPages = Math.ceil(filteredPosts.length / SITE_CONFIG.postsPerPage);
+const pageParams = new URLSearchParams();
+if (query) pageParams.set('q', query);
+if (selectedCategory) pageParams.set('category', selectedCategory);
+if (sort !== 'newest') pageParams.set('sort', sort);
+const pageQuery = pageParams.toString();
+const baseUrl = pageQuery ? `/posts?${pageQuery}` : '/posts';
+const hasFilters = Boolean(query || selectedCategory || sort !== 'newest');
 ---
-<BaseLayout title="文章" description="所有博客文章列表">
+<BaseLayout title="文章" description="搜索、筛选和排序所有博客文章">
   <div class="container">
-    <div class="page-header"><h1 class="page-title">所有文章</h1><p class="page-description">共 {allPosts.length} 篇文章</p></div>
-    <PostList posts={posts} page={page} totalPages={totalPages} baseUrl="/posts" emptyMessage="还没有发布任何文章" />
+    <div class="page-header">
+      <h1 class="page-title">所有文章</h1>
+      <p class="page-description">{hasFilters ? `找到 ${filteredPosts.length} / ${allPosts.length} 篇文章` : `共 ${allPosts.length} 篇文章`}</p>
+    </div>
+
+    <form class="post-discovery" action="/posts" method="get">
+      <label class="post-search-field">
+        <span class="sr-only">搜索文章</span>
+        <input type="search" name="q" value={query} placeholder="搜索标题、摘要、正文、分类或标签" />
+      </label>
+      <label class="post-filter-field">
+        <span class="sr-only">按分类筛选</span>
+        <select name="category">
+          <option value="">全部分类</option>
+          {categories.map(category => <option value={category} selected={selectedCategory === category}>{category}</option>)}
+        </select>
+      </label>
+      <label class="post-filter-field">
+        <span class="sr-only">文章排序</span>
+        <select name="sort">
+          <option value="newest" selected={sort === 'newest'}>时间：新到旧</option>
+          <option value="oldest" selected={sort === 'oldest'}>时间：旧到新</option>
+          <option value="views" selected={sort === 'views'}>点击量：高到低</option>
+        </select>
+      </label>
+      <button class="post-discovery-submit" type="submit">搜索 / 筛选</button>
+      {hasFilters && <a class="post-discovery-reset" href="/posts">重置</a>}
+    </form>
+
+    <PostList posts={posts} page={page} totalPages={totalPages} baseUrl={baseUrl} emptyMessage="没有找到匹配的文章，试试其他关键词或分类。" />
   </div>
 </BaseLayout>
+
+<style>
+  .post-discovery { display:grid; grid-template-columns:minmax(12rem,1fr) minmax(8rem,12rem) minmax(10rem,13rem) auto auto; gap:.65rem; margin:var(--space-xl) 0; align-items:center; }
+  .post-search-field input,.post-filter-field select,.post-discovery-submit,.post-discovery-reset { min-height:2.75rem; box-sizing:border-box; border:1px solid var(--border); border-radius:.7rem; background:var(--surface); color:var(--fg); padding:.65rem .85rem; font:inherit; }
+  .post-search-field input,.post-filter-field select { width:100%; }
+  .post-search-field input:focus,.post-filter-field select:focus { outline:2px solid color-mix(in srgb,var(--accent) 55%,transparent); outline-offset:1px; }
+  .post-discovery-submit { background:var(--fg); color:var(--bg); cursor:pointer; white-space:nowrap; }
+  .post-discovery-reset { display:inline-flex; align-items:center; justify-content:center; text-decoration:none; }
+  @media(max-width:760px) { .post-discovery { grid-template-columns:1fr 1fr; } .post-search-field { grid-column:1 / -1; } }
+  @media(max-width:420px) { .post-discovery { grid-template-columns:1fr; } .post-search-field { grid-column:auto; } }
+</style>

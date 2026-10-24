@@ -1,6 +1,6 @@
 import { getCollection, getEntry, type CollectionEntry } from 'astro:content';
 import type { PostItem, PostFrontmatter } from '@types/index';
-import { findBlogPost, getDeletedSlugs, isBlogDatabaseConfigured, listBlogPosts } from '@lib/blog-db';
+import { findBlogPost, getBlogPostStats, getDeletedSlugs, isBlogDatabaseConfigured, listBlogPosts } from '@lib/blog-db';
 
 export interface PostRecord {
   id: string;
@@ -58,8 +58,17 @@ export async function getAllPostRecords(): Promise<PostRecord[]> {
 }
 
 export async function getAllPosts(): Promise<PostItem[]> {
-  const posts = await getAllPostRecords();
-  return posts.map(post => ({ slug: post.id, ...post.data, tags: post.data.tags || [] }));
+  const records = await getAllPostRecords();
+  let stats: Awaited<ReturnType<typeof getBlogPostStats>> = {};
+  try {
+    stats = await getBlogPostStats(records.map(post => post.id));
+  } catch (error) {
+    console.error('[Blog stats] unable to read MongoDB post_stats collection', error);
+  }
+  return records.map(post => {
+    const stat = stats[post.id];
+    return { slug: post.id, ...post.data, tags: post.data.tags || [], pinned: stat?.pinned || false, viewCount: stat?.viewCount || 0 };
+  });
 }
 
 export async function getPostBySlug(slug: string): Promise<PostRecord | undefined> {
@@ -77,14 +86,18 @@ export async function getPostBySlug(slug: string): Promise<PostRecord | undefine
   return fromFile(entry);
 }
 
+function pinnedFirst(posts: PostItem[]): PostItem[] {
+  return posts.sort((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) || new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
+}
+
 export async function getPostsByCategory(category: string): Promise<PostItem[]> {
   const allPosts = await getAllPosts();
-  return allPosts.filter(p => p.category.toLowerCase() === category.toLowerCase());
+  return pinnedFirst(allPosts.filter(p => p.category.toLowerCase() === category.toLowerCase()));
 }
 
 export async function getPostsByTag(tag: string): Promise<PostItem[]> {
   const allPosts = await getAllPosts();
-  return allPosts.filter(p => p.tags.some(t => t.toLowerCase() === tag.toLowerCase()));
+  return pinnedFirst(allPosts.filter(p => p.tags.some(t => t.toLowerCase() === tag.toLowerCase())));
 }
 
 export async function getRelatedPosts(currentSlug: string, limit = 5): Promise<PostItem[]> {

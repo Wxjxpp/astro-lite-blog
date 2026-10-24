@@ -21,6 +21,8 @@ export interface PostItem {
   cover?: string;
   draft?: boolean;
   author?: string;
+  pinned?: boolean;
+  viewCount?: number;
 }
 
 export interface CategoryInfo { name: string; count: number; posts: PostItem[]; }

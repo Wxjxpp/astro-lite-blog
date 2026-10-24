@@ -43,7 +43,7 @@ const { prev, next } = await getPrevNextPosts(post.id);
   image={data.cover}
   type="article"
 >
-  <article class="container-narrow">
+  <article class="container-narrow" data-post-slug={post.id}>
     <!-- 文章头部 -->
     <header class="post-header">
       <a href={`/categories/${slugify(data.category)}`} class="post-card-category">{data.category}</a>
@@ -146,6 +146,25 @@ const { prev, next } = await getPrevNextPosts(post.id);
 </BaseLayout>
 
 <script>
+  const recordPostView = async () => {
+    const slug = document.querySelector<HTMLElement>('[data-post-slug]')?.dataset.postSlug;
+    if (!slug) return;
+    const key = `blog:viewed:${slug}`;
+    try {
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, 'pending');
+    } catch {}
+    try {
+      const response = await fetch(`/api/posts/${encodeURIComponent(slug)}/view`, { method: 'POST', keepalive: true });
+      if (response.ok) sessionStorage.setItem(key, '1');
+      else sessionStorage.removeItem(key);
+    } catch {
+      try { sessionStorage.removeItem(key); } catch {}
+    }
+  };
+  document.addEventListener('astro:page-load', recordPostView);
+  recordPostView();
+
   const copyText = async (text: string) => {
     if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(text);

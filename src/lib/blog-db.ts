@@ -18,6 +18,12 @@ export interface BlogPostDocument {
   updatedAt: Date;
 }
 
+export interface BlogPostStats {
+  viewCount: number;
+  pinned: boolean;
+}
+interface BlogPostStatsDocument extends BlogPostStats { _id: string; updatedAt: Date; }
+
 interface BlogDeletionDocument { slug: string; deletedAt: Date; }
 type StoredPost = Omit<BlogPostDocument, 'pubDate' | 'updatedDate' | 'createdAt' | 'updatedAt'> & {
   pubDate: string; updatedDate?: string; createdAt: string; updatedAt: string;
@@ -49,6 +55,10 @@ async function getBlogPostsCollection(): Promise<Collection<BlogPostDocument>> {
 async function getDeletionsCollection(): Promise<Collection<BlogDeletionDocument>> {
   const db: Db = (await getClient()).db(dbName);
   return db.collection<BlogDeletionDocument>('post_deletions');
+}
+async function getPostStatsCollection(): Promise<Collection<BlogPostStatsDocument>> {
+  const db: Db = (await getClient()).db(dbName);
+  return db.collection<BlogPostStatsDocument>('post_stats');
 }
 
 function toStored(post: BlogPostDocument): StoredPost {
@@ -126,6 +136,25 @@ export async function listBlogPosts() {
   }
   const deleted = [...await getDeletedSlugs()];
   return (await getBlogPostsCollection()).find(deleted.length ? { slug: { $nin: deleted } } : {}).sort({ pubDate: -1 }).toArray();
+}
+
+export async function getBlogPostStats(slugs: string[]): Promise<Record<string, BlogPostStats>> {
+  const unique = [...new Set(slugs.map(slug => String(slug).trim()).filter(Boolean))];
+  const result: Record<string, BlogPostStats> = Object.fromEntries(unique.map(slug => [slug, { viewCount: 0, pinned: false }]));
+  if (!unique.length || !mongoUri) return result;
+  const rows = await (await getPostStatsCollection()).find({ _id: { $in: unique } }, { projection: { _id: 1, viewCount: 1, pinned: 1 } }).toArray();
+  for (const row of rows) result[row._id] = { viewCount: Number(row.viewCount || 0), pinned: Boolean(row.pinned) };
+  return result;
+}
+
+export async function incrementBlogPostViewCount(slug: string) {
+  if (!mongoUri) throw new Error('BLOG_MONGODB_URI is required to record article views');
+  await (await getPostStatsCollection()).updateOne({ _id: slug }, { $inc: { viewCount: 1 }, $set: { updatedAt: new Date() }, $setOnInsert: { pinned: false } }, { upsert: true });
+}
+
+export async function setBlogPostPinned(slug: string, pinned: boolean) {
+  if (!mongoUri) throw new Error('BLOG_MONGODB_URI is required to save the pinned state');
+  await (await getPostStatsCollection()).updateOne({ _id: slug }, { $set: { pinned, updatedAt: new Date() }, $setOnInsert: { viewCount: 0 } }, { upsert: true });
 }
 
 export async function findBlogPost(slug: string) {

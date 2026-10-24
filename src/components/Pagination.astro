@@ -22,7 +22,14 @@ function getPageNumbers(current: number, total: number): (number | 'ellipsis')[]
 }
 
 const pageNumbers = getPageNumbers(page, totalPages);
-const getPageUrl = (p: number) => (p === 1 ? baseUrl : `${baseUrl}?page=${p}`);
+const getPageUrl = (p: number) => {
+  const [path, query = ''] = baseUrl.split('?');
+  const params = new URLSearchParams(query);
+  if (p === 1) params.delete('page');
+  else params.set('page', String(p));
+  const suffix = params.toString();
+  return suffix ? `${path}?${suffix}` : path;
+};
 ---
 
 {totalPages > 1 && (

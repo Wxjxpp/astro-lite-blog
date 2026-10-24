@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { isAdminAuthenticated } from '@lib/admin-auth';
-import { isBlogDatabaseConfigured, saveBlogPost } from '@lib/blog-db';
+import { getBlogPostStats, isBlogDatabaseConfigured, saveBlogPost, setBlogPostPinned } from '@lib/blog-db';
 import { getAllPostRecords } from '@lib/posts';
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
@@ -10,9 +10,12 @@ export const GET: APIRoute = async ({ request }) => {
   if (!isAdminAuthenticated(request)) return forbidden();
   if (!isBlogDatabaseConfigured) return json({ error: '博客存储尚未配置' }, 503);
   const records = await getAllPostRecords();
+  const stats = await getBlogPostStats(records.map(post => post.id));
   return json(records.map(post => ({
     slug: post.id,
     ...post.data,
+    pinned: stats[post.id]?.pinned || false,
+    viewCount: stats[post.id]?.viewCount || 0,
     content: post.body ?? post.entry?.body ?? '',
     source: post.source,
   })));
@@ -41,5 +44,6 @@ export const POST: APIRoute = async ({ request }) => {
     author: input.author?.trim() || undefined,
     content: String(input.content),
   });
+  if (typeof input.pinned === 'boolean') await setBlogPostPinned(slug, input.pinned);
   return json(saved, 201);
 };

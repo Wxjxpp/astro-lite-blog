@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { isAdminAuthenticated } from '@lib/admin-auth';
-import { findBlogPost, findBlogPostIncludingDeleted, isBlogDatabaseConfigured, permanentlyDeleteBlogPost } from '@lib/blog-db';
+import { findBlogPost, findBlogPostIncludingDeleted, getBlogPostStats, isBlogDatabaseConfigured, permanentlyDeleteBlogPost } from '@lib/blog-db';
 import { extractBlogBlobUrls, permanentlyDeleteBlogBlobs } from '@lib/blob-storage';
 import { getPostBySlug } from '@lib/posts';
 
@@ -11,9 +11,12 @@ export const GET: APIRoute = async ({ request, params }) => {
   if (!isBlogDatabaseConfigured) return json({ error: 'BLOG_MONGODB_URI 尚未配置' }, 503);
   const post = await findBlogPost(params.slug || '') ?? await getPostBySlug(params.slug || '');
   if (!post) return json({ error: '文章不存在或已删除' }, 404);
+  const stats = await getBlogPostStats([params.slug || '']);
   return json({
     slug: post.id ?? post.slug,
     ...('data' in post ? post.data : post),
+    pinned: stats[params.slug || '']?.pinned || false,
+    viewCount: stats[params.slug || '']?.viewCount || 0,
     content: 'body' in post ? (post.body ?? '') : post.content,
     source: 'source' in post ? post.source : 'database',
   });
