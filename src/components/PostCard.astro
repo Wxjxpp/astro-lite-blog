@@ -8,7 +8,7 @@ const { post } = Astro.props;
 const postUrl = `/posts/${post.slug}`;
 ---
 
-<a href={postUrl} class="post-card">
+<a href={postUrl} class="post-card" data-category={post.category} data-tags={JSON.stringify(post.tags)}>
   <div class="post-card-header">
     <span class="post-card-category">{post.category}</span>
     <time datetime={post.pubDate.toISOString()}>{formatDate(post.pubDate)}</time>

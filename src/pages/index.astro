@@ -3,11 +3,17 @@ import BaseLayout from '@layouts/BaseLayout.astro';
 import PostCard from '@components/PostCard.astro';
 import GrokOrb from '@components/GrokOrb.astro';
 import { getAllPosts, getAllCategories, getAllTags } from '@lib/posts';
-import { SITE_CONFIG } from '@lib/utils';
+import { SITE_CONFIG, extractCategories, extractTags } from '@lib/utils';
 const allPosts = await getAllPosts();
 const allCategories = await getAllCategories();
 const allTags = await getAllTags();
-const recentPosts = allPosts.slice(0, 6);
+
+/* Home shows the 6 newest posts; the filter bar can reach back through up to 60. */
+const HOME_LIMIT = 6;
+const homePosts = allPosts.slice(0, 60);
+const categoryChips = extractCategories(allPosts);
+const tagChips = extractTags(allPosts);
+const TAGS_VISIBLE = 10;
 ---
 <BaseLayout title="首页" description={SITE_CONFIG.description}>
   <div class="container">
@@ -27,11 +33,141 @@ const recentPosts = allPosts.slice(0, 6);
     <section>
       <div class="section-head">
         <h2>最新文章</h2>
-        <a href="/posts" class="link-arrow">查看全部 →</a>
+        <div class="section-tools">
+          <button class="icon-btn section-search-btn" type="button" data-search-open aria-label="搜索文章（Ctrl+K）" aria-haspopup="dialog">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          </button>
+          <a href="/posts" class="link-arrow">查看全部 →</a>
+        </div>
       </div>
-      <div class="posts-list">
-        {recentPosts.map(post => (<PostCard post={post} />))}
+
+      {allPosts.length > 0 && (
+        <div class="filter-bar" id="postFilter" data-limit={HOME_LIMIT} data-total={allPosts.length}>
+          <div class="filter-row" role="group" aria-label="按分类筛选">
+            <span class="filter-label">分类</span>
+            <div class="filter-chips">
+              <button type="button" class="filter-chip active" data-filter="category" data-value="" aria-pressed="true">全部</button>
+              {categoryChips.map(c => (
+                <button type="button" class="filter-chip" data-filter="category" data-value={c.name} aria-pressed="false">{c.name}<span class="filter-count">{c.count}</span></button>
+              ))}
+            </div>
+          </div>
+          {tagChips.length > 0 && (
+            <div class="filter-row" role="group" aria-label="按标签筛选">
+              <span class="filter-label">标签</span>
+              <div class="filter-chips">
+                {tagChips.map((t, i) => (
+                  <button type="button" class="filter-chip" data-filter="tag" data-value={t.name} aria-pressed="false" hidden={i >= TAGS_VISIBLE} data-extra={i >= TAGS_VISIBLE ? '' : undefined}>#{t.name}<span class="filter-count">{t.count}</span></button>
+                ))}
+                {tagChips.length > TAGS_VISIBLE && (
+                  <button type="button" class="filter-more" id="filterMore" aria-expanded="false">更多 ▾</button>
+                )}
+              </div>
+            </div>
+          )}
+          <div class="filter-meta">
+            <span id="filterCount" aria-live="polite"></span>
+            <button type="button" class="filter-clear" id="filterClear" hidden>清除筛选</button>
+          </div>
+        </div>
+      )}
+
+      <div class="posts-list" id="homePosts">
+        {homePosts.map((post, i) => (<PostCard post={post} />))}
       </div>
+      <p class="filter-empty" id="filterEmpty" hidden>没有符合条件的文章，换个条件试试？</p>
     </section>
   </div>
 </BaseLayout>
+
+<script>
+  const init = () => {
+    const root = document.getElementById('postFilter');
+    const list = document.getElementById('homePosts');
+    if (!root || !list || root.dataset.bound) return;
+    root.dataset.bound = '1';
+
+    const limit = Number(root.dataset.limit) || 6;
+    const total = Number(root.dataset.total) || 0;
+    const cards = [...list.querySelectorAll<HTMLElement>('.post-card')];
+    const chips = [...root.querySelectorAll<HTMLButtonElement>('.filter-chip')];
+    const countEl = document.getElementById('filterCount')!;
+    const clearBtn = document.getElementById('filterClear') as HTMLButtonElement;
+    const emptyEl = document.getElementById('filterEmpty')!;
+    const moreBtn = document.getElementById('filterMore') as HTMLButtonElement | null;
+
+    const known = (kind: string, value: string) => chips.some(c => c.dataset.filter === kind && c.dataset.value === value);
+    const params = new URLSearchParams(location.search);
+    const state = { category: params.get('category') || '', tag: params.get('tag') || '' };
+    if (!known('category', state.category)) state.category = '';
+    if (!known('tag', state.tag)) state.tag = '';
+
+    const revealExtraTags = (on: boolean) => {
+      root.querySelectorAll<HTMLElement>('[data-extra]').forEach(el => {
+        // keep a selected tag visible even while the rest are collapsed
+        el.hidden = !on && !(el.dataset.value === state.tag);
+      });
+      if (moreBtn) {
+        moreBtn.setAttribute('aria-expanded', String(on));
+        moreBtn.textContent = on ? '收起 ▴' : '更多 ▾';
+      }
+    };
+
+    const apply = () => {
+      const filtering = !!(state.category || state.tag);
+      let shown = 0;
+      cards.forEach((card, i) => {
+        let tags: string[] = [];
+        try { tags = JSON.parse(card.dataset.tags || '[]'); } catch { /* ignore */ }
+        const match = (!state.category || card.dataset.category === state.category) && (!state.tag || tags.includes(state.tag));
+        const visible = filtering ? match : i < limit;
+        card.hidden = !visible;
+        if (visible) shown++;
+      });
+
+      chips.forEach(chip => {
+        const kind = chip.dataset.filter as 'category' | 'tag';
+        const on = (chip.dataset.value || '') === state[kind];
+        chip.classList.toggle('active', on);
+        chip.setAttribute('aria-pressed', String(on));
+      });
+
+      emptyEl.hidden = shown > 0;
+      clearBtn.hidden = !filtering;
+      countEl.textContent = filtering ? `找到 ${shown} 篇文章` : `最新 ${Math.min(limit, total)} 篇 · 共 ${total} 篇`;
+
+      const next = new URLSearchParams();
+      if (state.category) next.set('category', state.category);
+      if (state.tag) next.set('tag', state.tag);
+      const qs = next.toString();
+      history.replaceState(history.state, '', location.pathname + (qs ? `?${qs}` : '') + location.hash);
+    };
+
+    root.addEventListener('click', e => {
+      const t = e.target as HTMLElement;
+      if (t.closest('#filterMore')) {
+        revealExtraTags(moreBtn?.getAttribute('aria-expanded') !== 'true');
+        return;
+      }
+      if (t.closest('#filterClear')) {
+        state.category = '';
+        state.tag = '';
+        revealExtraTags(false);
+        apply();
+        return;
+      }
+      const chip = t.closest<HTMLButtonElement>('.filter-chip');
+      if (!chip) return;
+      const kind = chip.dataset.filter as 'category' | 'tag';
+      const value = chip.dataset.value || '';
+      state[kind] = state[kind] === value ? '' : value; // click an active chip again to clear it
+      apply();
+    });
+
+    revealExtraTags(false);
+    apply();
+  };
+
+  init();
+  document.addEventListener('astro:page-load', init);
+</script>
