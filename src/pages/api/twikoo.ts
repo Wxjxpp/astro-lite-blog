@@ -5,14 +5,12 @@ const twikooUrl = import.meta.env.PUBLIC_TWIKOO_ENV_ID?.replace(/\/+$/, '');
 // on the Twikoo project so it only trusts the visitor IP forwarded by this proxy.
 const proxySecret = import.meta.env.TWIKOO_PROXY_SECRET || process.env.TWIKOO_PROXY_SECRET || '';
 
-/** Real visitor IP as seen by this site (Cloudflare > Vercel/Astro > plain proxy headers). */
+/** Client public IP as seen by Vercel; this domain points directly to Vercel, not Cloudflare. */
 const visitorIp = (request: Request, clientAddress?: string) => {
   const h = request.headers;
   const first = (v: string | null) => (v ? v.split(',')[0].trim() : '');
   return (
-    first(h.get('cf-connecting-ip')) ||
     first(h.get('x-vercel-forwarded-for')) ||
-    first(h.get('x-real-ip')) ||
     first(h.get('x-forwarded-for')) ||
     clientAddress ||
     ''
