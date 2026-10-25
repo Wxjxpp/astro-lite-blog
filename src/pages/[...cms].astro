@@ -69,6 +69,20 @@ Astro.response.status = 200;
                 <p class="cms-tip">图片支持 JPG、PNG、WebP、AVIF，超过 4MB 自动压缩；SVG、GIF 不压缩，需 ≤4MB。</p>
               </div>
 
+              <details class="cms-card cms-blobs" id="blobBox">
+                <summary>图片库（Vercel Blob）</summary>
+                <div class="cms-blob-controls">
+                  <div class="cms-seg" role="group" aria-label="扫描方式">
+                    <button type="button" class="is-on" data-mode="recent">最近上传</button>
+                    <button type="button" data-mode="unused">仅未使用</button>
+                  </div>
+                  <button type="button" class="cms-btn" id="blobScan">扫描 3 张</button>
+                </div>
+                <p class="cms-tip" id="blobTip">不会自动扫描。每次只取 3 张，只加载这 3 张的缩略图，节省流量。</p>
+                <div id="blobList" class="cms-blob-list"></div>
+                <button type="button" class="cms-btn" id="blobMore" hidden>再扫描 3 张</button>
+              </details>
+
               <div class="cms-foot">
                 <button class="cms-btn danger" type="button" id="deleteButton">删除文章</button>
               </div>
@@ -495,6 +509,97 @@ Astro.response.status = 200;
     window.addEventListener('orientationchange', () => setTimeout(onViewport, 300));
     desktop.addEventListener('change', () => { $('listBox').open = desktop.matches; setDock(false); });
 
+    /* ------------------------------------------------ Blob library: scan 3 at a time, insert / delete */
+    let blobMode = 'recent';
+    let blobOffset = 0;
+    let blobBusy = false;
+    const blobList = $('blobList');
+    const fmtSize = (b: number) => (b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB');
+    const fmtDate = (v: string) => new Date(v).toLocaleString('zh-CN', { hour12: false, month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const blobAlt = (pathname: string) => (pathname.split('/').pop() || 'image').replace(/\.[^.]+$/, '').replace(/-[A-Za-z0-9]{20,}$/, '') || 'image';
+
+    const renderBlob = (item: any) => {
+      const row = document.createElement('div');
+      row.className = 'cms-blob';
+      row.dataset.url = item.url;
+      const thumb = document.createElement('div');
+      thumb.className = 'cms-blob-thumb';
+      const loadThumb = () => { thumb.innerHTML = ''; const img = document.createElement('img'); img.src = item.url; img.alt = ''; img.loading = 'lazy'; thumb.appendChild(img); };
+      if (blobMode === 'recent') loadThumb();
+      else {
+        const b = document.createElement('button');
+        b.type = 'button'; b.textContent = '预览'; b.className = 'cms-btn';
+        b.onclick = loadThumb;
+        thumb.appendChild(b);
+      }
+      const info = document.createElement('div');
+      info.className = 'cms-blob-info';
+      const name = document.createElement('strong');
+      name.textContent = item.pathname;
+      const meta = document.createElement('small');
+      meta.innerHTML = `<b class="${item.used ? 'pub' : 'draft'}">${item.used ? '使用中' : '未使用'}</b> · ${fmtSize(item.size)} · ${fmtDate(item.uploadedAt)}`;
+      const link = document.createElement('code');
+      link.textContent = item.url;
+      info.append(name, meta, link);
+      const acts = document.createElement('div');
+      acts.className = 'cms-blob-acts';
+      const mk = (label: string, cls: string, fn: () => void) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'cms-btn ' + cls; b.textContent = label; b.onclick = fn; return b; };
+      acts.append(
+        mk('插入', 'primary', () => { showTab('edit'); insertBlock(`![${blobAlt(item.pathname)}](${item.url})`); setDirty(true); countWords(); status('已把图片插入到光标处'); }),
+        mk('复制链接', '', async () => { try { await navigator.clipboard.writeText(item.url); status('链接已复制'); } catch { status('复制失败，请长按链接手动复制', true); } }),
+        mk('删除', 'danger', () => deleteBlob(item, row)),
+      );
+      row.append(thumb, info, acts);
+      blobList.appendChild(row);
+    };
+
+    const deleteBlob = async (item: any, row: HTMLElement, force = false) => {
+      if (!force && !confirm(`永久删除这张图片？\n${item.pathname}\n此操作无法恢复。`)) return;
+      const r = await fetch('/api/admin/blobs', { method: 'DELETE', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ url: item.url, force }) });
+      const data = await readJson(r);
+      if (r.status === 409 && data.used) {
+        if (confirm(`${data.error}。\n仍要强制删除吗？`)) return deleteBlob(item, row, true);
+        return;
+      }
+      if (!r.ok) return status(data.error || '删除失败', true);
+      row.remove();
+      blobOffset = Math.max(0, blobOffset - 1); // the next page starts one earlier now that this row is gone
+      status('图片已从 Blob 永久删除');
+    };
+
+    const scanBlobs = async (reset: boolean) => {
+      if (blobBusy) return;
+      blobBusy = true;
+      const scanBtn = $('blobScan') as HTMLButtonElement, moreBtn = $('blobMore') as HTMLButtonElement;
+      scanBtn.disabled = moreBtn.disabled = true;
+      if (reset) { blobOffset = 0; blobList.innerHTML = ''; }
+      status('正在扫描图片…');
+      try {
+        const r = await fetch(`/api/admin/blobs?limit=3&offset=${blobOffset}&unused=${blobMode === 'unused' ? 1 : 0}`);
+        const data = await readJson(r);
+        if (!r.ok) return status(data.error || '扫描失败', true);
+        data.items.forEach(renderBlob);
+        blobOffset = data.nextOffset;
+        moreBtn.hidden = !data.hasMore;
+        scanBtn.textContent = '重新扫描';
+        if (!blobList.children.length) blobList.innerHTML = `<p class="cms-empty">${blobMode === 'unused' ? '没有未使用的图片' : 'Blob 里还没有图片'}。</p>`;
+        $('blobTip').textContent = `存储中共 ${data.storeTotal} 张，其中未使用 ${data.unusedTotal} 张；当前列表已显示 ${blobList.querySelectorAll('.cms-blob').length}/${data.total} 张。`;
+        status(`已扫描 ${data.items.length} 张图片`);
+      } finally { blobBusy = false; scanBtn.disabled = moreBtn.disabled = false; }
+    };
+    $('blobScan').addEventListener('click', () => scanBlobs(true));
+    $('blobMore').addEventListener('click', () => scanBlobs(false));
+    document.querySelectorAll<HTMLButtonElement>('.cms-seg button').forEach(b => b.addEventListener('click', () => {
+      blobMode = b.dataset.mode || 'recent';
+      document.querySelectorAll('.cms-seg button').forEach(x => x.classList.toggle('is-on', x === b));
+      blobList.innerHTML = '';
+      $('blobMore').hidden = true;
+      $('blobScan').textContent = '扫描 3 张';
+      $('blobTip').textContent = blobMode === 'unused'
+        ? '只列出没被任何文章引用的图片链接；点“预览”才会加载单张图片。'
+        : '不会自动扫描。每次只取 3 张，只加载这 3 张的缩略图，节省流量。';
+    }));
+
     /* ------------------------------------------------ misc UX */
     $('postForm').addEventListener('input', () => setDirty(true));
     content.addEventListener('input', countWords);
@@ -627,6 +732,24 @@ Astro.response.status = 200;
     .cms-sheet[hidden] { display: none; }
     .cms-sheet .cms-tool.tpl { flex: none; }
   }
+
+  /* Blob library */
+  .cms-blobs > summary { cursor: pointer; font-weight: 600; padding: 0.2rem 0; }
+  .cms-blob-controls { display: flex; gap: 0.6rem; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-top: 0.7rem; }
+  .cms-seg { display: inline-flex; border: 1px solid var(--border-strong, var(--border)); border-radius: 0.7rem; overflow: hidden; }
+  .cms-seg button { min-height: 2.4rem; padding: 0 0.95rem; font: inherit; font-size: 0.9rem; color: var(--fg-muted); background: transparent; border: 0; cursor: pointer; }
+  .cms-seg button.is-on { background: var(--fg); color: var(--bg); font-weight: 600; }
+  .cms-blob-list { display: grid; gap: 0.6rem; margin: 0.7rem 0; }
+  .cms-blob { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 0.4rem 0.8rem; padding: 0.7rem; border: 1px solid var(--border); border-radius: 0.8rem; background: var(--bg); }
+  .cms-blob-thumb { grid-row: span 2; display: grid; place-items: center; width: 96px; height: 96px; background: color-mix(in srgb, var(--fg) 5%, transparent); overflow: hidden; }
+  .cms-blob-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cms-blob-info { min-width: 0; display: grid; gap: 0.2rem; align-content: start; }
+  .cms-blob-info strong { font-size: 0.88rem; overflow-wrap: anywhere; }
+  .cms-blob-info small { font-size: 0.78rem; color: var(--fg-muted); }
+  .cms-blob-info small b.pub { color: #16a34a; } .cms-blob-info small b.draft { color: #d97706; }
+  .cms-blob-info code { font-size: 0.72rem; color: var(--fg-dim, var(--fg-muted)); overflow-wrap: anywhere; user-select: all; }
+  .cms-blob-acts { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+  .cms-blob-acts .cms-btn { min-height: 2.2rem; padding: 0 0.8rem; font-size: 0.85rem; }
 
   /* login */
   .cms-login { max-width: 30rem; margin: 18vh auto 0; text-align: left; display: grid; gap: 0.9rem; }

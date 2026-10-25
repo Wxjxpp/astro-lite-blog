@@ -32,3 +32,15 @@ export async function permanentlyDeleteBlogBlobs(urls: string[]) {
   await del(urls);
   return { deleted: urls.length };
 }
+
+/** True for a public https URL on this project's Vercel Blob host. */
+export function isBlogBlobUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && url.hostname.endsWith(BLOB_HOST_SUFFIX);
+  } catch {
+    return false;
+  }
+}
+
+export const normalizeBlobUrl = (value: string) => new URL(value).toString();

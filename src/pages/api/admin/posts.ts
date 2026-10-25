@@ -9,7 +9,7 @@ const forbidden = () => json({ error: '未登录或会话已过期' }, 401);
 export const GET: APIRoute = async ({ request }) => {
   if (!isAdminAuthenticated(request)) return forbidden();
   if (!isBlogDatabaseConfigured) return json({ error: '博客存储尚未配置' }, 503);
-  const records = await getAllPostRecords();
+  const records = await getAllPostRecords({ includeDrafts: true });
   const stats = await getBlogPostStats(records.map(post => post.id));
   return json(records.map(post => ({
     slug: post.id,

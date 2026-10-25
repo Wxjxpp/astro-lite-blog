@@ -38,7 +38,6 @@ async function getDatabaseRecords(): Promise<PostRecord[]> {
   if (!isBlogDatabaseConfigured) return [];
   try {
     const posts = await listBlogPosts();
-    // 注意：草稿过滤逻辑保留，但建议去掉 import.meta.env.PROD 限制，确保后台能拿到全部数据
     return posts.map(post => fromDatabase(post)!).filter(Boolean);
   } catch (error: any) {
     console.error('[Blog DB] 读取 TiDB 崩溃了！', error);
@@ -47,11 +46,13 @@ async function getDatabaseRecords(): Promise<PostRecord[]> {
   }
 }
 
-export async function getAllPostRecords(): Promise<PostRecord[]> {
-  const files = await getCollection('posts', ({ data }) => import.meta.env.PROD ? data.draft !== true : true);
+/** Public pages never see drafts (file or database). The admin passes `includeDrafts` to list everything. */
+export async function getAllPostRecords(options: { includeDrafts?: boolean } = {}): Promise<PostRecord[]> {
+  const hideDrafts = !options.includeDrafts && import.meta.env.PROD;
+  const files = await getCollection('posts', ({ data }) => hideDrafts ? data.draft !== true : true);
   const deleted = isBlogDatabaseConfigured ? await getDeletedSlugs() : new Set<string>();
   const records = files.filter(entry => !deleted.has(entry.id)).map(fromFile);
-  const database = await getDatabaseRecords();
+  const database = (await getDatabaseRecords()).filter(post => !hideDrafts || post.data.draft !== true);
   const bySlug = new Map(records.map(post => [post.id, post]));
   for (const post of database) bySlug.set(post.id, post);
   return [...bySlug.values()].sort((a, b) => new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime());
