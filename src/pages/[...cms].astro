@@ -18,7 +18,7 @@ Astro.response.status = 200;
             <form id="postForm" novalidate>
               <input type="hidden" id="originalSlug" />
               <label>标题 <span class="required-mark">必填</span><input id="title" required /></label>
-              <div class="cms-two"><label>Slug <span class="required-mark">必填，仅限英文、数字和连字符</span><input id="slug" required pattern="[a-z0-9-]+" /></label><label>分类 <span class="required-mark">必填</span><input id="category" required /></label></div>
+              <div class="cms-two"><label>Slug <span class="required-mark">必填，仅限英文、数字和连字符</span><input id="slug" required pattern="[a-z0-9\-]+" /></label><label>分类 <span class="required-mark">必填</span><input id="category" required /></label></div>
               <label>摘要 <span class="required-mark">必填</span><textarea id="description" rows="2" required></textarea></label>
               <div class="cms-two"><label>发布日期 <span class="required-mark">必填</span><input id="pubDate" type="date" required /></label><label>作者<input id="author" /></label></div>
               <label>封面 URL<input id="cover" type="url" placeholder="https://…" /></label>
