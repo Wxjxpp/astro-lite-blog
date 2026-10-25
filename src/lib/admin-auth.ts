@@ -2,6 +2,7 @@ import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 
 const sessionCookie = 'blog_admin_session';
 const stateCookie = 'blog_oauth_state';
+const turnstileCookie = 'blog_turnstile_pass';
 const sessionSecret = import.meta.env.BLOG_SESSION_SECRET || 'development-only-change-me';
 
 export function getAdminPath() {
@@ -66,4 +67,20 @@ export function getOAuthRedirectUri(request: Request) {
   return `${url.origin}${callbackPath}`;
 }
 
-export { sessionCookie, stateCookie };
+/** Short-lived proof that this browser just passed the Turnstile check; consumed by /api/auth/github. */
+export function createTurnstilePass() {
+  const token = encode({ ok: true, nonce: randomBytes(8).toString('hex'), exp: Date.now() + 2 * 60_000 });
+  return `${turnstileCookie}=${token}; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=120`;
+}
+
+export function hasTurnstilePass(request: Request) {
+  const token = cookies(request)[turnstileCookie];
+  const payload = token ? decode<{ ok: boolean; exp: number }>(token) : null;
+  return Boolean(payload?.ok && payload.exp > Date.now());
+}
+
+export function clearTurnstilePass() {
+  return `${turnstileCookie}=; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=0`;
+}
+
+export { sessionCookie, stateCookie, turnstileCookie };

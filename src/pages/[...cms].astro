@@ -1,11 +1,15 @@
 ---
 import BaseLayout from '@layouts/BaseLayout.astro';
 import { getAdminPath, isAdminAuthenticated } from '@lib/admin-auth';
+import { getTurnstileSiteKey, isTurnstileConfigured } from '@lib/turnstile';
 
 const requestedPath = Array.isArray(Astro.params.cms) ? Astro.params.cms.join('/') : (Astro.params.cms || '');
 if (requestedPath !== getAdminPath()) return new Response('Not Found', { status: 404 });
 const loggedIn = isAdminAuthenticated(Astro.request);
 Astro.response.status = 200;
+const turnstileOn = isTurnstileConfigured();
+const turnstileKey = getTurnstileSiteKey();
+const turnstileFailed = new URL(Astro.request.url).searchParams.get('e') === 'turnstile';
 ---
 <BaseLayout title="博客管理" description="博客内容管理后台" transitions={false}>
   <main class="cms-page">
@@ -101,7 +105,19 @@ Astro.response.status = 200;
         <p class="cms-kicker">PRIVATE CONTENT STUDIO</p>
         <h1>博客管理</h1>
         <p>管理入口不是安全边界，登录仍需 GitHub OAuth 和账号白名单。</p>
-        <a class="cms-btn primary" href="/api/auth/github">使用 GitHub 登录</a>
+        {turnstileOn ? (
+          <>
+            <div id="tsBox" class="cms-ts" data-sitekey={turnstileKey}></div>
+            <p id="loginMsg" class={`cms-login-msg${turnstileFailed ? ' error' : ''}`} role="status">{turnstileFailed ? '请先完成人机验证，再使用 GitHub 登录。' : '请先完成下方的人机验证。'}</p>
+            <button type="button" class="cms-btn primary" id="loginBtn" disabled>使用 GitHub 登录</button>
+            <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+          </>
+        ) : (
+          <>
+            <p class="cms-login-msg error">未配置 Cloudflare Turnstile（TURNSTILE_SITE_KEY / TURNSTILE_SECRET_KEY），登录目前没有人机验证保护。</p>
+            <a class="cms-btn primary" href="/api/auth/github">使用 GitHub 登录</a>
+          </>
+        )}
       </section>
     )}
   </main>
@@ -111,6 +127,40 @@ Astro.response.status = 200;
   import { marked } from 'marked';
   import markedKatex from 'marked-katex-extension';
   import markedFootnote from 'marked-footnote';
+
+  /* ---- login: Turnstile first, then GitHub OAuth ---- */
+  const tsBox = document.getElementById('tsBox');
+  if (tsBox) {
+    const btn = document.getElementById('loginBtn') as HTMLButtonElement;
+    const msg = document.getElementById('loginMsg')!;
+    let token = '';
+    const say = (text: string, error = false) => { msg.textContent = text; msg.classList.toggle('error', error); };
+    const mount = () => {
+      const ts = (window as any).turnstile;
+      if (!ts) return setTimeout(mount, 200);
+      ts.render(tsBox, {
+        sitekey: tsBox.dataset.sitekey,
+        theme: 'auto',
+        callback: (t: string) => { token = t; btn.disabled = false; say('验证通过，可以登录了。'); },
+        'expired-callback': () => { token = ''; btn.disabled = true; say('验证已过期，请重新验证。', true); },
+        'error-callback': () => { token = ''; btn.disabled = true; say('验证组件加载失败，请刷新页面重试。', true); },
+      });
+    };
+    mount();
+    btn.addEventListener('click', async () => {
+      if (!token) return;
+      btn.disabled = true;
+      say('正在校验…');
+      try {
+        const r = await fetch('/api/auth/turnstile', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token }) });
+        if (r.ok) { location.href = '/api/auth/github'; return; }
+        const data = await r.json().catch(() => ({}));
+        say(data.error || '人机验证未通过，请重试。', true);
+      } catch { say('网络错误，请重试。', true); }
+      token = '';
+      (window as any).turnstile?.reset(tsBox);
+    });
+  }
 
   if (document.getElementById('postForm')) {
     marked.use(markedKatex({ throwOnError: false, nonStandard: true }));
@@ -755,4 +805,7 @@ Astro.response.status = 200;
   .cms-login { max-width: 30rem; margin: 18vh auto 0; text-align: left; display: grid; gap: 0.9rem; }
   .cms-kicker { font-size: 0.75rem; letter-spacing: 0.15em; color: var(--fg-muted); }
   .cms-login h1 { font-size: 2rem; margin: 0; }
+  .cms-ts { min-height: 65px; }
+  .cms-login-msg { margin: 0; font-size: 0.9rem; color: var(--fg-muted); }
+  .cms-login-msg.error { color: #dc2626; }
 </style>

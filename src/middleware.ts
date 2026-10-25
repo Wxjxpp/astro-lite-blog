@@ -1,4 +1,5 @@
 import { defineMiddleware } from 'astro:middleware';
+import { getAdminPath } from '@lib/admin-auth';
 
 /* Public pages are cacheable at the edge for a short time (stale-while-revalidate
    hides regeneration). Anything personal, admin, auth or API is never cached. */
@@ -14,7 +15,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const response = await next();
 
   if (context.request.method !== 'GET' || response.status !== 200) return response;
-  if (NEVER_CACHE.some(re => re.test(path))) return response;
+  if (NEVER_CACHE.some(re => re.test(path)) || path.replace(/^\/+|\/+$/g, '') === getAdminPath()) return response;
   if (response.headers.has('set-cookie') || response.headers.has('cache-control')) return response;
   if ((context.request.headers.get('cookie') || '').includes(ADMIN_COOKIE)) {
     response.headers.set('cache-control', 'private, no-store'); // logged-in admin always sees fresh content
