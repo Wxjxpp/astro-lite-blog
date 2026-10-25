@@ -152,7 +152,79 @@ const ogImage = image || new URL('/og-image.png', SITE_CONFIG.url).toString();
       document.getElementById('backToTop')?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
     };
 
+
+    /* External links in articles go through the /go interstitial in a new tab. */
+    const initExternalLinks = () => {
+      const bare = (h: string) => h.replace(/^www\./, '');
+      document.querySelectorAll<HTMLAnchorElement>('.markdown-content a[href]').forEach(a => {
+        if (a.dataset.external) return;
+        let u: URL;
+        try { u = new URL(a.getAttribute('href') || '', location.href); } catch { return; }
+        if (!/^https?:$/.test(u.protocol) || bare(u.hostname) === bare(location.hostname)) return;
+        a.dataset.external = u.href;
+        a.href = '/go?url=' + encodeURIComponent(u.href);
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer nofollow';
+      });
+    };
+
+    /* Two (or more) images with nothing between them are joined into one row, two per row. */
+    const groupImages = () => {
+      const imageOnly = (p: Element): Element[] | null => {
+        if (p.tagName !== 'P') return null;
+        const imgs = Array.from(p.querySelectorAll('img'));
+        if (!imgs.length) return null;
+        const probe = p.cloneNode(true) as HTMLElement;
+        probe.querySelectorAll('img, br').forEach(n => n.remove());
+        if (probe.textContent?.trim()) return null;
+        if (!Array.from(probe.children).every(c => c.tagName === 'A')) return null;
+        // keep a wrapping link together with its image
+        return imgs.map(img => (img.parentElement && img.parentElement !== p && img.parentElement.tagName === 'A' ? img.parentElement : img));
+      };
+      document.querySelectorAll<HTMLElement>('.markdown-content').forEach(root => {
+        const kids = Array.from(root.children);
+        let i = 0;
+        while (i < kids.length) {
+          const first = imageOnly(kids[i]);
+          if (!first) { i++; continue; }
+          const paras: Element[] = [];
+          const items: Element[] = [];
+          let j = i;
+          for (let it = imageOnly(kids[j]); it; it = j < kids.length ? imageOnly(kids[j]) : null) {
+            paras.push(kids[j]); items.push(...it); j++;
+          }
+          if (items.length >= 2) {
+            const anchor = paras[0];
+            const frag = document.createDocumentFragment();
+            for (let k = 0; k < items.length; k += 2) {
+              const pair = items.slice(k, k + 2);
+              if (pair.length === 2) {
+                const row = document.createElement('div');
+                row.className = 'img-row';
+                pair.forEach(el => {
+                  const img = (el.tagName === 'IMG' ? el : el.querySelector('img')) as HTMLImageElement;
+                  const fit = () => { if (img.naturalWidth && img.naturalHeight) el.setAttribute('style', `flex:${(img.naturalWidth / img.naturalHeight).toFixed(3)} 1 0`); };
+                  img.complete ? fit() : img.addEventListener('load', fit, { once: true });
+                  row.appendChild(el);
+                });
+                frag.appendChild(row);
+              } else {
+                const p = document.createElement('p');
+                p.appendChild(pair[0]);
+                frag.appendChild(p);
+              }
+            }
+            anchor.before(frag);
+            paras.forEach(p => p.remove());
+          }
+          i = j;
+        }
+      });
+    };
+
     const initImages = () => {
+      groupImages();
+      initExternalLinks();
       const imgs = document.querySelectorAll('img[loading="lazy"]');
       if ('IntersectionObserver' in window) {
         const o = new IntersectionObserver(entries => {

@@ -107,6 +107,7 @@ Astro.response.status = 200;
     const fields = ['title', 'slug', 'description', 'pubDate', 'author', 'cover', 'category', 'tags', 'content', 'draft', 'pinned'];
     const labels = { title: '标题', slug: 'Slug', description: '摘要', pubDate: '发布日期', category: '分类', content: '正文' };
     const UPLOAD_LIMIT = 4 * 1024 * 1024;
+    const DEFAULT_AUTHOR = 'Wxjxpp'; // pre-filled for new posts; editable
     const desktop = window.matchMedia('(min-width: 1024px)');
     const content = $('content');
     let current = null;
@@ -163,7 +164,7 @@ Astro.response.status = 200;
         if (k === 'tags') el.value = (post.tags || []).join(', ');
         else if (k === 'draft' || k === 'pinned') el.checked = Boolean(post[k]);
         else if (k === 'pubDate') el.value = post.pubDate ? new Date(post.pubDate).toISOString().slice(0, 10) : today();
-        else el.value = post[k] || '';
+        else el.value = post[k] || (k === 'author' ? DEFAULT_AUTHOR : '');
       });
       $('originalSlug').value = current || '';
       $('deleteButton').hidden = !current;

@@ -1,0 +1,65 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+---
+<BaseLayout title="即将离开本站" description="外部链接跳转提示" noindex={true} transitions={false}>
+  <main class="go-page">
+    <section class="go-card" id="goCard">
+      <p class="go-kicker">EXTERNAL LINK</p>
+      <h1>即将离开本站</h1>
+      <p class="go-note">此链接指向外部网站，我们无法保证其内容与链接的安全性，请自行判断后再继续访问。</p>
+      <div class="go-url" id="goUrl" aria-live="polite">正在解析链接…</div>
+      <div class="go-actions">
+        <a class="go-btn primary" id="goContinue" rel="noopener noreferrer nofollow" hidden>继续访问</a>
+        <button type="button" class="go-btn" id="goCancel">取消</button>
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<script>
+  const card = document.getElementById('goCard');
+  if (card) {
+    const urlBox = document.getElementById('goUrl')!;
+    const go = document.getElementById('goContinue') as HTMLAnchorElement;
+    const raw = new URLSearchParams(location.search).get('url') || '';
+    let target: URL | null = null;
+    try {
+      const u = new URL(raw);
+      if (u.protocol === 'http:' || u.protocol === 'https:') target = u;
+    } catch { /* invalid */ }
+
+    if (target) {
+      // show the host prominently, the full address below it
+      urlBox.innerHTML = '';
+      const host = document.createElement('strong');
+      host.textContent = target.hostname;
+      const full = document.createElement('span');
+      full.textContent = target.href;
+      urlBox.append(host, full);
+      go.href = target.href; // same tab: this page is the new tab opened from the article
+      go.hidden = false;
+    } else {
+      urlBox.textContent = '链接无效，或不是 http/https 地址，已拒绝跳转。';
+      urlBox.classList.add('bad');
+    }
+    document.getElementById('goCancel')!.addEventListener('click', () => {
+      window.close();
+      setTimeout(() => { location.href = '/'; }, 150); // window.close() is ignored if the tab wasn't script-opened
+    });
+  }
+</script>
+
+<style is:global>
+  .go-page { min-height: 60vh; display: grid; place-items: center; padding: 3rem 1rem; }
+  .go-card { width: min(100%, 34rem); display: grid; gap: 1rem; padding: 1.6rem; border: 1px solid var(--border-strong, var(--border)); border-radius: 1rem; background: color-mix(in srgb, var(--bg) 94%, var(--fg) 3%); }
+  .go-kicker { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.15em; color: var(--fg-muted); margin: 0; }
+  .go-card h1 { margin: 0; font-size: 1.6rem; }
+  .go-note { margin: 0; color: var(--fg-muted); line-height: 1.7; }
+  .go-url { display: grid; gap: 0.3rem; padding: 0.8rem 0.9rem; border: 1px dashed var(--border-strong, var(--border)); border-radius: 0.7rem; word-break: break-all; font-size: 0.85rem; color: var(--fg-muted); }
+  .go-url strong { font-size: 1.05rem; color: var(--fg); }
+  .go-url.bad { color: #dc2626; }
+  .go-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+  .go-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 2.6rem; padding: 0 1.3rem; font: inherit; color: inherit; background: transparent; border: 1px solid var(--border-strong, var(--border)); border-radius: 0.7rem; cursor: pointer; text-decoration: none; }
+  .go-btn.primary { background: var(--fg); color: var(--bg); border-color: var(--fg); font-weight: 600; }
+  .go-btn[hidden] { display: none; }
+</style>
