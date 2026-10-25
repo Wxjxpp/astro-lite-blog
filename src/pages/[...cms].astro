@@ -328,108 +328,170 @@ Astro.response.status = 200;
       replaceRange(ls, le, out, out.length, out.length);
     };
 
-    /* ------------------------------------------------ tool + template definitions */
-    const callout = (icon, name, bg, bar, ink, text) =>
-      `<div style="background:${bg};border-left:4px solid ${bar};color:#1f2937;padding:12px 16px;border-radius:8px;margin:16px 0;">\n<strong style="color:${ink};">${icon} ${name}</strong>\n<div>${text}</div>\n</div>`;
+    /* ------------------------------------------------ icons
+       Paths are GitHub Octicons (MIT, https://github.com/primer/octicons); sigma / kbd are drawn to match. */
+    const ICONS: Record<string, string> = {
+      bold: 'M4 2h4.5a3.501 3.501 0 0 1 2.852 5.53A3.499 3.499 0 0 1 9.5 14H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Zm1 7v3h4.5a1.5 1.5 0 0 0 0-3Zm3.5-2a1.5 1.5 0 0 0 0-3H5v3Z',
+      italic: 'M6 2.75A.75.75 0 0 1 6.75 2h6.5a.75.75 0 0 1 0 1.5h-2.505l-3.858 9H9.25a.75.75 0 0 1 0 1.5h-6.5a.75.75 0 0 1 0-1.5h2.505l3.858-9H6.75A.75.75 0 0 1 6 2.75Z',
+      strike: 'M11.055 8.5c.524.536.815 1.257.811 2.007a3.133 3.133 0 0 1-1.12 2.408C9.948 13.597 8.748 14 7.096 14c-1.706 0-3.104-.607-3.902-1.377a.751.751 0 0 1 1.042-1.079c.48.463 1.487.956 2.86.956 1.422 0 2.232-.346 2.676-.726.435-.372.594-.839.594-1.267 0-.472-.208-.857-.647-1.197-.448-.346-1.116-.623-1.951-.81H1.75a.75.75 0 0 1 0-1.5h12.5a.75.75 0 0 1 0 1.5ZM7.581 3.25c-2.036 0-2.778 1.082-2.778 1.786 0 .055.002.107.006.157a.75.75 0 0 1-1.496.114 3.506 3.506 0 0 1-.01-.271c0-1.832 1.75-3.286 4.278-3.286 1.418 0 2.721.58 3.514 1.093a.75.75 0 1 1-.814 1.26c-.64-.414-1.662-.853-2.7-.853Z',
+      heading: 'M3.75 2a.75.75 0 0 1 .75.75V7h7V2.75a.75.75 0 0 1 1.5 0v10.5a.75.75 0 0 1-1.5 0V8.5h-7v4.75a.75.75 0 0 1-1.5 0V2.75A.75.75 0 0 1 3.75 2Z',
+      link: 'm7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z',
+      quote: 'M1.75 2.5h10.5a.75.75 0 0 1 0 1.5H1.75a.75.75 0 0 1 0-1.5Zm4 5h8.5a.75.75 0 0 1 0 1.5h-8.5a.75.75 0 0 1 0-1.5Zm0 5h8.5a.75.75 0 0 1 0 1.5h-8.5a.75.75 0 0 1 0-1.5ZM2.5 7.75v6a.75.75 0 0 1-1.5 0v-6a.75.75 0 0 1 1.5 0Z',
+      code: 'm11.28 3.22 4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734L13.94 8l-3.72-3.72a.749.749 0 0 1 .326-1.275.749.749 0 0 1 .734.215Zm-6.56 0a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042L2.06 8l3.72 3.72a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L.47 8.53a.75.75 0 0 1 0-1.06Z',
+      image: 'M16 13.25A1.75 1.75 0 0 1 14.25 15H1.75A1.75 1.75 0 0 1 0 13.25V2.75C0 1.784.784 1 1.75 1h12.5c.966 0 1.75.784 1.75 1.75ZM1.75 2.5a.25.25 0 0 0-.25.25v10.5c0 .138.112.25.25.25h.94l.03-.03 6.077-6.078a1.75 1.75 0 0 1 2.412-.06L14.5 10.31V2.75a.25.25 0 0 0-.25-.25Zm12.5 11a.25.25 0 0 0 .25-.25v-.917l-4.298-3.889a.25.25 0 0 0-.344.009L4.81 13.5ZM7 6a2 2 0 1 1-3.999.001A2 2 0 0 1 7 6ZM5.5 6a.5.5 0 1 0-1 0 .5.5 0 0 0 1 0Z',
+      ul: 'M5.75 2.5h8.5a.75.75 0 0 1 0 1.5h-8.5a.75.75 0 0 1 0-1.5Zm0 5h8.5a.75.75 0 0 1 0 1.5h-8.5a.75.75 0 0 1 0-1.5Zm0 5h8.5a.75.75 0 0 1 0 1.5h-8.5a.75.75 0 0 1 0-1.5ZM2 14a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm1-6a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM2 4a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z',
+      ol: 'M5 3.25a.75.75 0 0 1 .75-.75h8.5a.75.75 0 0 1 0 1.5h-8.5A.75.75 0 0 1 5 3.25Zm0 5a.75.75 0 0 1 .75-.75h8.5a.75.75 0 0 1 0 1.5h-8.5A.75.75 0 0 1 5 8.25Zm0 5a.75.75 0 0 1 .75-.75h8.5a.75.75 0 0 1 0 1.5h-8.5a.75.75 0 0 1-.75-.75ZM.924 10.32a.5.5 0 0 1-.851-.525l.001-.001.001-.002.002-.004.007-.011c.097-.144.215-.273.348-.384.228-.19.588-.392 1.068-.392.468 0 .858.181 1.126.484.259.294.377.673.377 1.038 0 .987-.686 1.495-1.156 1.845l-.047.035c-.303.225-.522.4-.654.597h1.357a.5.5 0 0 1 0 1H.5a.5.5 0 0 1-.5-.5c0-1.005.692-1.52 1.167-1.875l.035-.025c.531-.396.8-.625.8-1.078a.57.57 0 0 0-.128-.376C1.806 10.068 1.695 10 1.5 10a.658.658 0 0 0-.429.163.835.835 0 0 0-.144.153ZM2.003 2.5V6h.503a.5.5 0 0 1 0 1H.5a.5.5 0 0 1 0-1h.503V3.308l-.28.14a.5.5 0 0 1-.446-.895l1.003-.5a.5.5 0 0 1 .723.447Z',
+      task: 'M2 2h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Zm4.655 8.595a.75.75 0 0 1 0 1.06L4.03 14.28a.75.75 0 0 1-1.06 0l-1.5-1.5a.749.749 0 0 1 .326-1.275.749.749 0 0 1 .734.215l.97.97 2.095-2.095a.75.75 0 0 1 1.06 0ZM9.75 2.5h5.5a.75.75 0 0 1 0 1.5h-5.5a.75.75 0 0 1 0-1.5Zm0 5h5.5a.75.75 0 0 1 0 1.5h-5.5a.75.75 0 0 1 0-1.5Zm0 5h5.5a.75.75 0 0 1 0 1.5h-5.5a.75.75 0 0 1 0-1.5Zm-7.25-9v3h3v-3Z',
+      hr: 'M0 7.75A.75.75 0 0 1 .75 7h14.5a.75.75 0 0 1 0 1.5H.75A.75.75 0 0 1 0 7.75Z',
+      table: 'M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v12.5A1.75 1.75 0 0 1 14.25 16H1.75A1.75 1.75 0 0 1 0 14.25ZM6.5 6.5v8h7.75a.25.25 0 0 0 .25-.25V6.5Zm8-1.5V1.75a.25.25 0 0 0-.25-.25H6.5V5Zm-13 1.5v7.75c0 .138.112.25.25.25H5v-8ZM5 5V1.5H1.75a.25.25 0 0 0-.25.25V5Z',
+      codeblock: 'M4 1.75C4 .784 4.784 0 5.75 0h5.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v8.586A1.75 1.75 0 0 1 14.25 15h-9a.75.75 0 0 1 0-1.5h9a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 10 4.25V1.5H5.75a.25.25 0 0 0-.25.25v2.5a.75.75 0 0 1-1.5 0Zm1.72 4.97a.75.75 0 0 1 1.06 0l2 2a.75.75 0 0 1 0 1.06l-2 2a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734l1.47-1.47-1.47-1.47a.75.75 0 0 1 0-1.06ZM3.28 7.78 1.81 9.25l1.47 1.47a.751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018l-2-2a.75.75 0 0 1 0-1.06l2-2a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042Zm8.22-6.218V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z',
+      doc: 'M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z',
+      steps: 'M2.5 1.75v11.5c0 .138.112.25.25.25h3.17a.75.75 0 0 1 0 1.5H2.75A1.75 1.75 0 0 1 1 13.25V1.75C1 .784 1.784 0 2.75 0h8.5C12.216 0 13 .784 13 1.75v7.736a.75.75 0 0 1-1.5 0V1.75a.25.25 0 0 0-.25-.25h-8.5a.25.25 0 0 0-.25.25Zm13.274 9.537v-.001l-4.557 4.45a.75.75 0 0 1-1.055-.008l-1.943-1.95a.75.75 0 0 1 1.062-1.058l1.419 1.425 4.026-3.932a.75.75 0 1 1 1.048 1.074ZM4.75 4h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM4 7.75A.75.75 0 0 1 4.75 7h2a.75.75 0 0 1 0 1.5h-2A.75.75 0 0 1 4 7.75Z',
+      tip: 'M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z',
+      ok: 'M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm1.5 0a6.5 6.5 0 1 0 13 0 6.5 6.5 0 0 0-13 0Zm10.28-1.72-4.5 4.5a.75.75 0 0 1-1.06 0l-2-2a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l1.47 1.47 3.97-3.97a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042Z',
+      warn: 'M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z',
+      err: 'M2.344 2.343h-.001a8 8 0 0 1 11.314 11.314A8.002 8.002 0 0 1 .234 10.089a8 8 0 0 1 2.11-7.746Zm1.06 10.253a6.5 6.5 0 1 0 9.108-9.275 6.5 6.5 0 0 0-9.108 9.275ZM6.03 4.97 8 6.94l1.97-1.97a.749.749 0 0 1 1.275.326.749.749 0 0 1-.215.734L9.06 8l1.97 1.97a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L8 9.06l-1.97 1.97a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734L6.94 8 4.97 6.03a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018Z',
+      fold: 'm8.177.677 2.896 2.896a.25.25 0 0 1-.177.427H8.75v1.25a.75.75 0 0 1-1.5 0V4H5.104a.25.25 0 0 1-.177-.427L7.823.677a.25.25 0 0 1 .354 0ZM7.25 10.75a.75.75 0 0 1 1.5 0V12h2.146a.25.25 0 0 1 .177.427l-2.896 2.896a.25.25 0 0 1-.354 0l-2.896-2.896A.25.25 0 0 1 5.104 12H7.25v-1.25Zm-5-2a.75.75 0 0 0 0-1.5h-.5a.75.75 0 0 0 0 1.5h.5ZM6 8a.75.75 0 0 1-.75.75h-.5a.75.75 0 0 1 0-1.5h.5A.75.75 0 0 1 6 8Zm2.25.75a.75.75 0 0 0 0-1.5h-.5a.75.75 0 0 0 0 1.5h.5ZM12 8a.75.75 0 0 1-.75.75h-.5a.75.75 0 0 1 0-1.5h.5A.75.75 0 0 1 12 8Zm2.25.75a.75.75 0 0 0 0-1.5h-.5a.75.75 0 0 0 0 1.5h.5Z',
+      compare: 'M2.75 0h2.5C6.216 0 7 .784 7 1.75v12.5A1.75 1.75 0 0 1 5.25 16h-2.5A1.75 1.75 0 0 1 1 14.25V1.75C1 .784 1.784 0 2.75 0Zm8 0h2.5C14.216 0 15 .784 15 1.75v12.5A1.75 1.75 0 0 1 13.25 16h-2.5A1.75 1.75 0 0 1 9 14.25V1.75C9 .784 9.784 0 10.75 0ZM2.5 1.75v12.5c0 .138.112.25.25.25h2.5a.25.25 0 0 0 .25-.25V1.75a.25.25 0 0 0-.25-.25h-2.5a.25.25 0 0 0-.25.25Zm8 0v12.5c0 .138.112.25.25.25h2.5a.25.25 0 0 0 .25-.25V1.75a.25.25 0 0 0-.25-.25h-2.5a.25.25 0 0 0-.25.25Z',
+      undo: 'M1.22 6.28a.749.749 0 0 1 0-1.06l3.5-3.5a.749.749 0 1 1 1.06 1.06L3.561 5h7.188l.001.007L10.749 5c.058 0 .116.007.171.019A4.501 4.501 0 0 1 10.5 14H8.796a.75.75 0 0 1 0-1.5H10.5a3 3 0 1 0 0-6H3.561L5.78 8.72a.749.749 0 1 1-1.06 1.06l-3.5-3.5Z',
+      redo: 'M14.78 6.28a.749.749 0 0 0 0-1.06l-3.5-3.5a.749.749 0 1 0-1.06 1.06L12.439 5H5.251l-.001.007L5.251 5a.8.8 0 0 0-.171.019A4.501 4.501 0 0 0 5.5 14h1.704a.75.75 0 0 0 0-1.5H5.5a3 3 0 1 1 0-6h6.939L10.22 8.72a.749.749 0 1 0 1.06 1.06l3.5-3.5Z',
+      tpl: 'M13.25 8a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5h1.75v-2h-.75a.75.75 0 0 1 0-1.5h.75v-.25a.75.75 0 0 1 .75-.75ZM5 12.25a.25.25 0 0 1 .25-.25h3.5a.25.25 0 0 1 .25.25v3.25a.25.25 0 0 1-.4.2l-1.45-1.087a.249.249 0 0 0-.3 0L5.4 15.7a.25.25 0 0 1-.4-.2ZM2.75 8a.75.75 0 0 1 .75.75v.268c.083-.012.166-.018.25-.018h.5a.75.75 0 0 1 0 1.5h-.5a.25.25 0 0 0-.25.25v.75c0 .28.114.532.3.714a.75.75 0 1 1-1.05 1.072A2.495 2.495 0 0 1 2 11.5V8.75A.75.75 0 0 1 2.75 8ZM11 .75a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0V1.5h-.75A.75.75 0 0 1 11 .75Zm-5 0A.75.75 0 0 1 6.75 0h2.5a.75.75 0 0 1 0 1.5h-2.5A.75.75 0 0 1 6 .75Zm0 9A.75.75 0 0 1 6.75 9h2.5a.75.75 0 0 1 0 1.5h-2.5A.75.75 0 0 1 6 9.75ZM4.992.662a.75.75 0 0 1-.636.848c-.436.063-.783.41-.846.846a.751.751 0 0 1-1.485-.212A2.501 2.501 0 0 1 4.144.025a.75.75 0 0 1 .848.637ZM2.75 4a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 2.75 4Zm10.5 0a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5a.75.75 0 0 1 .75-.75Z',
+      foot: 'M2.75 3.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h4.5a.25.25 0 0 0 .25-.25v-2.5a.75.75 0 0 1 1.5 0v2.5A1.75 1.75 0 0 1 13.25 13H9.06l-2.573 2.573A1.458 1.458 0 0 1 4 14.543V13H2.75A1.75 1.75 0 0 1 1 11.25v-7.5C1 2.784 1.784 2 2.75 2h5.5a.75.75 0 0 1 0 1.5ZM16 1.25v4.146a.25.25 0 0 1-.427.177L14.03 4.03l-3.75 3.75a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734l3.75-3.75-1.543-1.543A.25.25 0 0 1 11.604 1h4.146a.25.25 0 0 1 .25.25Z',
+      type: 'M6.71 10H2.332l-.874 2.498a.75.75 0 0 1-1.415-.496l3.39-9.688a1.217 1.217 0 0 1 2.302.018l3.227 9.681a.75.75 0 0 1-1.423.474Zm3.13-4.358C10.53 4.374 11.87 4 13 4c1.5 0 3 .939 3 2.601v5.649a.75.75 0 0 1-1.448.275C13.995 12.82 13.3 13 12.5 13c-.77 0-1.514-.231-2.078-.709-.577-.488-.922-1.199-.922-2.041 0-.694.265-1.411.887-1.944C11 7.78 11.88 7.5 13 7.5h1.5v-.899c0-.54-.5-1.101-1.5-1.101-.869 0-1.528.282-1.84.858a.75.75 0 1 1-1.32-.716ZM6.21 8.5 4.574 3.594 2.857 8.5Zm8.29.5H13c-.881 0-1.375.22-1.637.444-.253.217-.363.5-.363.806 0 .408.155.697.39.896.249.21.63.354 1.11.354.732 0 1.26-.209 1.588-.449.35-.257.412-.495.412-.551Z',
+      sigma: 'M3 2h10v2H6.4L9.4 8l-3 4H13v2H3v-1.5L6.6 8 3 3.5V2z',
+      kbd: 'M1.5 3h13A1.5 1.5 0 0 1 16 4.5v7a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 11.5v-7A1.5 1.5 0 0 1 1.5 3zm0 1.5v7h13v-7zM3 6h1.5v1.5H3zm3 0h1.5v1.5H6zm3 0h1.5v1.5H9zm3 0h1v1.5h-1zM4 9h8v1.5H4z',
+    };
+    const svg = (name: string, size = 18) =>
+      `<svg class="oi" viewBox="0 0 16 16" width="${size}" height="${size}" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="${ICONS[name]}"/></svg>`;
 
+    /* ------------------------------------------------ tool + template definitions */
+    // Plain-text headings: the coloured boxes carry no emoji so they look the same everywhere.
+    const callout = (name: string, bg: string, bar: string, ink: string, text: string) =>
+      `<div style="background:${bg};border-left:4px solid ${bar};color:#1f2937;padding:12px 16px;border-radius:8px;margin:16px 0;">\n<strong style="color:${ink};">${name}</strong>\n<div>${text}</div>\n</div>`;
+
+    const cycleHeading = () => {
+      const v = content.value, s = content.selectionStart;
+      const ls = v.lastIndexOf('\n', s - 1) + 1;
+      const le = v.indexOf('\n', s) === -1 ? v.length : v.indexOf('\n', s);
+      const line = v.slice(ls, le);
+      const m = line.match(/^(#{1,6})\s+/);
+      const level = m ? m[1].length : 1; // none -> ##, ## -> ###, … , ###### -> plain text
+      const text = m ? line.slice(m[0].length) : (line || '标题');
+      const next = !m ? '## ' : level >= 6 ? '' : '#'.repeat(level + 1) + ' ';
+      const out = next + text;
+      replaceRange(ls, le, out, out.length, out.length);
+    };
+    const codeBlock = () => insertBlock('```js\n// 在这里写代码\n```', '// 在这里写代码');
+
+    // Order follows GitHub's mobile editor: B / I / link / image / lists / task / H / S / code / undo
     const TOOLS = [
-      { g: '格式', items: [
-        { k: 'b', l: 'B', t: '加粗 (Ctrl+B)', run: () => wrap('**', '**', '加粗文字') },
-        { k: 'i', l: 'I', t: '斜体 (Ctrl+I)', run: () => wrap('*', '*', '斜体文字') },
-        { k: 's', l: 'S̶', t: '删除线', run: () => wrap('~~', '~~', '删除线') },
-        { k: 'h2', l: 'H2', t: '二级标题', run: () => prefixLines('## ', '标题') },
-        { k: 'h3', l: 'H3', t: '三级标题', run: () => prefixLines('### ', '小标题') },
-        { k: 'link', l: '🔗', t: '链接', run: () => wrap('[', '](https://)', '链接文字') },
-        { k: 'quote', l: '❝', t: '引用', run: () => prefixLines('> ', '引用内容') },
-        { k: 'code', l: '`·`', t: '行内代码', run: () => wrap('`', '`', 'code') },
-      ] },
-      { g: '插入', items: [
-        { k: 'img', l: '🖼 图片', t: '上传并插入图片', run: () => $('imageUpload').click() },
-        { k: 'ul', l: '• 列表', t: '无序列表', run: () => prefixLines('- ', '列表项') },
-        { k: 'ol', l: '1. 列表', t: '有序列表', run: () => prefixLines('1. ', '列表项') },
-        { k: 'task', l: '☑ 任务', t: '任务列表', run: () => insertBlock('- [ ] 待办一\n- [ ] 待办二\n- [x] 已完成', '待办一') },
-        { k: 'hr', l: '— 分隔线', t: '水平线', run: () => insertBlock('---') },
-        { k: 'fn', l: '脚注', t: '脚注', run: () => { const n = (content.value.match(/\[\^\d+\]:/g) || []).length + 1; wrap(`[^${n}]`, '', ''); const end = content.value.length; const sep = content.value.endsWith('\n') ? '\n' : '\n\n'; content.setSelectionRange(end, end); const pre = `${sep}[^${n}]: `; replaceRange(end, end, pre + '脚注内容', pre.length, pre.length + 4); } },
-      ] },
+      { k: 'bold', t: '加粗 (Ctrl+B)', run: () => wrap('**', '**', '加粗文字') },
+      { k: 'italic', t: '斜体 (Ctrl+I)', run: () => wrap('*', '*', '斜体文字') },
+      { k: 'link', t: '链接', run: () => wrap('[', '](https://)', '链接文字') },
+      { k: 'image', t: '上传并插入图片', run: () => $('imageUpload').click(), noDirty: true },
+      { k: 'ul', t: '无序列表', run: () => prefixLines('- ', '列表项') },
+      { k: 'ol', t: '有序列表', run: () => prefixLines('1. ', '列表项') },
+      { k: 'task', t: '任务列表', run: () => prefixLines('- [ ] ', '待办') },
+      { k: 'heading', t: '标题（再点一次升一级）', run: cycleHeading },
+      { k: 'strike', t: '删除线', run: () => wrap('~~', '~~', '删除线') },
+      { k: 'quote', t: '引用', run: () => prefixLines('> ', '引用内容') },
+      { k: 'code', t: '行内代码', run: () => wrap('`', '`', 'code') },
+      { k: 'codeblock', t: '代码块', run: codeBlock },
+      { k: 'hr', t: '分隔线', run: () => insertBlock('---') },
+      { k: 'undo', t: '撤销', run: () => { content.focus(); document.execCommand('undo'); } },
+      { k: 'redo', t: '重做', run: () => { content.focus(); document.execCommand('redo'); } },
     ];
 
+    const footnote = () => {
+      const n = (content.value.match(/\[\^\d+\]:/g) || []).length + 1;
+      wrap(`[^${n}]`, '', '');
+      const end = content.value.length;
+      const sep = content.value.endsWith('\n') ? '\n' : '\n\n';
+      const pre = `${sep}[^${n}]: `;
+      replaceRange(end, end, pre + '脚注内容', pre.length, pre.length + 4);
+    };
     const TEMPLATES = [
-      { g: '模板', items: [
-        { l: '📄 文章骨架', run: () => insertBlock('## 引言\n\n用一两段话说明这篇文章要解决什么问题。\n\n## 正文\n\n### 第一部分\n\n内容……\n\n### 第二部分\n\n内容……\n\n## 总结\n\n- 要点一\n- 要点二\n- 要点三', '用一两段话说明这篇文章要解决什么问题。') },
-        { l: '🪜 教程步骤', run: () => insertBlock('## 准备工作\n\n- 环境要求：……\n\n## 步骤\n\n### 1. 第一步\n\n说明……\n\n```bash\nnpm install\n```\n\n### 2. 第二步\n\n说明……\n\n## 常见问题\n\n**Q：……？**\n\nA：……', '说明……') },
-        { l: '📊 表格', run: () => insertBlock('| 名称 | 说明 | 备注 |\n| --- | --- | --- |\n| 项目一 | 内容 | — |\n| 项目二 | 内容 | — |', '名称') },
-        { l: '⚖️ 对比表', run: () => insertBlock('| 对比项 | 方案 A | 方案 B |\n| --- | --- | --- |\n| 优点 | …… | …… |\n| 缺点 | …… | …… |\n| 适用场景 | …… | …… |', '方案 A') },
-        { l: '💻 代码块', run: () => insertBlock('```js\n// 在这里写代码\n```', '// 在这里写代码') },
-        { l: '💡 提示框', run: () => insertBlock(callout('💡', '提示', '#eff6ff', '#3b82f6', '#1d4ed8', '这是一条提示信息。'), '这是一条提示信息。') },
-        { l: '✅ 成功框', run: () => insertBlock(callout('✅', '成功', '#f0fdf4', '#22c55e', '#15803d', '操作已成功完成。'), '操作已成功完成。') },
-        { l: '⚠️ 警告框', run: () => insertBlock(callout('⚠️', '警告', '#fffbeb', '#f59e0b', '#b45309', '请注意以下事项。'), '请注意以下事项。') },
-        { l: '❌ 错误框', run: () => insertBlock(callout('❌', '错误', '#fef2f2', '#ef4444', '#b91c1c', '发生了一个错误。'), '发生了一个错误。') },
-        { l: '🔽 折叠块', run: () => insertBlock('<details>\n<summary>点击展开</summary>\n\n折叠的内容……\n\n</details>', '折叠的内容……') },
-        { l: '∑ 行内公式', run: () => wrap('$', '$', 'E = mc^2') },
-        { l: '∑ 块级公式', run: () => insertBlock('$$\nx = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}\n$$', 'x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}') },
-        { l: '⌨️ 按键', run: () => insertBlock('<kbd>Ctrl</kbd> + <kbd>S</kbd>', 'Ctrl') },
-      ] },
+      { k: 'doc', l: '文章骨架', run: () => insertBlock('## 引言\n\n用一两段话说明这篇文章要解决什么问题。\n\n## 正文\n\n### 第一部分\n\n内容……\n\n### 第二部分\n\n内容……\n\n## 总结\n\n- 要点一\n- 要点二\n- 要点三', '用一两段话说明这篇文章要解决什么问题。') },
+      { k: 'steps', l: '教程步骤', run: () => insertBlock('## 准备工作\n\n- 环境要求：……\n\n## 步骤\n\n### 1. 第一步\n\n说明……\n\n```bash\nnpm install\n```\n\n### 2. 第二步\n\n说明……\n\n## 常见问题\n\n**Q：……？**\n\nA：……', '说明……') },
+      { k: 'table', l: '表格', run: () => insertBlock('| 名称 | 说明 | 备注 |\n| --- | --- | --- |\n| 项目一 | 内容 | — |\n| 项目二 | 内容 | — |', '名称') },
+      { k: 'compare', l: '对比表', run: () => insertBlock('| 对比项 | 方案 A | 方案 B |\n| --- | --- | --- |\n| 优点 | …… | …… |\n| 缺点 | …… | …… |\n| 适用场景 | …… | …… |', '方案 A') },
+      { k: 'tip', l: '提示框', run: () => insertBlock(callout('提示', '#eff6ff', '#3b82f6', '#1d4ed8', '这是一条提示信息。'), '这是一条提示信息。') },
+      { k: 'ok', l: '成功框', run: () => insertBlock(callout('成功', '#f0fdf4', '#22c55e', '#15803d', '操作已成功完成。'), '操作已成功完成。') },
+      { k: 'warn', l: '警告框', run: () => insertBlock(callout('警告', '#fffbeb', '#f59e0b', '#b45309', '请注意以下事项。'), '请注意以下事项。') },
+      { k: 'err', l: '错误框', run: () => insertBlock(callout('错误', '#fef2f2', '#ef4444', '#b91c1c', '发生了一个错误。'), '发生了一个错误。') },
+      { k: 'fold', l: '折叠块', run: () => insertBlock('<details>\n<summary>点击展开</summary>\n\n折叠的内容……\n\n</details>', '折叠的内容……') },
+      { k: 'sigma', l: '行内公式', run: () => wrap('$', '$', 'E = mc^2') },
+      { k: 'sigma', l: '块级公式', run: () => insertBlock('$$\nx = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}\n$$', 'x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}') },
+      { k: 'foot', l: '脚注', run: footnote },
+      { k: 'kbd', l: '按键', run: () => insertBlock('<kbd>Ctrl</kbd> + <kbd>S</kbd>', 'Ctrl') },
     ];
 
     /* ------------------------------------------------ build the tool panel */
     const scroll = $('toolsScroll');
-    const btn = (item, cls = '') => {
+    const sheet = $('tplSheet');
+    const closeSheet = () => { sheet.hidden = true; tplChip.classList.remove('is-on'); };
+    const makeBtn = (item: any, cls = '') => {
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'cms-tool ' + cls;
-      b.textContent = item.l;
-      if (item.t) b.title = item.t;
-      b.addEventListener('click', () => { item.run(); setDirty(true); countWords(); closeSheet(); });
+      b.innerHTML = svg(item.k) + (item.l ? `<span>${item.l}</span>` : '');
+      if (item.t || item.l) { b.title = item.t || item.l; b.setAttribute('aria-label', item.t || item.l); }
+      b.addEventListener('click', () => { item.run(); if (!item.noDirty) setDirty(true); countWords(); closeSheet(); });
       return b;
     };
-    [...TOOLS, ...TEMPLATES].forEach(group => {
+    const section = (title: string, cls: string) => {
       const sec = document.createElement('section');
-      sec.className = 'cms-tool-group' + (group.g === '模板' ? ' is-templates' : '');
-      const h = document.createElement('h3');
-      h.textContent = group.g;
-      sec.appendChild(h);
-      const row = document.createElement('div');
-      row.className = 'cms-tool-row';
-      group.items.forEach(it => row.appendChild(btn(it, group.g === '模板' ? 'tpl' : '')));
-      sec.appendChild(row);
+      sec.className = 'cms-tool-group ' + cls;
+      sec.innerHTML = `<h3>${title}</h3><div class="cms-tool-row"></div>`;
       scroll.appendChild(sec);
-    });
-    // mobile only: one chip that opens the templates sheet above the keyboard bar
-    const sheet = $('tplSheet');
+      return sec.querySelector('.cms-tool-row') as HTMLElement;
+    };
+    const fmtRow = section('格式', 'is-format');
+    TOOLS.forEach(t => fmtRow.appendChild(makeBtn(t)));
+    // desktop: templates listed in the side panel
+    const tplRow = section('模板', 'is-templates');
+    TEMPLATES.forEach(t => tplRow.appendChild(makeBtn(t, 'tpl')));
+    // mobile: a chip at the end of the bar opens the templates sheet above it
     const tplChip = document.createElement('button');
     tplChip.type = 'button';
     tplChip.className = 'cms-tool chip-tpl';
-    tplChip.textContent = '📑 模板';
-    const closeSheet = () => { sheet.hidden = true; tplChip.classList.remove('is-on'); };
+    tplChip.innerHTML = svg('tpl') + '<span>模板</span>';
     tplChip.addEventListener('click', () => {
       if (sheet.hidden) {
         sheet.innerHTML = '';
-        TEMPLATES[0].items.forEach(it => sheet.appendChild(btn(it, 'tpl')));
+        TEMPLATES.forEach(t => sheet.appendChild(makeBtn(t, 'tpl')));
         sheet.hidden = false; tplChip.classList.add('is-on');
       } else closeSheet();
     });
-    scroll.querySelector('.cms-tool-group')!.querySelector('.cms-tool-row')!.prepend(tplChip);
+    fmtRow.appendChild(tplChip);
 
     // keep the textarea focused (and the keyboard open) while tapping tools
     $('mdTools').addEventListener('pointerdown', e => { if ((e.target as HTMLElement).closest('button')) e.preventDefault(); });
 
-    /* ------------------------------------------------ mobile: dock sits right above the keyboard */
+    /* ------------------------------------------------ mobile: bar floats above the keyboard and hides with it */
     const vv = window.visualViewport;
-    function setDock(on) {
-      document.documentElement.classList.toggle('cms-kb', on && !desktop.matches);
-      if (!on) closeSheet();
-      placeDock();
-    }
-    function placeDock() {
+    let dockWanted = false;                       // the textarea has focus (and we're editing, not previewing)
+    let baseH = vv ? vv.height : window.innerHeight; // viewport height with no keyboard
+    const typing = () => /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName || '');
+    function refreshDock() {
       const tools = $('mdTools');
-      if (desktop.matches || !vv) { tools.style.removeProperty('--kb'); return; }
-      const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-      tools.style.setProperty('--kb', kb + 'px');
+      const kbOpen = vv ? baseH - vv.height > 120 : true;
+      const show = !desktop.matches && dockWanted && kbOpen;
+      document.documentElement.classList.toggle('cms-kb', show);
+      if (!show) closeSheet();
+      if (show && vv) tools.style.setProperty('--kb', Math.max(0, window.innerHeight - vv.height - vv.offsetTop) + 'px');
+      else tools.style.removeProperty('--kb');
     }
+    function setDock(on: boolean) { dockWanted = on; refreshDock(); }
+    const onViewport = () => {
+      if (vv) baseH = typing() ? Math.max(baseH, vv.height) : vv.height; // only re-measure while no field is focused
+      refreshDock();
+    };
     content.addEventListener('focus', () => setDock(true));
     content.addEventListener('blur', () => setTimeout(() => { if (document.activeElement !== content) setDock(false); }, 120));
-    vv?.addEventListener('resize', placeDock);
-    vv?.addEventListener('scroll', placeDock);
+    vv?.addEventListener('resize', onViewport);
+    vv?.addEventListener('scroll', refreshDock);
+    window.addEventListener('orientationchange', () => setTimeout(onViewport, 300));
     desktop.addEventListener('change', () => { $('listBox').open = desktop.matches; setDock(false); });
 
     /* ------------------------------------------------ misc UX */
@@ -441,8 +503,8 @@ Astro.response.status = 200;
       if (!mod) return;
       const k = e.key.toLowerCase();
       if (k === 's') { e.preventDefault(); $('postForm').requestSubmit(); }
-      else if (k === 'b' && document.activeElement === content) { e.preventDefault(); TOOLS[0].items[0].run(); }
-      else if (k === 'i' && document.activeElement === content) { e.preventDefault(); TOOLS[0].items[1].run(); }
+      else if (k === 'b' && document.activeElement === content) { e.preventDefault(); TOOLS[0].run(); }
+      else if (k === 'i' && document.activeElement === content) { e.preventDefault(); TOOLS[1].run(); }
     });
 
     $('listBox').open = desktop.matches;
@@ -537,7 +599,10 @@ Astro.response.status = 200;
   .cms-tool { min-height: 2.25rem; min-width: 2.25rem; padding: 0 0.7rem; font: inherit; font-size: 0.88rem; color: inherit; background: var(--bg);
     border: 1px solid var(--border-strong, var(--border)); border-radius: 0.6rem; cursor: pointer; white-space: nowrap; }
   .cms-tool:hover { background: color-mix(in srgb, var(--fg) 8%, var(--bg)); }
-  .cms-tool.tpl { flex: 1 1 100%; text-align: left; }
+  .cms-tool { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; }
+  .cms-tool .oi { flex: none; display: block; }
+  .cms-tool.tpl { flex: 1 1 100%; justify-content: flex-start; text-align: left; }
+  .cms-tool.tpl .oi { opacity: 0.75; }
   .cms-tool.chip-tpl { display: none; }
   .cms-sheet { display: none; }
 
@@ -553,7 +618,9 @@ Astro.response.status = 200;
     .cms-tool-group h3, .cms-tool-group.is-templates { display: none; }
     .cms-tool-row { display: contents; }
     .cms-tool { flex: none; min-height: 2.6rem; min-width: 2.6rem; font-size: 0.95rem; }
-    .cms-tool.chip-tpl { display: inline-flex; align-items: center; background: var(--fg); color: var(--bg); border-color: var(--fg); }
+    .cms-tool.chip-tpl { display: inline-flex; background: var(--fg); color: var(--bg); border-color: var(--fg); }
+    .cms-tool.chip-tpl .oi { opacity: 1; }
+    .cms-tool-row .cms-tool:not(.chip-tpl):not(.tpl) { padding: 0 0.6rem; }
     .cms-tool.chip-tpl.is-on { opacity: 0.8; }
     .cms-sheet { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; max-height: 40vh; overflow-y: auto; padding: 0.6rem; border-bottom: 1px solid var(--border); background: var(--bg); }
     .cms-sheet[hidden] { display: none; }
