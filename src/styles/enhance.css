@@ -258,3 +258,7 @@ html.hw-night body { transition: background-color 1.2s ease; }
 .post-nav.post-nav-single { grid-template-columns: 1fr 1fr; }
 .post-nav .post-nav-card { grid-column: 1; text-align: left; align-items: flex-start; }
 .post-nav .post-nav-card.next { grid-column: 2; text-align: right; align-items: flex-end; border-left: 1px solid var(--border); padding-left: 1rem; }
+
+/* ---------------------------------------------------------- Footer: GitHub + RSS only, icon beside label */
+.footer-icon-link { display: inline-flex; align-items: center; gap: 0.5rem; }
+.footer-icon-link svg { flex: none; display: block; }
