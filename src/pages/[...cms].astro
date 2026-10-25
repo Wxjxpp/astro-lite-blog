@@ -8,100 +8,560 @@ const loggedIn = isAdminAuthenticated(Astro.request);
 Astro.response.status = 200;
 ---
 <BaseLayout title="博客管理" description="博客内容管理后台" transitions={false}>
-  <main class="container-narrow cms-page">
+  <main class="cms-page">
     {loggedIn ? (
       <>
-        <header class="cms-header"><div><p class="label">CONTENT STUDIO</p><h1>文章管理</h1><p class="cms-hint">先写正文，保存时系统会告诉你具体缺哪个字段。</p></div><a href="/api/auth/logout">退出登录</a></header>
-        <section class="cms-grid">
-          <aside class="cms-list"><button id="newPost" class="cms-button primary">＋ 新建文章</button><div id="postList">正在加载…</div></aside>
+        <header class="cms-bar">
+          <div class="cms-bar-title"><strong>文章管理</strong><span id="dirtyDot" class="cms-dot" hidden title="有未保存的修改"></span></div>
+          <div class="cms-bar-actions">
+            <button type="button" class="cms-btn" id="newPost">＋ 新建</button>
+            <button type="submit" form="postForm" class="cms-btn primary" id="saveButton">保存</button>
+            <a class="cms-btn ghost" href="/api/auth/logout">退出</a>
+          </div>
+        </header>
+        <p id="status" class="cms-status" role="status" aria-live="polite">准备新文章</p>
+
+        <div class="cms-layout">
+          <!-- 左：文章列表 -->
+          <details class="cms-list" id="listBox" open>
+            <summary><span>文章列表</span><span id="listCount" class="cms-count"></span></summary>
+            <input id="listFilter" class="cms-filter" type="search" placeholder="搜索标题或 slug…" autocomplete="off" />
+            <div id="postList" class="cms-posts">正在加载…</div>
+          </details>
+
+          <!-- 中：编辑器 -->
           <section class="cms-editor">
             <form id="postForm" novalidate>
               <input type="hidden" id="originalSlug" />
-              <label>标题 <span class="required-mark">必填</span><input id="title" required /></label>
-              <div class="cms-two"><label>Slug <span class="required-mark">必填，仅限英文、数字和连字符</span><input id="slug" required pattern="[a-z0-9\-]+" /></label><label>分类 <span class="required-mark">必填</span><input id="category" required /></label></div>
-              <label>摘要 <span class="required-mark">必填</span><textarea id="description" rows="2" required></textarea></label>
-              <div class="cms-two"><label>发布日期 <span class="required-mark">必填</span><input id="pubDate" type="date" required /></label><label>作者<input id="author" /></label></div>
-              <label>封面 URL<input id="cover" type="url" placeholder="https://…" /></label>
-              <label>标签（逗号分隔）<input id="tags" placeholder="Astro, 教程" /></label>
-              <label>正文 Markdown <span class="required-mark">必填</span><textarea id="content" rows="18" required placeholder="在这里写 Markdown 正文…"></textarea></label>
-              <div class="cms-upload"><div><strong>插入图片</strong><small>支持 JPG、PNG、WebP、AVIF；超过 4MB 自动压缩。SVG、GIF 不压缩，需 ≤4MB</small></div><input id="imageUpload" type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/avif,image/svg+xml" /><button class="cms-button" type="button" id="uploadButton">上传并插入正文</button></div>
-              <label class="cms-check"><input id="draft" type="checkbox" /> 保存为草稿</label>
-              <label class="cms-check"><input id="pinned" type="checkbox" /> 置顶文章（优先显示在列表前面）</label>
-              <div class="cms-actions"><button class="cms-button primary" type="submit" id="saveButton">保存文章</button><button class="cms-button" type="button" id="previewButton">预览</button><button class="cms-button danger" type="button" id="deleteButton">删除</button></div>
-              <p id="status" class="cms-status" role="status"></p>
+
+              <div class="cms-card">
+                <label class="cms-field cms-title-field">
+                  <span class="cms-label">标题 <em>必填</em></span>
+                  <input id="title" required placeholder="文章标题" autocomplete="off" />
+                </label>
+                <details class="cms-meta" id="metaBox" open>
+                  <summary>文章信息（slug、分类、摘要、封面…）</summary>
+                  <div class="cms-meta-grid">
+                    <label class="cms-field"><span class="cms-label">Slug <em>必填 · 小写英文、数字、连字符</em></span><input id="slug" required pattern="[a-z0-9\-]+" placeholder="my-first-post" autocomplete="off" /></label>
+                    <label class="cms-field"><span class="cms-label">分类 <em>必填</em></span><input id="category" required placeholder="技术" /></label>
+                    <label class="cms-field cms-wide"><span class="cms-label">摘要 <em>必填</em></span><textarea id="description" rows="2" required placeholder="一两句话概括这篇文章"></textarea></label>
+                    <label class="cms-field"><span class="cms-label">发布日期 <em>必填</em></span><input id="pubDate" type="date" required /></label>
+                    <label class="cms-field"><span class="cms-label">作者</span><input id="author" /></label>
+                    <label class="cms-field cms-wide"><span class="cms-label">封面 URL</span><input id="cover" type="url" placeholder="https://…" /></label>
+                    <label class="cms-field cms-wide"><span class="cms-label">标签 <em>逗号分隔</em></span><input id="tags" placeholder="Astro, 教程" /></label>
+                    <div class="cms-checks cms-wide">
+                      <label class="cms-check"><input id="draft" type="checkbox" /> 保存为草稿</label>
+                      <label class="cms-check"><input id="pinned" type="checkbox" /> 置顶</label>
+                    </div>
+                  </div>
+                </details>
+              </div>
+
+              <div class="cms-card cms-body-card">
+                <div class="cms-tabs" role="tablist">
+                  <button type="button" role="tab" class="cms-tab is-on" id="tabEdit" aria-selected="true">编辑</button>
+                  <button type="button" role="tab" class="cms-tab" id="tabPreview" aria-selected="false">预览</button>
+                  <span class="cms-wc" id="wordCount"></span>
+                </div>
+                <textarea id="content" required spellcheck="false" placeholder="在这里写 Markdown 正文…  （Ctrl/⌘+S 保存，Ctrl/⌘+B 加粗，Ctrl/⌘+I 斜体）"></textarea>
+                <article id="preview" class="markdown-content cms-preview" hidden></article>
+                <input id="imageUpload" type="file" hidden accept="image/jpeg,image/png,image/gif,image/webp,image/avif,image/svg+xml" />
+                <p class="cms-tip">图片支持 JPG、PNG、WebP、AVIF，超过 4MB 自动压缩；SVG、GIF 不压缩，需 ≤4MB。</p>
+              </div>
+
+              <div class="cms-foot">
+                <button class="cms-btn danger" type="button" id="deleteButton">删除文章</button>
+              </div>
             </form>
-            <article id="preview" class="markdown-content cms-preview" hidden></article>
           </section>
-        </section>
+
+          <!-- 右（桌面）/ 键盘上方（手机）：Markdown 工具与模板 -->
+          <aside class="cms-tools" id="mdTools" aria-label="Markdown 工具">
+            <div class="cms-tools-scroll" id="toolsScroll"></div>
+            <div class="cms-sheet" id="tplSheet" hidden></div>
+          </aside>
+        </div>
       </>
     ) : (
-      <section class="cms-login"><p class="label">PRIVATE CONTENT STUDIO</p><h1>博客管理</h1><p>管理入口不是安全边界，登录仍需 GitHub OAuth 和账号白名单。</p><a class="cms-button primary" href="/api/auth/github">使用 GitHub 登录</a></section>
+      <section class="cms-login">
+        <p class="cms-kicker">PRIVATE CONTENT STUDIO</p>
+        <h1>博客管理</h1>
+        <p>管理入口不是安全边界，登录仍需 GitHub OAuth 和账号白名单。</p>
+        <a class="cms-btn primary" href="/api/auth/github">使用 GitHub 登录</a>
+      </section>
     )}
   </main>
 </BaseLayout>
 
-{loggedIn && <script>
+<script>
   import { marked } from 'marked';
-  const $ = (id) => document.getElementById(id);
-  const fields = ['title','slug','description','pubDate','author','cover','tags','content','draft','pinned'];
-  const labels = { title:'标题', slug:'Slug', description:'摘要', pubDate:'发布日期', category:'分类', content:'正文' };
-  const UPLOAD_LIMIT = 4 * 1024 * 1024;
-  let current = null;
-  const status = (text, error = false) => { const el = $('status'); el.textContent = text; el.classList.toggle('error', error); };
-  const mb = (bytes) => (bytes / 1024 / 1024).toFixed(1) + 'MB';
-  const readJson = async (response) => { const text = await response.text(); try { return text ? JSON.parse(text) : {}; } catch { return { error: `服务器返回 ${response.status}，不是有效的 JSON 响应` }; } };
-  const setBusy = (busy) => { $('saveButton').disabled = busy; $('uploadButton').disabled = busy; };
-  // 超过 4MB 的位图在前端自动压缩：逐步降低质量并缩小尺寸，输出 WebP，直到小于上限
-  const compressImage = async (file) => {
-    const bitmap = await createImageBitmap(file);
-    let { width, height } = bitmap;
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    for (let attempt = 0; attempt < 12; attempt++) {
-      canvas.width = width;
-      canvas.height = height;
-      ctx.drawImage(bitmap, 0, 0, width, height);
-      const quality = Math.max(0.4, 0.92 - attempt * 0.05);
-      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', quality));
-      if (blob && blob.size <= UPLOAD_LIMIT) {
-        const name = file.name.replace(/\.[^.]+$/, '') + '.webp';
-        return new File([blob], name, { type: 'image/webp' });
-      }
-      width = Math.max(1, Math.round(width * 0.85));
-      height = Math.max(1, Math.round(height * 0.85));
-    }
-    return null;
-  };
-  const fill = (post = {}) => { current = post.slug || null; fields.forEach(k => { const el = $(k); if (!el) return; if (k === 'tags') el.value = (post.tags || []).join(', '); else if (k === 'draft') el.checked = Boolean(post.draft); else if (k === 'pinned') el.checked = Boolean(post.pinned); else if (k === 'pubDate') el.value = post.pubDate ? new Date(post.pubDate).toISOString().slice(0,10) : new Date().toISOString().slice(0,10); else el.value = post[k] || ''; }); $('originalSlug').value = current || ''; $('preview').hidden = true; status(current ? `正在编辑：${post.title || current}` : '准备新文章'); };
-  const load = async () => { const r = await fetch('/api/admin/posts'); const data = await readJson(r); if (!r.ok) return status(data.error || '加载失败', true); $('postList').innerHTML = data.length ? data.map(p => `<button class="cms-post" data-slug="${p.slug}"><strong>${p.title}</strong><small>${p.pinned ? '置顶 · ' : ''}${p.draft ? '草稿' : '已发布'} · ${p.source === 'file' ? 'Markdown' : '数据库'} · ${p.slug}</small></button>`).join('') : '<p>还没有文章。</p>'; document.querySelectorAll('.cms-post').forEach(b => b.onclick = async () => { const r = await fetch('/api/admin/posts/' + encodeURIComponent(b.dataset.slug)); const post = await readJson(r); r.ok ? fill(post) : status(post.error || '文章加载失败', true); }); };
-  const validate = () => { const missing = Object.keys(labels).filter(k => { const el = $(k); return !el || !String(el.value || '').trim(); }); document.querySelectorAll('[required]').forEach(el => el.classList.remove('invalid')); missing.forEach(k => $(k)?.classList.add('invalid')); if (missing.length) { status(`还差：${missing.map(k => labels[k]).join('、')}`, true); $(missing[0])?.focus(); return false; } if (!/^[a-z0-9-]+$/.test($('slug').value.trim())) { $('slug').classList.add('invalid'); status('Slug 只能使用小写英文、数字和连字符，例如 astro-vercel-tutorial', true); $('slug').focus(); return false; } return true; };
-  $('newPost').onclick = () => fill();
-  $('postForm').onsubmit = async e => { e.preventDefault(); if (!validate()) return; setBusy(true); const body = { title:$('title').value.trim(), slug:$('slug').value.trim(), description:$('description').value.trim(), pubDate:$('pubDate').value, author:$('author').value.trim(), cover:$('cover').value.trim(), category:$('category').value.trim(), tags:$('tags').value.split(',').map(x=>x.trim()).filter(Boolean), content:$('content').value, draft:$('draft').checked, pinned:$('pinned').checked }; try { const r = await fetch('/api/admin/posts', { method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(body) }); const data = await readJson(r); status(r.ok ? '保存成功，文章已写入存储' : (data.error || '保存失败'), !r.ok); if(r.ok){ current=data.slug; await load(); } } finally { setBusy(false); } };
-  $('uploadButton').onclick = async () => {
-    let file = $('imageUpload').files?.[0];
-    if (!file) return status('请先选择一张图片', true);
-    if (file.size > UPLOAD_LIMIT) {
-      if (file.type === 'image/svg+xml' || file.type === 'image/gif') return status(`图片 ${mb(file.size)} 超过 4MB，SVG/GIF 无法自动压缩，请手动压缩后再上传`, true);
-      setBusy(true);
-      status(`图片 ${mb(file.size)} 超过 4MB，正在自动压缩…`);
-      try {
-        file = await compressImage(file);
-      } catch { file = null; }
-      setBusy(false);
-      if (!file) return status('自动压缩后仍超过 4MB，请手动压缩后再上传', true);
-    }
-    const originalSize = $('imageUpload').files?.[0]?.size;
-    const form = new FormData();
-    form.append('file', file);
-    setBusy(true);
-    status(originalSize && originalSize > UPLOAD_LIMIT ? `已自动压缩：${mb(originalSize)} → ${mb(file.size)}，正在上传…` : '正在上传图片…');
-    try { const r = await fetch('/api/admin/upload', { method:'POST', body:form }); const data = await readJson(r); if (!r.ok) return status(data.error || '图片上传失败', true); const area = $('content'); const markdown = `\n\n${data.markdown}\n`; area.setRangeText(markdown, area.selectionStart, area.selectionEnd, 'end'); status(originalSize && originalSize > UPLOAD_LIMIT ? `图片上传成功（已自动压缩 ${mb(originalSize)} → ${mb(file.size)}），Markdown 已插入正文` : '图片上传成功，Markdown 已插入正文'); $('imageUpload').value = ''; } finally { setBusy(false); }
-  };
-  $('previewButton').onclick = () => { $('preview').innerHTML = marked.parse($('content').value); $('preview').hidden = false; };
-  $('deleteButton').onclick = async () => { if(!current || !confirm('确认永久删除这篇文章？文章正文、数据库记录及正文/封面中的 Vercel Blob 图片都会被删除，且无法恢复。')) return; const r=await fetch('/api/admin/posts/'+encodeURIComponent(current),{method:'DELETE',headers:{'content-type':'application/json'}}); const data = await readJson(r); status(r.ok ? `永久删除成功${data.deletedImages ? `，已清理 ${data.deletedImages} 张图片` : ''}` : (data.error || '删除失败'), !r.ok); if(r.ok){fill();load();} };
-  fill(); load();
-</script>}
+  import markedKatex from 'marked-katex-extension';
+  import markedFootnote from 'marked-footnote';
 
-<style>
-  .cms-page { padding-block: var(--space-3xl); } .cms-hint,.required-mark,.cms-upload small { color:var(--fg-muted); font-size:.8rem; } .cms-header,.cms-grid,.cms-two,.cms-actions { display:grid; gap:1rem; } .cms-header { grid-template-columns:1fr auto; align-items:end; border-bottom:1px solid var(--border); padding-bottom:1rem; } .cms-grid { grid-template-columns:240px 1fr; margin-top:2rem; } .cms-list { display:flex; flex-direction:column; gap:1rem; } .cms-post { text-align:left; background:transparent; border:1px solid var(--border); padding:.8rem; cursor:pointer; } .cms-post small { display:block; margin-top:.4rem; opacity:.65; } .cms-editor form { display:grid; gap:1rem; } .cms-editor label { display:grid; gap:.35rem; } .cms-editor input,.cms-editor textarea { width:100%; box-sizing:border-box; border:1px solid var(--border); background:transparent; padding:.7rem; font:inherit; color:inherit; border-radius:.5rem; } .cms-editor input.invalid,.cms-editor textarea.invalid { border-color:#d33; box-shadow:0 0 0 2px color-mix(in srgb,#d33 18%,transparent); } .cms-two { grid-template-columns:1fr 1fr; } .cms-actions { grid-template-columns:repeat(3,auto); justify-content:start; } .cms-button { border:1px solid var(--border); background:transparent; color:inherit; padding:.7rem 1rem; cursor:pointer; text-decoration:none; border-radius:.65rem; } .cms-button:disabled { opacity:.5; cursor:wait; } .cms-button.primary { background:var(--fg); color:var(--bg); } .cms-button.danger { color:#d33; } .cms-status { min-height:1.2em; color:var(--fg-muted); } .cms-status.error { color:#d33; } .cms-preview { border-top:1px solid var(--border); margin-top:2rem; padding-top:2rem; } .cms-upload { display:grid; grid-template-columns:1fr auto auto; align-items:center; gap:.75rem; padding:1rem; border:1px dashed var(--border-strong); border-radius:.75rem; } .cms-upload small { display:block; margin-top:.25rem; } .cms-upload input { border:0; padding:0; } .cms-login { max-width:34rem; margin:8rem auto; } .cms-login p { margin-block:1rem; } @media(max-width:700px){ .cms-grid,.cms-two { grid-template-columns:1fr; } .cms-header { grid-template-columns:1fr; } .cms-upload { grid-template-columns:1fr; } .cms-actions { grid-template-columns:1fr; } }
+  if (document.getElementById('postForm')) {
+    marked.use(markedKatex({ throwOnError: false, nonStandard: true }));
+    marked.use(markedFootnote());
+
+    const $ = (id) => document.getElementById(id);
+    const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const fields = ['title', 'slug', 'description', 'pubDate', 'author', 'cover', 'category', 'tags', 'content', 'draft', 'pinned'];
+    const labels = { title: '标题', slug: 'Slug', description: '摘要', pubDate: '发布日期', category: '分类', content: '正文' };
+    const UPLOAD_LIMIT = 4 * 1024 * 1024;
+    const desktop = window.matchMedia('(min-width: 1024px)');
+    const content = $('content');
+    let current = null;
+    let dirty = false;
+    let allPosts = [];
+
+    /* ------------------------------------------------ status / dirty */
+    const status = (text, error = false) => {
+      const el = $('status');
+      el.textContent = text;
+      el.classList.toggle('error', error);
+    };
+    const setDirty = (v) => { dirty = v; $('dirtyDot').hidden = !v; };
+    const mb = (bytes) => (bytes / 1024 / 1024).toFixed(1) + 'MB';
+    const readJson = async (response) => {
+      const text = await response.text();
+      try { return text ? JSON.parse(text) : {}; } catch { return { error: `服务器返回 ${response.status}，不是有效的 JSON 响应` }; }
+    };
+    const setBusy = (busy) => { $('saveButton').disabled = busy; };
+    const countWords = () => {
+      const t = content.value;
+      const cjk = (t.match(/[\u4e00-\u9fff]/g) || []).length;
+      const words = (t.replace(/[\u4e00-\u9fff]/g, ' ').match(/[A-Za-z0-9_]+/g) || []).length;
+      $('wordCount').textContent = `${cjk + words} 字`;
+    };
+
+    /* ------------------------------------------------ image compress (unchanged behaviour) */
+    const compressImage = async (file) => {
+      const bitmap = await createImageBitmap(file);
+      let { width, height } = bitmap;
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      for (let attempt = 0; attempt < 12; attempt++) {
+        canvas.width = width; canvas.height = height;
+        ctx.drawImage(bitmap, 0, 0, width, height);
+        const quality = Math.max(0.4, 0.92 - attempt * 0.05);
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', quality));
+        if (blob && blob.size <= UPLOAD_LIMIT) {
+          return new File([blob], file.name.replace(/\.[^.]+$/, '') + '.webp', { type: 'image/webp' });
+        }
+        width = Math.max(1, Math.round(width * 0.85));
+        height = Math.max(1, Math.round(height * 0.85));
+      }
+      return null;
+    };
+
+    /* ------------------------------------------------ form <-> post */
+    const today = () => new Date().toISOString().slice(0, 10);
+    const fill = (post = {}) => {
+      current = post.slug || null;
+      fields.forEach(k => {
+        const el = $(k);
+        if (!el) return;
+        if (k === 'tags') el.value = (post.tags || []).join(', ');
+        else if (k === 'draft' || k === 'pinned') el.checked = Boolean(post[k]);
+        else if (k === 'pubDate') el.value = post.pubDate ? new Date(post.pubDate).toISOString().slice(0, 10) : today();
+        else el.value = post[k] || '';
+      });
+      $('originalSlug').value = current || '';
+      $('deleteButton').hidden = !current;
+      showTab('edit');
+      countWords();
+      setDirty(false);
+      markActive();
+      status(current ? `正在编辑：${post.title || current}` : '准备新文章');
+    };
+    const confirmLeave = () => !dirty || confirm('当前文章有未保存的修改，确定放弃吗？');
+
+    /* ------------------------------------------------ post list */
+    const markActive = () => document.querySelectorAll('.cms-post').forEach(b => b.classList.toggle('is-on', b.dataset.slug === current));
+    const renderList = () => {
+      const q = $('listFilter').value.trim().toLowerCase();
+      const rows = allPosts.filter(p => !q || `${p.title} ${p.slug}`.toLowerCase().includes(q));
+      $('listCount').textContent = String(allPosts.length);
+      $('postList').innerHTML = rows.length
+        ? rows.map(p => `<button type="button" class="cms-post" data-slug="${esc(p.slug)}"><strong>${esc(p.title)}</strong><small>${p.pinned ? '<b>置顶</b>' : ''}${p.draft ? '<b class="draft">草稿</b>' : '<b class="pub">已发布</b>'}<span>${p.source === 'file' ? 'Markdown' : '数据库'}</span></small></button>`).join('')
+        : '<p class="cms-empty">没有匹配的文章。</p>';
+      markActive();
+    };
+    const load = async () => {
+      const r = await fetch('/api/admin/posts');
+      const data = await readJson(r);
+      if (!r.ok) return status(data.error || '加载失败', true);
+      allPosts = data;
+      renderList();
+    };
+    $('postList').addEventListener('click', async (e) => {
+      const b = e.target.closest('.cms-post');
+      if (!b || !confirmLeave()) return;
+      const r = await fetch('/api/admin/posts/' + encodeURIComponent(b.dataset.slug));
+      const post = await readJson(r);
+      if (!r.ok) return status(post.error || '文章加载失败', true);
+      fill(post);
+      if (!desktop.matches) { $('listBox').open = false; window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    });
+    $('listFilter').addEventListener('input', renderList);
+    $('newPost').onclick = () => { if (confirmLeave()) { fill(); $('title').focus(); } };
+
+    /* ------------------------------------------------ validate / save / delete */
+    const validate = () => {
+      const missing = Object.keys(labels).filter(k => !String($(k)?.value || '').trim());
+      document.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));
+      missing.forEach(k => $(k)?.classList.add('invalid'));
+      if (missing.length) {
+        status(`还差：${missing.map(k => labels[k]).join('、')}`, true);
+        if (missing.some(k => k !== 'content' && k !== 'title')) $('metaBox').open = true;
+        $(missing[0])?.focus();
+        return false;
+      }
+      if (!/^[a-z0-9-]+$/.test($('slug').value.trim())) {
+        $('slug').classList.add('invalid');
+        $('metaBox').open = true;
+        status('Slug 只能使用小写英文、数字和连字符，例如 astro-vercel-tutorial', true);
+        $('slug').focus();
+        return false;
+      }
+      return true;
+    };
+    $('postForm').onsubmit = async (e) => {
+      e.preventDefault();
+      if (!validate()) return;
+      setBusy(true);
+      const body = {
+        title: $('title').value.trim(), slug: $('slug').value.trim(), description: $('description').value.trim(),
+        pubDate: $('pubDate').value, author: $('author').value.trim(), cover: $('cover').value.trim(),
+        category: $('category').value.trim(), tags: $('tags').value.split(',').map(x => x.trim()).filter(Boolean),
+        content: content.value, draft: $('draft').checked, pinned: $('pinned').checked,
+      };
+      try {
+        const r = await fetch('/api/admin/posts', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+        const data = await readJson(r);
+        status(r.ok ? '保存成功，文章已写入存储' : (data.error || '保存失败'), !r.ok);
+        if (r.ok) { current = data.slug; $('originalSlug').value = current; $('deleteButton').hidden = false; setDirty(false); await load(); }
+      } finally { setBusy(false); }
+    };
+    $('deleteButton').onclick = async () => {
+      if (!current || !confirm('确认永久删除这篇文章？文章正文、数据库记录及正文/封面中的 Vercel Blob 图片都会被删除，且无法恢复。')) return;
+      const r = await fetch('/api/admin/posts/' + encodeURIComponent(current), { method: 'DELETE', headers: { 'content-type': 'application/json' } });
+      const data = await readJson(r);
+      status(r.ok ? `永久删除成功${data.deletedImages ? `，已清理 ${data.deletedImages} 张图片` : ''}` : (data.error || '删除失败'), !r.ok);
+      if (r.ok) { fill(); load(); }
+    };
+
+    /* ------------------------------------------------ edit / preview */
+    function showTab(which) {
+      const preview = which === 'preview';
+      if (preview) {
+        $('preview').innerHTML = marked.parse(content.value || '*（正文为空）*') as string;
+      }
+      $('preview').hidden = !preview;
+      content.hidden = preview;
+      $('tabEdit').classList.toggle('is-on', !preview);
+      $('tabPreview').classList.toggle('is-on', preview);
+      $('tabEdit').setAttribute('aria-selected', String(!preview));
+      $('tabPreview').setAttribute('aria-selected', String(preview));
+      $('mdTools').classList.toggle('is-disabled', preview);
+      if (preview) setDock(false);
+    }
+    $('tabEdit').onclick = () => showTab('edit');
+    $('tabPreview').onclick = () => showTab('preview');
+
+    /* ------------------------------------------------ image upload (auto-runs after choosing a file) */
+    const uploadImage = async () => {
+      let file = $('imageUpload').files?.[0];
+      if (!file) return;
+      const originalSize = file.size;
+      if (file.size > UPLOAD_LIMIT) {
+        if (file.type === 'image/svg+xml' || file.type === 'image/gif') return status(`图片 ${mb(file.size)} 超过 4MB，SVG/GIF 无法自动压缩，请手动压缩后再上传`, true);
+        setBusy(true);
+        status(`图片 ${mb(file.size)} 超过 4MB，正在自动压缩…`);
+        try { file = await compressImage(file); } catch { file = null; }
+        setBusy(false);
+        if (!file) return status('自动压缩后仍超过 4MB，请手动压缩后再上传', true);
+      }
+      const form = new FormData();
+      form.append('file', file);
+      setBusy(true);
+      status(originalSize > UPLOAD_LIMIT ? `已自动压缩：${mb(originalSize)} → ${mb(file.size)}，正在上传…` : '正在上传图片…');
+      try {
+        const r = await fetch('/api/admin/upload', { method: 'POST', body: form });
+        const data = await readJson(r);
+        if (!r.ok) return status(data.error || '图片上传失败', true);
+        insertBlock(data.markdown);
+        status(originalSize > UPLOAD_LIMIT ? `图片上传成功（已压缩 ${mb(originalSize)} → ${mb(file.size)}），已插入正文` : '图片上传成功，已插入正文');
+      } finally { setBusy(false); $('imageUpload').value = ''; }
+    };
+    $('imageUpload').addEventListener('change', uploadImage);
+
+    /* ------------------------------------------------ editing helpers (keep native undo when possible) */
+    const replaceRange = (start, end, text, selA, selB) => {
+      content.focus();
+      content.setSelectionRange(start, end);
+      let ok = false;
+      try { ok = document.execCommand('insertText', false, text); } catch { ok = false; }
+      if (!ok) { content.setRangeText(text, start, end, 'end'); content.dispatchEvent(new Event('input', { bubbles: true })); }
+      content.setSelectionRange(start + selA, start + selB);
+    };
+    const wrap = (before, after, placeholder) => {
+      const s = content.selectionStart, e = content.selectionEnd;
+      const sel = content.value.slice(s, e) || placeholder;
+      replaceRange(s, e, before + sel + after, before.length, before.length + sel.length);
+    };
+    const insertBlock = (text, selectText) => {
+      const s = content.selectionStart, e = content.selectionEnd, v = content.value;
+      const lead = s === 0 || v.slice(s - 2, s) === '\n\n' ? '' : (v[s - 1] === '\n' ? '\n' : '\n\n');
+      const trail = v.slice(e, e + 2) === '\n\n' ? '' : (v[e] === '\n' ? '\n' : '\n\n');
+      const full = lead + text + trail;
+      let a = full.length - trail.length, b = a;
+      if (selectText) { const i = full.indexOf(selectText); if (i >= 0) { a = i; b = i + selectText.length; } }
+      replaceRange(s, e, full, a, b);
+    };
+    const prefixLines = (prefix, placeholder) => {
+      const v = content.value;
+      let s = content.selectionStart, e = content.selectionEnd;
+      const ls = v.lastIndexOf('\n', s - 1) + 1;
+      const le = v.indexOf('\n', e) === -1 ? v.length : v.indexOf('\n', e);
+      const block = v.slice(ls, le) || placeholder;
+      const out = block.split('\n').map(l => prefix + l).join('\n');
+      replaceRange(ls, le, out, out.length, out.length);
+    };
+
+    /* ------------------------------------------------ tool + template definitions */
+    const callout = (icon, name, bg, bar, ink, text) =>
+      `<div style="background:${bg};border-left:4px solid ${bar};color:#1f2937;padding:12px 16px;border-radius:8px;margin:16px 0;">\n<strong style="color:${ink};">${icon} ${name}</strong>\n<div>${text}</div>\n</div>`;
+
+    const TOOLS = [
+      { g: '格式', items: [
+        { k: 'b', l: 'B', t: '加粗 (Ctrl+B)', run: () => wrap('**', '**', '加粗文字') },
+        { k: 'i', l: 'I', t: '斜体 (Ctrl+I)', run: () => wrap('*', '*', '斜体文字') },
+        { k: 's', l: 'S̶', t: '删除线', run: () => wrap('~~', '~~', '删除线') },
+        { k: 'h2', l: 'H2', t: '二级标题', run: () => prefixLines('## ', '标题') },
+        { k: 'h3', l: 'H3', t: '三级标题', run: () => prefixLines('### ', '小标题') },
+        { k: 'link', l: '🔗', t: '链接', run: () => wrap('[', '](https://)', '链接文字') },
+        { k: 'quote', l: '❝', t: '引用', run: () => prefixLines('> ', '引用内容') },
+        { k: 'code', l: '`·`', t: '行内代码', run: () => wrap('`', '`', 'code') },
+      ] },
+      { g: '插入', items: [
+        { k: 'img', l: '🖼 图片', t: '上传并插入图片', run: () => $('imageUpload').click() },
+        { k: 'ul', l: '• 列表', t: '无序列表', run: () => prefixLines('- ', '列表项') },
+        { k: 'ol', l: '1. 列表', t: '有序列表', run: () => prefixLines('1. ', '列表项') },
+        { k: 'task', l: '☑ 任务', t: '任务列表', run: () => insertBlock('- [ ] 待办一\n- [ ] 待办二\n- [x] 已完成', '待办一') },
+        { k: 'hr', l: '— 分隔线', t: '水平线', run: () => insertBlock('---') },
+        { k: 'fn', l: '脚注', t: '脚注', run: () => { const n = (content.value.match(/\[\^\d+\]:/g) || []).length + 1; wrap(`[^${n}]`, '', ''); const end = content.value.length; const sep = content.value.endsWith('\n') ? '\n' : '\n\n'; content.setSelectionRange(end, end); const pre = `${sep}[^${n}]: `; replaceRange(end, end, pre + '脚注内容', pre.length, pre.length + 4); } },
+      ] },
+    ];
+
+    const TEMPLATES = [
+      { g: '模板', items: [
+        { l: '📄 文章骨架', run: () => insertBlock('## 引言\n\n用一两段话说明这篇文章要解决什么问题。\n\n## 正文\n\n### 第一部分\n\n内容……\n\n### 第二部分\n\n内容……\n\n## 总结\n\n- 要点一\n- 要点二\n- 要点三', '用一两段话说明这篇文章要解决什么问题。') },
+        { l: '🪜 教程步骤', run: () => insertBlock('## 准备工作\n\n- 环境要求：……\n\n## 步骤\n\n### 1. 第一步\n\n说明……\n\n```bash\nnpm install\n```\n\n### 2. 第二步\n\n说明……\n\n## 常见问题\n\n**Q：……？**\n\nA：……', '说明……') },
+        { l: '📊 表格', run: () => insertBlock('| 名称 | 说明 | 备注 |\n| --- | --- | --- |\n| 项目一 | 内容 | — |\n| 项目二 | 内容 | — |', '名称') },
+        { l: '⚖️ 对比表', run: () => insertBlock('| 对比项 | 方案 A | 方案 B |\n| --- | --- | --- |\n| 优点 | …… | …… |\n| 缺点 | …… | …… |\n| 适用场景 | …… | …… |', '方案 A') },
+        { l: '💻 代码块', run: () => insertBlock('```js\n// 在这里写代码\n```', '// 在这里写代码') },
+        { l: '💡 提示框', run: () => insertBlock(callout('💡', '提示', '#eff6ff', '#3b82f6', '#1d4ed8', '这是一条提示信息。'), '这是一条提示信息。') },
+        { l: '✅ 成功框', run: () => insertBlock(callout('✅', '成功', '#f0fdf4', '#22c55e', '#15803d', '操作已成功完成。'), '操作已成功完成。') },
+        { l: '⚠️ 警告框', run: () => insertBlock(callout('⚠️', '警告', '#fffbeb', '#f59e0b', '#b45309', '请注意以下事项。'), '请注意以下事项。') },
+        { l: '❌ 错误框', run: () => insertBlock(callout('❌', '错误', '#fef2f2', '#ef4444', '#b91c1c', '发生了一个错误。'), '发生了一个错误。') },
+        { l: '🔽 折叠块', run: () => insertBlock('<details>\n<summary>点击展开</summary>\n\n折叠的内容……\n\n</details>', '折叠的内容……') },
+        { l: '∑ 行内公式', run: () => wrap('$', '$', 'E = mc^2') },
+        { l: '∑ 块级公式', run: () => insertBlock('$$\nx = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}\n$$', 'x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}') },
+        { l: '⌨️ 按键', run: () => insertBlock('<kbd>Ctrl</kbd> + <kbd>S</kbd>', 'Ctrl') },
+      ] },
+    ];
+
+    /* ------------------------------------------------ build the tool panel */
+    const scroll = $('toolsScroll');
+    const btn = (item, cls = '') => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'cms-tool ' + cls;
+      b.textContent = item.l;
+      if (item.t) b.title = item.t;
+      b.addEventListener('click', () => { item.run(); setDirty(true); countWords(); closeSheet(); });
+      return b;
+    };
+    [...TOOLS, ...TEMPLATES].forEach(group => {
+      const sec = document.createElement('section');
+      sec.className = 'cms-tool-group' + (group.g === '模板' ? ' is-templates' : '');
+      const h = document.createElement('h3');
+      h.textContent = group.g;
+      sec.appendChild(h);
+      const row = document.createElement('div');
+      row.className = 'cms-tool-row';
+      group.items.forEach(it => row.appendChild(btn(it, group.g === '模板' ? 'tpl' : '')));
+      sec.appendChild(row);
+      scroll.appendChild(sec);
+    });
+    // mobile only: one chip that opens the templates sheet above the keyboard bar
+    const sheet = $('tplSheet');
+    const tplChip = document.createElement('button');
+    tplChip.type = 'button';
+    tplChip.className = 'cms-tool chip-tpl';
+    tplChip.textContent = '📑 模板';
+    const closeSheet = () => { sheet.hidden = true; tplChip.classList.remove('is-on'); };
+    tplChip.addEventListener('click', () => {
+      if (sheet.hidden) {
+        sheet.innerHTML = '';
+        TEMPLATES[0].items.forEach(it => sheet.appendChild(btn(it, 'tpl')));
+        sheet.hidden = false; tplChip.classList.add('is-on');
+      } else closeSheet();
+    });
+    scroll.querySelector('.cms-tool-group')!.querySelector('.cms-tool-row')!.prepend(tplChip);
+
+    // keep the textarea focused (and the keyboard open) while tapping tools
+    $('mdTools').addEventListener('pointerdown', e => { if ((e.target as HTMLElement).closest('button')) e.preventDefault(); });
+
+    /* ------------------------------------------------ mobile: dock sits right above the keyboard */
+    const vv = window.visualViewport;
+    function setDock(on) {
+      document.documentElement.classList.toggle('cms-kb', on && !desktop.matches);
+      if (!on) closeSheet();
+      placeDock();
+    }
+    function placeDock() {
+      const tools = $('mdTools');
+      if (desktop.matches || !vv) { tools.style.removeProperty('--kb'); return; }
+      const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      tools.style.setProperty('--kb', kb + 'px');
+    }
+    content.addEventListener('focus', () => setDock(true));
+    content.addEventListener('blur', () => setTimeout(() => { if (document.activeElement !== content) setDock(false); }, 120));
+    vv?.addEventListener('resize', placeDock);
+    vv?.addEventListener('scroll', placeDock);
+    desktop.addEventListener('change', () => { $('listBox').open = desktop.matches; setDock(false); });
+
+    /* ------------------------------------------------ misc UX */
+    $('postForm').addEventListener('input', () => setDirty(true));
+    content.addEventListener('input', countWords);
+    window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+    document.addEventListener('keydown', e => {
+      const mod = e.ctrlKey || e.metaKey;
+      if (!mod) return;
+      const k = e.key.toLowerCase();
+      if (k === 's') { e.preventDefault(); $('postForm').requestSubmit(); }
+      else if (k === 'b' && document.activeElement === content) { e.preventDefault(); TOOLS[0].items[0].run(); }
+      else if (k === 'i' && document.activeElement === content) { e.preventDefault(); TOOLS[0].items[1].run(); }
+    });
+
+    $('listBox').open = desktop.matches;
+    fill();
+    load();
+  }
+</script>
+
+<style is:global>
+  .cms-page { max-width: 1320px; margin: 0 auto; padding: 1rem 1rem 6rem; font-size: 16px; line-height: 1.6; }
+  .cms-page * { box-sizing: border-box; }
+
+  /* top bar */
+  .cms-bar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+    padding: 0.6rem 0.9rem; margin-bottom: 0.5rem; background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid var(--border); border-radius: 0.9rem; }
+  .cms-bar-title { display: flex; align-items: center; gap: 0.5rem; font-size: 1.1rem; }
+  .cms-bar-actions { display: flex; gap: 0.5rem; }
+  .cms-dot { width: 0.6rem; height: 0.6rem; border-radius: 50%; background: #f59e0b; }
+  .cms-status { min-height: 1.6rem; margin: 0 0.25rem 0.75rem; font-size: 0.92rem; color: var(--fg-muted); }
+  .cms-status.error { color: #dc2626; font-weight: 600; }
+
+  /* buttons */
+  .cms-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 2.5rem; padding: 0 1rem; font: inherit; font-size: 0.95rem;
+    color: inherit; background: transparent; border: 1px solid var(--border-strong, var(--border)); border-radius: 0.7rem; cursor: pointer; text-decoration: none; white-space: nowrap; }
+  .cms-btn:hover { background: color-mix(in srgb, var(--fg) 7%, transparent); }
+  .cms-btn.primary { background: var(--fg); color: var(--bg); border-color: var(--fg); font-weight: 600; }
+  .cms-btn.danger { color: #dc2626; border-color: color-mix(in srgb, #dc2626 45%, var(--border)); }
+  .cms-btn.ghost { border-color: transparent; color: var(--fg-muted); }
+  .cms-btn:disabled { opacity: 0.5; cursor: wait; }
+
+  /* layout: list | editor | tools */
+  .cms-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; align-items: start; }
+  @media (min-width: 1024px) {
+    .cms-layout { grid-template-columns: 250px minmax(0, 1fr) 270px; }
+    .cms-list, .cms-tools { position: sticky; top: 4.6rem; max-height: calc(100vh - 5.6rem); overflow-y: auto; }
+  }
+
+  /* list */
+  .cms-list { border: 1px solid var(--border); border-radius: 1rem; padding: 0.35rem; }
+  .cms-list > summary { display: flex; justify-content: space-between; align-items: center; padding: 0.7rem 0.8rem; font-weight: 600; cursor: pointer; list-style: none; }
+  .cms-list > summary::-webkit-details-marker { display: none; }
+  .cms-count { font-size: 0.8rem; color: var(--fg-muted); border: 1px solid var(--border); border-radius: 99px; padding: 0 0.55rem; }
+  @media (min-width: 1024px) { .cms-list > summary { cursor: default; pointer-events: none; } }
+  .cms-filter { width: calc(100% - 0.7rem); margin: 0 0.35rem 0.5rem; padding: 0.6rem 0.75rem; font: inherit; font-size: 0.92rem; color: inherit; background: transparent; border: 1px solid var(--border); border-radius: 0.65rem; }
+  .cms-posts { display: flex; flex-direction: column; gap: 0.25rem; padding: 0 0.35rem 0.35rem; }
+  .cms-post { display: block; width: 100%; text-align: left; padding: 0.65rem 0.75rem; font: inherit; color: inherit; background: transparent; border: 1px solid transparent; border-radius: 0.7rem; cursor: pointer; }
+  .cms-post:hover { background: color-mix(in srgb, var(--fg) 6%, transparent); }
+  .cms-post.is-on { border-color: var(--fg); background: color-mix(in srgb, var(--fg) 8%, transparent); }
+  .cms-post strong { display: block; font-size: 0.95rem; line-height: 1.35; }
+  .cms-post small { display: flex; gap: 0.5rem; align-items: center; margin-top: 0.25rem; font-size: 0.75rem; color: var(--fg-muted); }
+  .cms-post small b { font-weight: 600; } .cms-post small b.draft { color: #d97706; } .cms-post small b.pub { color: #16a34a; }
+  .cms-empty { padding: 0.75rem; color: var(--fg-muted); font-size: 0.9rem; }
+
+  /* editor cards + fields */
+  .cms-editor form { display: grid; gap: 1rem; }
+  .cms-card { border: 1px solid var(--border); border-radius: 1rem; padding: 1rem; background: color-mix(in srgb, var(--bg) 92%, var(--fg) 3%); }
+  .cms-field { display: grid; gap: 0.4rem; }
+  .cms-label { font-size: 0.9rem; font-weight: 600; }
+  .cms-label em { font-style: normal; font-weight: 400; font-size: 0.78rem; color: var(--fg-muted); margin-left: 0.35rem; }
+  .cms-editor input:not([type='checkbox']), .cms-editor textarea { width: 100%; padding: 0.7rem 0.85rem; font: inherit; font-size: 1rem; color: inherit;
+    background: var(--bg); border: 1px solid var(--border-strong, var(--border)); border-radius: 0.7rem; }
+  .cms-editor input:focus, .cms-editor textarea:focus { outline: 2px solid color-mix(in srgb, var(--fg) 55%, transparent); outline-offset: 1px; }
+  .cms-editor .invalid { border-color: #dc2626 !important; box-shadow: 0 0 0 3px color-mix(in srgb, #dc2626 18%, transparent); }
+  .cms-title-field input { font-size: 1.35rem; font-weight: 700; padding: 0.8rem 0.9rem; }
+  .cms-meta { margin-top: 0.9rem; border-top: 1px solid var(--border); padding-top: 0.6rem; }
+  .cms-meta > summary { cursor: pointer; padding: 0.4rem 0; font-size: 0.9rem; color: var(--fg-muted); }
+  .cms-meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; margin-top: 0.6rem; }
+  .cms-wide { grid-column: 1 / -1; }
+  .cms-checks { display: flex; gap: 1.4rem; flex-wrap: wrap; }
+  .cms-check { display: inline-flex; align-items: center; gap: 0.5rem; min-height: 2.25rem; cursor: pointer; }
+  .cms-check input { width: 1.15rem; height: 1.15rem; }
+  @media (max-width: 640px) { .cms-meta-grid { grid-template-columns: 1fr; } }
+
+  /* body: tabs + textarea */
+  .cms-body-card { padding: 0.6rem 0.8rem 0.9rem; }
+  .cms-tabs { display: flex; align-items: center; gap: 0.25rem; margin-bottom: 0.6rem; }
+  .cms-tab { min-height: 2.3rem; padding: 0 1rem; font: inherit; font-size: 0.92rem; color: var(--fg-muted); background: transparent; border: 0; border-bottom: 2px solid transparent; cursor: pointer; }
+  .cms-tab.is-on { color: var(--fg); font-weight: 600; border-bottom-color: var(--fg); }
+  .cms-wc { margin-left: auto; font-size: 0.8rem; color: var(--fg-muted); }
+  #content { min-height: 58vh; resize: vertical; font-family: var(--font-mono); font-size: 0.95rem; line-height: 1.75; }
+  @media (max-width: 1023px) { #content { min-height: 48vh; } }
+  .cms-preview { min-height: 40vh; padding: 0.5rem 0.4rem; }
+  .cms-tip { margin: 0.6rem 0.1rem 0; font-size: 0.78rem; color: var(--fg-muted); }
+  .cms-foot { display: flex; justify-content: flex-end; }
+
+  /* tools / templates — desktop: right side panel (like GitHub's sidebar) */
+  .cms-tools { border: 1px solid var(--border); border-radius: 1rem; padding: 0.5rem 0.75rem 0.9rem; background: color-mix(in srgb, var(--bg) 94%, var(--fg) 2%); }
+  .cms-tools.is-disabled { opacity: 0.45; pointer-events: none; }
+  .cms-tool-group h3 { margin: 0.8rem 0 0.45rem; font-size: 0.72rem; letter-spacing: 0.12em; color: var(--fg-muted); font-weight: 600; }
+  .cms-tool-row { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .cms-tool { min-height: 2.25rem; min-width: 2.25rem; padding: 0 0.7rem; font: inherit; font-size: 0.88rem; color: inherit; background: var(--bg);
+    border: 1px solid var(--border-strong, var(--border)); border-radius: 0.6rem; cursor: pointer; white-space: nowrap; }
+  .cms-tool:hover { background: color-mix(in srgb, var(--fg) 8%, var(--bg)); }
+  .cms-tool.tpl { flex: 1 1 100%; text-align: left; }
+  .cms-tool.chip-tpl { display: none; }
+  .cms-sheet { display: none; }
+
+  /* tools — mobile: a bar floating right above the keyboard */
+  @media (max-width: 1023px) {
+    .cms-tools { position: fixed; left: 0; right: 0; bottom: var(--kb, 0px); z-index: 60; display: none; padding: 0; border-radius: 0; border-width: 1px 0 0;
+      background: var(--bg); box-shadow: 0 -6px 18px rgb(0 0 0 / 0.14); }
+    html.cms-kb .cms-tools { display: block; }
+    html.cms-kb .cms-page { padding-bottom: 9rem; }
+    .cms-tools-scroll { display: flex; align-items: center; gap: 0.4rem; overflow-x: auto; padding: 0.45rem 0.6rem; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .cms-tools-scroll::-webkit-scrollbar { display: none; }
+    .cms-tool-group { display: contents; }
+    .cms-tool-group h3, .cms-tool-group.is-templates { display: none; }
+    .cms-tool-row { display: contents; }
+    .cms-tool { flex: none; min-height: 2.6rem; min-width: 2.6rem; font-size: 0.95rem; }
+    .cms-tool.chip-tpl { display: inline-flex; align-items: center; background: var(--fg); color: var(--bg); border-color: var(--fg); }
+    .cms-tool.chip-tpl.is-on { opacity: 0.8; }
+    .cms-sheet { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; max-height: 40vh; overflow-y: auto; padding: 0.6rem; border-bottom: 1px solid var(--border); background: var(--bg); }
+    .cms-sheet[hidden] { display: none; }
+    .cms-sheet .cms-tool.tpl { flex: none; }
+  }
+
+  /* login */
+  .cms-login { max-width: 30rem; margin: 18vh auto 0; text-align: left; display: grid; gap: 0.9rem; }
+  .cms-kicker { font-size: 0.75rem; letter-spacing: 0.15em; color: var(--fg-muted); }
+  .cms-login h1 { font-size: 2rem; margin: 0; }
 </style>
