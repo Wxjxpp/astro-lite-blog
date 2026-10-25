@@ -1,5 +1,6 @@
 import { getCollection, getEntry, type CollectionEntry } from 'astro:content';
 import type { PostItem, PostFrontmatter } from '@types/index';
+import { ABOUT_SLUG } from '@lib/about';
 import { findBlogPost, getBlogPostStats, getDeletedSlugs, isBlogDatabaseConfigured, listBlogPosts } from '@lib/blog-db';
 
 export interface PostRecord {
@@ -38,7 +39,7 @@ async function getDatabaseRecords(): Promise<PostRecord[]> {
   if (!isBlogDatabaseConfigured) return [];
   try {
     const posts = await listBlogPosts();
-    return posts.map(post => fromDatabase(post)!).filter(Boolean);
+    return posts.filter(post => post.slug !== ABOUT_SLUG).map(post => fromDatabase(post)!).filter(Boolean);
   } catch (error: any) {
     console.error('[Blog DB] 读取 TiDB 崩溃了！', error);
     // 修复把错误抛出去，让 API 返回 500，这样你能在浏览器 Network 里直接看到原因
@@ -73,6 +74,7 @@ export async function getAllPosts(): Promise<PostItem[]> {
 }
 
 export async function getPostBySlug(slug: string): Promise<PostRecord | undefined> {
+  if (slug === ABOUT_SLUG) return undefined;
   if (isBlogDatabaseConfigured) {
     if ((await getDeletedSlugs()).has(slug)) return undefined;
     try {

@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { list } from '@vercel/blob';
 import { isAdminAuthenticated } from '@lib/admin-auth';
 import { getAllPostRecords } from '@lib/posts';
+import { getAboutPage } from '@lib/about';
 import { extractBlogBlobUrls, isBlogBlobUrl, normalizeBlobUrl, permanentlyDeleteBlogBlobs } from '@lib/blob-storage';
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
@@ -13,6 +14,7 @@ async function usedUrls(): Promise<Set<string>> {
     const body = post.body ?? post.entry?.body ?? '';
     extractBlogBlobUrls(body, post.data.cover).forEach(u => used.add(normalizeBlobUrl(u)));
   }
+  extractBlogBlobUrls((await getAboutPage()).content).forEach(u => used.add(normalizeBlobUrl(u))); // images on the About page
   return used;
 }
 

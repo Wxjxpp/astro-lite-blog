@@ -175,6 +175,8 @@ const turnstileFailed = new URL(Astro.request.url).searchParams.get('e') === 'tu
     const desktop = window.matchMedia('(min-width: 1024px)');
     const content = $('content');
     let current = null;
+    let aboutMode = false;      // editing the About page instead of a post
+    let aboutCustom = false;    // the About page has saved (non-default) content
     let dirty = false;
     let allPosts = [];
 
@@ -220,8 +222,9 @@ const turnstileFailed = new URL(Astro.request.url).searchParams.get('e') === 'tu
 
     /* ------------------------------------------------ form <-> post */
     const today = () => new Date().toISOString().slice(0, 10);
-    const fill = (post = {}) => {
-      current = post.slug || null;
+    const fill = (post = {}, about = false) => {
+      aboutMode = about;
+      current = about ? null : (post.slug || null);
       fields.forEach(k => {
         const el = $(k);
         if (!el) return;
@@ -231,24 +234,27 @@ const turnstileFailed = new URL(Astro.request.url).searchParams.get('e') === 'tu
         else el.value = post[k] || (k === 'author' ? DEFAULT_AUTHOR : '');
       });
       $('originalSlug').value = current || '';
-      $('deleteButton').hidden = !current;
+      $('metaBox').hidden = about;                       // the About page only has a title and a body
+      $('deleteButton').textContent = about ? '恢复默认内容' : '删除文章';
+      $('deleteButton').hidden = about ? !aboutCustom : !current;
       showTab('edit');
       countWords();
       setDirty(false);
       markActive();
-      status(current ? `正在编辑：${post.title || current}` : '准备新文章');
+      status(about ? '正在编辑：关于页（保存后约 1 分钟内全站生效）' : current ? `正在编辑：${post.title || current}` : '准备新文章');
     };
     const confirmLeave = () => !dirty || confirm('当前文章有未保存的修改，确定放弃吗？');
 
     /* ------------------------------------------------ post list */
-    const markActive = () => document.querySelectorAll('.cms-post').forEach(b => b.classList.toggle('is-on', b.dataset.slug === current));
+    const markActive = () => document.querySelectorAll('.cms-post').forEach(b => b.classList.toggle('is-on', b.dataset.about ? aboutMode : (!aboutMode && b.dataset.slug === current)));
     const renderList = () => {
       const q = $('listFilter').value.trim().toLowerCase();
       const rows = allPosts.filter(p => !q || `${p.title} ${p.slug}`.toLowerCase().includes(q));
       $('listCount').textContent = String(allPosts.length);
-      $('postList').innerHTML = rows.length
+      const aboutRow = q ? '' : '<button type="button" class="cms-post" data-about="1"><strong>关于页</strong><small><span>站点页面 · /about</span></small></button>';
+      $('postList').innerHTML = aboutRow + (rows.length
         ? rows.map(p => `<button type="button" class="cms-post" data-slug="${esc(p.slug)}"><strong>${esc(p.title)}</strong><small>${p.pinned ? '<b>置顶</b>' : ''}${p.draft ? '<b class="draft">草稿</b>' : '<b class="pub">已发布</b>'}<span>${p.source === 'file' ? 'Markdown' : '数据库'}</span></small></button>`).join('')
-        : '<p class="cms-empty">没有匹配的文章。</p>';
+        : '<p class="cms-empty">没有匹配的文章。</p>');
       markActive();
     };
     const load = async () => {
@@ -261,6 +267,15 @@ const turnstileFailed = new URL(Astro.request.url).searchParams.get('e') === 'tu
     $('postList').addEventListener('click', async (e) => {
       const b = e.target.closest('.cms-post');
       if (!b || !confirmLeave()) return;
+      if (b.dataset.about) {
+        const ra = await fetch('/api/admin/about');
+        const about = await readJson(ra);
+        if (!ra.ok) return status(about.error || '关于页加载失败', true);
+        aboutCustom = Boolean(about.custom);
+        fill({ title: about.title, content: about.content }, true);
+        if (!desktop.matches) { $('listBox').open = false; window.scrollTo({ top: 0, behavior: 'smooth' }); }
+        return;
+      }
       const r = await fetch('/api/admin/posts/' + encodeURIComponent(b.dataset.slug));
       const post = await readJson(r);
       if (!r.ok) return status(post.error || '文章加载失败', true);
@@ -272,7 +287,8 @@ const turnstileFailed = new URL(Astro.request.url).searchParams.get('e') === 'tu
 
     /* ------------------------------------------------ validate / save / delete */
     const validate = () => {
-      const missing = Object.keys(labels).filter(k => !String($(k)?.value || '').trim());
+      const required = aboutMode ? ['title', 'content'] : Object.keys(labels);
+      const missing = required.filter(k => !String($(k)?.value || '').trim());
       document.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));
       missing.forEach(k => $(k)?.classList.add('invalid'));
       if (missing.length) {
@@ -281,7 +297,7 @@ const turnstileFailed = new URL(Astro.request.url).searchParams.get('e') === 'tu
         $(missing[0])?.focus();
         return false;
       }
-      if (!/^[a-z0-9-]+$/.test($('slug').value.trim())) {
+      if (!aboutMode && !/^[a-z0-9-]+$/.test($('slug').value.trim())) {
         $('slug').classList.add('invalid');
         $('metaBox').open = true;
         status('Slug 只能使用小写英文、数字和连字符，例如 astro-vercel-tutorial', true);
@@ -294,6 +310,15 @@ const turnstileFailed = new URL(Astro.request.url).searchParams.get('e') === 'tu
       e.preventDefault();
       if (!validate()) return;
       setBusy(true);
+      if (aboutMode) {
+        try {
+          const r = await fetch('/api/admin/about', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ title: $('title').value.trim(), content: content.value }) });
+          const data = await readJson(r);
+          status(r.ok ? '关于页已保存，约 1 分钟内全站生效' : (data.error || '保存失败'), !r.ok);
+          if (r.ok) { aboutCustom = true; $('deleteButton').hidden = false; setDirty(false); }
+        } finally { setBusy(false); }
+        return;
+      }
       const body = {
         title: $('title').value.trim(), slug: $('slug').value.trim(), description: $('description').value.trim(),
         pubDate: $('pubDate').value, author: $('author').value.trim(), cover: $('cover').value.trim(),
@@ -308,6 +333,16 @@ const turnstileFailed = new URL(Astro.request.url).searchParams.get('e') === 'tu
       } finally { setBusy(false); }
     };
     $('deleteButton').onclick = async () => {
+      if (aboutMode) {
+        if (!confirm('恢复为内置的默认关于页？你保存过的内容会被清除，且无法恢复。')) return;
+        const r = await fetch('/api/admin/about', { method: 'DELETE' });
+        const data = await readJson(r);
+        if (!r.ok) return status(data.error || '恢复失败', true);
+        const about = await readJson(await fetch('/api/admin/about'));
+        aboutCustom = false;
+        fill({ title: about.title, content: about.content }, true);
+        return status('已恢复默认关于页');
+      }
       if (!current || !confirm('确认永久删除这篇文章？文章正文、数据库记录及正文/封面中的 Vercel Blob 图片都会被删除，且无法恢复。')) return;
       const r = await fetch('/api/admin/posts/' + encodeURIComponent(current), { method: 'DELETE', headers: { 'content-type': 'application/json' } });
       const data = await readJson(r);
