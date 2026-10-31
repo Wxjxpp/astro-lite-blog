@@ -354,6 +354,7 @@ const turnstileFailed = new URL(Astro.request.url).searchParams.get('e') === 'tu
     function showTab(which) {
       const preview = which === 'preview';
       if (preview) {
+        (window as any).__ensureKatex?.();
         $('preview').innerHTML = marked.parse(content.value || '*（正文为空）*') as string;
       }
       $('preview').hidden = !preview;

@@ -14,6 +14,9 @@ export default defineConfig({
   output: 'server', // 保持 server 模式
   adapter: edgeone(), // 使用正确的适配器
   prefetch: { prefetchAll: false, defaultStrategy: 'hover' },
+  // The stylesheet is ~13 KB gzipped once the font faces moved out: inlining it removes the render-blocking request.
+  build: { inlineStylesheets: 'always' },
+  vite: { build: { assetsInlineLimit: 0 } }, // keep font files out of the CSS as base64
   security: {
     checkOrigin: false,
   },

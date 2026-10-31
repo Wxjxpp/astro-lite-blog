@@ -1,14 +1,14 @@
 ---
-import '@fontsource/noto-serif-sc/400.css';
-import '@fontsource/noto-serif-sc/500.css';
-import '@fontsource/noto-serif-sc/700.css';
-import '@fontsource/mona-sans/400.css';
-import '@fontsource/mona-sans/500.css';
-import '@fontsource/mona-sans/600.css';
-import '@fontsource/mona-sans/700.css';
-import '@fontsource/geist-mono/400.css';
-import '@fontsource/geist-mono/500.css';
-import '@fontsource/geist-mono/600.css';
+import { FONTS_URL } from '@lib/fonts';
+import monaSans400 from '@fontsource/mona-sans/files/mona-sans-latin-400-normal.woff2?url';
+import monaSans500 from '@fontsource/mona-sans/files/mona-sans-latin-500-normal.woff2?url';
+import monaSans600 from '@fontsource/mona-sans/files/mona-sans-latin-600-normal.woff2?url';
+import monaSans700 from '@fontsource/mona-sans/files/mona-sans-latin-700-normal.woff2?url';
+import geistMono400 from '@fontsource/geist-mono/files/geist-mono-latin-400-normal.woff2?url';
+import geistMono500 from '@fontsource/geist-mono/files/geist-mono-latin-500-normal.woff2?url';
+import geistMono600 from '@fontsource/geist-mono/files/geist-mono-latin-600-normal.woff2?url';
+import notoLatin700 from '@fontsource/noto-serif-sc/files/noto-serif-sc-latin-700-normal.woff2?url';
+import notoLatin400 from '@fontsource/noto-serif-sc/files/noto-serif-sc-latin-400-normal.woff2?url';
 import '@styles/global.css';
 import '@styles/enhance.css';
 import Header from '@components/Header.astro';
@@ -28,6 +28,15 @@ const pageTitle = title ? `${title} | ${SITE_CONFIG.title}` : SITE_CONFIG.title;
 const canonicalUrl = canonical || new URL(Astro.url.pathname, SITE_CONFIG.url).toString();
 const ogImage = image || new URL('/og-image.png', SITE_CONFIG.url).toString();
 
+/* Latin faces are tiny, so they are preloaded and declared with font-display: optional:
+   they are used if they arrive in time, and never cause a late swap (no layout shift). */
+const face = (family: string, weight: number, url: string) =>
+  `@font-face{font-family:'${family}';font-style:normal;font-weight:${weight};font-display:optional;src:url(${url}) format('woff2')}`;
+const fontFaces = [
+  face('Mona Sans', 400, monaSans400), face('Mona Sans', 500, monaSans500), face('Mona Sans', 600, monaSans600), face('Mona Sans', 700, monaSans700),
+  face('Geist Mono', 400, geistMono400), face('Geist Mono', 500, geistMono500), face('Geist Mono', 600, geistMono600),
+  face('Noto Serif SC', 400, notoLatin400), face('Noto Serif SC', 700, notoLatin700),
+].join('');
 ---
 <!DOCTYPE html>
 <html lang="zh-CN" data-theme="dark">
@@ -53,9 +62,15 @@ const ogImage = image || new URL('/og-image.png', SITE_CONFIG.url).toString();
   <meta name="twitter:image" content={ogImage} />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="alternate" type="application/rss+xml" title={SITE_CONFIG.title} href="/rss.xml" />
+  <link rel="preload" as="font" type="font/woff2" href={monaSans400} crossorigin />
+  <link rel="preload" as="font" type="font/woff2" href={monaSans600} crossorigin />
+  <link rel="preload" as="font" type="font/woff2" href={geistMono400} crossorigin />
+  <link rel="preload" as="font" type="font/woff2" href={notoLatin700} crossorigin />
+  <style is:inline set:html={fontFaces}></style>
+  <!-- CJK font slices: non-blocking. media=print keeps it off the critical path until it has loaded. -->
+  <link rel="stylesheet" href={FONTS_URL} media="print" onload="this.media='all'" data-astro-transition-persist="fonts-css" />
+  <noscript><link rel="stylesheet" href={FONTS_URL} /></noscript>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/misans@5.0.0/lib/Normal/MiSans-Medium.min.css" crossorigin="anonymous" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
   <script is:inline>
     /* Dark-first: dark unless the visitor chose light or "follow system". */
     (function () {
@@ -181,6 +196,24 @@ const ogImage = image || new URL('/og-image.png', SITE_CONFIG.url).toString();
       });
     };
 
+
+
+    /* ---- Non-critical stylesheets from the CDN: MiSans after the page is idle, KaTeX only when a page has math ---- */
+    const addCss = (id: string, href: string) => {
+      if (document.getElementById(id)) return;
+      const l = document.createElement('link');
+      l.id = id; l.rel = 'stylesheet'; l.href = href; l.crossOrigin = 'anonymous';
+      l.setAttribute('data-astro-transition-persist', id); // survive client-side navigations
+      document.head.appendChild(l);
+    };
+    const ensureKatex = () => addCss('katex-css', 'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css');
+    (window as any).__ensureKatex = ensureKatex;
+    const idle = (fn: () => void) => ((window as any).requestIdleCallback ? (window as any).requestIdleCallback(fn, { timeout: 3000 }) : setTimeout(fn, 1500));
+    if (!(window as any).__lateCss) {
+      (window as any).__lateCss = true;
+      const go = () => idle(() => addCss('misans-css', 'https://cdn.jsdelivr.net/npm/misans@5.0.0/lib/Normal/MiSans-Medium.min.css'));
+      document.readyState === 'complete' ? go() : window.addEventListener('load', go, { once: true });
+    }
 
     /* ---- Odometer: digits roll up to their value ---- */
     const initOdometer = () => {
@@ -435,7 +468,7 @@ const ogImage = image || new URL('/og-image.png', SITE_CONFIG.url).toString();
     document.addEventListener('astro:page-load', stopLoader);
 
     /* ---- bound on every page load ---- */
-    onPageReady(() => { initTheme(); initOdometer(); initMobileMenu(); initBackToTop(); initImages(); updateScrollChrome(); });
+    onPageReady(() => { if (document.querySelector('.katex')) ensureKatex(); initTheme(); initOdometer(); initMobileMenu(); initBackToTop(); initImages(); updateScrollChrome(); });
   </script>
 </body>
 </html>
