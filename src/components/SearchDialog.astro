@@ -3,24 +3,6 @@
 ---
 <div class="search-dialog" id="searchDialog" role="dialog" aria-modal="true" aria-label="搜索文章" aria-hidden="true">
   <div class="search-panel">
-    <div class="search-field">
-      <svg class="search-field-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-      <input
-        id="searchInput"
-        class="search-input"
-        type="search"
-        inputmode="search"
-        enterkeyhint="search"
-        placeholder="搜索标题、描述、标签、分类…"
-        autocomplete="off"
-        autocapitalize="off"
-        spellcheck="false"
-        aria-controls="searchResults"
-      />
-      <button class="search-close" type="button" data-search-close aria-label="关闭搜索">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
-      </button>
-    </div>
     <div class="search-status" id="searchStatus" aria-live="polite"></div>
     <div class="search-results" id="searchResults" role="listbox"></div>
     <div class="search-hints" aria-hidden="true">
@@ -149,6 +131,11 @@
       const dialog = $('searchDialog');
       const input = $<HTMLInputElement>('searchInput');
       if (!dialog || !input) return;
+      const root = document.documentElement;
+      window.clearTimeout((w.__searchAnimTimer as number) || 0);
+      root.setAttribute('data-search-anim', '');
+      root.setAttribute('data-search', '');
+      input.tabIndex = 0;
       dialog.classList.add('open');
       dialog.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
@@ -170,10 +157,15 @@
     const close = () => {
       const dialog = $('searchDialog');
       if (!dialog) return;
+      const root = document.documentElement;
+      root.removeAttribute('data-search');
+      // keep the transition rules alive until the spring has settled
+      w.__searchAnimTimer = window.setTimeout(() => root.removeAttribute('data-search-anim'), 1000);
       dialog.classList.remove('open');
       dialog.setAttribute('aria-hidden', 'true');
       document.body.style.overflow = '';
-      $<HTMLInputElement>('searchInput')?.blur();
+      const field = $<HTMLInputElement>('searchInput');
+      if (field) { field.blur(); field.tabIndex = -1; }
     };
 
     document.addEventListener('click', e => {
@@ -230,6 +222,8 @@
 
     /* A page swap replaces <body>: make sure the scroll lock never outlives the dialog. */
     document.addEventListener('astro:before-swap', () => {
+      document.documentElement.removeAttribute('data-search');
+      document.documentElement.removeAttribute('data-search-anim');
       document.body.style.overflow = '';
     });
   }

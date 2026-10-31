@@ -20,10 +20,10 @@ const TAGS_VISIBLE = 10;---
     <section class="hero-section">
       <div class="hero-copy">
         <h1 class="hero-title">{SITE_CONFIG.title}</h1>
-        <div class="hero-stats">
-          <div class="hero-stat"><span class="hero-stat-number">{allPosts.length}</span><span class="hero-stat-label">篇文章</span></div>
-          <div class="hero-stat"><span class="hero-stat-number">{allCategories.length}</span><span class="hero-stat-label">个分类</span></div>
-          <div class="hero-stat"><span class="hero-stat-number">{allTags.length}</span><span class="hero-stat-label">个标签</span></div>
+        <div class="hero-stats" role="group" aria-label="站点统计">
+          <div class="stat-chip"><span class="odo" data-value={String(allPosts.length)}>{allPosts.length}</span><span class="stat-label">文章</span></div>
+          <div class="stat-chip"><span class="odo" data-value={String(allCategories.length)}>{allCategories.length}</span><span class="stat-label">分类</span></div>
+          <div class="stat-chip"><span class="odo" data-value={String(allTags.length)}>{allTags.length}</span><span class="stat-label">标签</span></div>
         </div>
       </div>
       <div class="hero-orb-wrap" aria-label="点击切换小球形状">
