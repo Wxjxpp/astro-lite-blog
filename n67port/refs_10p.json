@@ -1,0 +1,824 @@
+{
+ "0xc105165": {
+  "count": 1,
+  "callers": [
+   "rh_platform_request_full_redraw"
+  ]
+ },
+ "0xc1068a9": {
+  "count": 5,
+  "callers": []
+ },
+ "0xc10cbb5": {
+  "count": 4,
+  "callers": []
+ },
+ "0xc13c691": {
+  "count": 46,
+  "callers": [
+   "p67_launcher_poll",
+   "rh_platform_backgrounds_poll",
+   "chaos_corona_backgrounds_poll"
+  ]
+ },
+ "0xc13cd55": {
+  "count": 1,
+  "callers": [
+   "rh_platform_request_full_redraw"
+  ]
+ },
+ "0xc16d545": {
+  "count": 6,
+  "callers": [
+   "chaos_write"
+  ]
+ },
+ "0xc187bb1": {
+  "count": 9,
+  "callers": [
+   "rh_platform_backgrounds_poll",
+   "chaos_s541_frame_idle"
+  ]
+ },
+ "0xc187f19": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc1a78f1": {
+  "count": 22,
+  "callers": [
+   "rh_platform_backgrounds_poll",
+   "chaos_s541_frame_idle"
+  ]
+ },
+ "0xc1aff61": {
+  "count": 1,
+  "callers": [
+   "chaos_ctor"
+  ]
+ },
+ "0xc1b002d": {
+  "count": 1,
+  "callers": [
+   "chaos_dtor"
+  ]
+ },
+ "0xc1b9701": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc1b979d": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc1b9d81": {
+  "count": 3,
+  "callers": [
+   "rh_platform_backgrounds_poll",
+   "cc_io_close"
+  ]
+ },
+ "0xc1b9e49": {
+  "count": 123,
+  "callers": [
+   "chaos_ctor"
+  ]
+ },
+ "0xc1d01a5": {
+  "count": 5,
+  "callers": []
+ },
+ "0xc1d0525": {
+  "count": 12,
+  "callers": [
+   "cc_io_seek",
+   "cc_io_size"
+  ]
+ },
+ "0xc1d05e9": {
+  "count": 2,
+  "callers": [
+   "cc_io_mkdir"
+  ]
+ },
+ "0xc1d0a29": {
+  "count": 108,
+  "callers": [
+   "chaos_ctor",
+   "rh_platform_backgrounds_poll",
+   "cc_io_open"
+  ]
+ },
+ "0xc1d0ba5": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc1d129d": {
+  "count": 47,
+  "callers": [
+   "chaos_ctor",
+   "cc_io_read"
+  ]
+ },
+ "0xc1d12e9": {
+  "count": 1,
+  "callers": [
+   "cc_io_rename"
+  ]
+ },
+ "0xc1d1e9d": {
+  "count": 3,
+  "callers": [
+   "cc_io_remove",
+   "cc_io_stat",
+   "cc_io_rmdir"
+  ]
+ },
+ "0xc1d2641": {
+  "count": 39,
+  "callers": [
+   "rh_platform_backgrounds_poll",
+   "cc_io_write"
+  ]
+ },
+ "0xc1e4529": {
+  "count": 13,
+  "callers": [
+   "cc_io_opendir"
+  ]
+ },
+ "0xc1e4565": {
+  "count": 2,
+  "callers": [
+   "cc_io_closedir"
+  ]
+ },
+ "0xc1e4591": {
+  "count": 1,
+  "callers": [
+   "cc_io_readdir"
+  ]
+ },
+ "0xc1e45bd": {
+  "count": 16,
+  "callers": [
+   "cc_io_open",
+   "cc_io_read",
+   "cc_io_write",
+   "cc_io_seek",
+   "cc_io_size",
+   "cc_io_close",
+   "cc_io_remove",
+   "cc_io_stat",
+   "cc_io_rename",
+   "cc_io_mkdir",
+   "cc_io_rmdir"
+  ]
+ },
+ "0xc1e5c39": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc1ea25d": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc1ea63d": {
+  "count": 12,
+  "callers": []
+ },
+ "0xc1ea6e5": {
+  "count": 3,
+  "callers": [
+   "chaos_connect_terminal_start",
+   "chaos_web_terminal_start"
+  ]
+ },
+ "0xc1ea725": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc1eabe1": {
+  "count": 17,
+  "callers": [
+   "rh_platform_backgrounds_poll",
+   "cc_io_open",
+   "cc_io_remove",
+   "cc_io_rmdir"
+  ]
+ },
+ "0xc1f06b5": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc1f0ce1": {
+  "count": 2,
+  "callers": []
+ },
+ "0xc1f49ad": {
+  "count": 4,
+  "callers": []
+ },
+ "0xc1f5d0d": {
+  "count": 1,
+  "callers": [
+   "pan_lwip_assert"
+  ]
+ },
+ "0xc1f8ff9": {
+  "count": 16,
+  "callers": []
+ },
+ "0xc1f903d": {
+  "count": 3,
+  "callers": []
+ },
+ "0xc201fe1": {
+  "count": 5,
+  "callers": []
+ },
+ "0xc2063c5": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc20690d": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc209771": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc238e29": {
+  "count": 3,
+  "callers": []
+ },
+ "0xc23ddad": {
+  "count": 3,
+  "callers": []
+ },
+ "0xc240399": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc2e3995": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc2e3b85": {
+  "count": 2,
+  "callers": [
+   "chaos_bridge_start"
+  ]
+ },
+ "0xc3a9a75": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc3ac47d": {
+  "count": 2,
+  "callers": []
+ },
+ "0xc3b14d1": {
+  "count": 1,
+  "callers": [
+   "chaos_connect_radio_poll"
+  ]
+ },
+ "0xc3dafe1": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc4bf87d": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc4bf899": {
+  "count": 21,
+  "callers": []
+ },
+ "0xc4bfffd": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc4c22cd": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc4c56cd": {
+  "count": 2,
+  "callers": [
+   "chaos_shake_timer"
+  ]
+ },
+ "0xc4c8515": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc4c8905": {
+  "count": 50,
+  "callers": []
+ },
+ "0xc4c8c61": {
+  "count": 4,
+  "callers": []
+ },
+ "0xc4ca0d9": {
+  "count": 3,
+  "callers": [
+   "chaos_shake_timer"
+  ]
+ },
+ "0xc4ca6c5": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc50fa75": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc50fb65": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc50fced": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc50fd7d": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc5100a5": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc513a45": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc513b2d": {
+  "count": 4,
+  "callers": []
+ },
+ "0xc513bc1": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc514301": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc514655": {
+  "count": 2,
+  "callers": []
+ },
+ "0xc5147c1": {
+  "count": 2,
+  "callers": []
+ },
+ "0xc515cf9": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc515ecd": {
+  "count": 3,
+  "callers": []
+ },
+ "0xc5166f1": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc517419": {
+  "count": 5,
+  "callers": []
+ },
+ "0xc5176fd": {
+  "count": 1,
+  "callers": [
+   "chaos_honeycomb_pre_scroll"
+  ]
+ },
+ "0xc517d9d": {
+  "count": 8,
+  "callers": [
+   "p67_launcher_poll"
+  ]
+ },
+ "0xc51805d": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc54751d": {
+  "count": 6,
+  "callers": []
+ },
+ "0xc5475f9": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc547699": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc547765": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc5481e5": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc549679": {
+  "count": 2,
+  "callers": []
+ },
+ "0xc54a561": {
+  "count": 4,
+  "callers": []
+ },
+ "0xc54ca3d": {
+  "count": 7,
+  "callers": []
+ },
+ "0xc54d635": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc570c41": {
+  "count": 2,
+  "callers": []
+ },
+ "0xc587b39": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc587b51": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc587bc1": {
+  "count": 3,
+  "callers": []
+ },
+ "0xc587c91": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc587d89": {
+  "count": 7,
+  "callers": []
+ },
+ "0xc587dc9": {
+  "count": 3,
+  "callers": []
+ },
+ "0xc587e71": {
+  "count": 5,
+  "callers": []
+ },
+ "0xc587ed1": {
+  "count": 5,
+  "callers": [
+   "chaos_write",
+   "chaos_bridge_start"
+  ]
+ },
+ "0xc587f39": {
+  "count": 6,
+  "callers": []
+ },
+ "0xc587fa1": {
+  "count": 15,
+  "callers": []
+ },
+ "0xc5880d1": {
+  "count": 3,
+  "callers": []
+ },
+ "0xc588129": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc5881b9": {
+  "count": 2,
+  "callers": []
+ },
+ "0xc5881c1": {
+  "count": 9,
+  "callers": [
+   "chaos_corona_backgrounds_poll"
+  ]
+ },
+ "0xc5881d9": {
+  "count": 15,
+  "callers": []
+ },
+ "0xc588211": {
+  "count": 17,
+  "callers": [
+   "chaos_honeycomb_pre_scroll",
+   "chaos_row_any",
+   "chaos_tj_wheel_ev"
+  ]
+ },
+ "0xc588249": {
+  "count": 2,
+  "callers": []
+ },
+ "0xc588269": {
+  "count": 2,
+  "callers": []
+ },
+ "0xc5882a1": {
+  "count": 2,
+  "callers": []
+ },
+ "0xc5883d9": {
+  "count": 2,
+  "callers": []
+ },
+ "0xc5883f1": {
+  "count": 38,
+  "callers": [
+   "p67_launcher_poll",
+   "rh_platform_backgrounds_poll"
+  ]
+ },
+ "0xc5883f9": {
+  "count": 11,
+  "callers": []
+ },
+ "0xc588421": {
+  "count": 4,
+  "callers": []
+ },
+ "0xc5884c9": {
+  "count": 5,
+  "callers": []
+ },
+ "0xc588519": {
+  "count": 4,
+  "callers": []
+ },
+ "0xc588629": {
+  "count": 11,
+  "callers": []
+ },
+ "0xc5886e1": {
+  "count": 5,
+  "callers": []
+ },
+ "0xc5888c9": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc588a49": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc588a71": {
+  "count": 6,
+  "callers": []
+ },
+ "0xc588ba9": {
+  "count": 2,
+  "callers": []
+ },
+ "0xc588bf9": {
+  "count": 4,
+  "callers": []
+ },
+ "0xc588cb9": {
+  "count": 2,
+  "callers": []
+ },
+ "0xc588cc9": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc588ce9": {
+  "count": 3,
+  "callers": []
+ },
+ "0xc588d59": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc588da1": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc588da9": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc588de9": {
+  "count": 17,
+  "callers": []
+ },
+ "0xc588ef1": {
+  "count": 13,
+  "callers": []
+ },
+ "0xc588f31": {
+  "count": 6,
+  "callers": []
+ },
+ "0xc588f89": {
+  "count": 3,
+  "callers": []
+ },
+ "0xc589051": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc5890d1": {
+  "count": 12,
+  "callers": []
+ },
+ "0xc589189": {
+  "count": 8,
+  "callers": []
+ },
+ "0xc5891b1": {
+  "count": 2,
+  "callers": []
+ },
+ "0xc5893c1": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc589449": {
+  "count": 9,
+  "callers": []
+ },
+ "0xc589491": {
+  "count": 17,
+  "callers": []
+ },
+ "0xc589571": {
+  "count": 2,
+  "callers": []
+ },
+ "0xc589579": {
+  "count": 23,
+  "callers": [
+   "p67_launcher_poll",
+   "rh_platform_backgrounds_poll",
+   "chaos_corona_backgrounds_poll"
+  ]
+ },
+ "0xc5f32b9": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc7d46a5": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc7d7e95": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc840c55": {
+  "count": 2,
+  "callers": []
+ },
+ "0xc840c61": {
+  "count": 1,
+  "callers": []
+ },
+ "0xc8603b1": {
+  "count": 1,
+  "callers": []
+ },
+ "0xca45609": {
+  "count": 1,
+  "callers": []
+ },
+ "0xca46249": {
+  "count": 6,
+  "callers": []
+ },
+ "0xca462d9": {
+  "count": 1,
+  "callers": []
+ },
+ "0xca48475": {
+  "count": 1,
+  "callers": []
+ },
+ "0xca5fb41": {
+  "count": 4,
+  "callers": [
+   "rh_platform_backgrounds_poll"
+  ]
+ },
+ "0xca67245": {
+  "count": 1,
+  "callers": []
+ },
+ "0xca67835": {
+  "count": 1,
+  "callers": []
+ },
+ "0xca67a19": {
+  "count": 1,
+  "callers": []
+ },
+ "0xca67cb9": {
+  "count": 1,
+  "callers": []
+ },
+ "0xca67cdd": {
+  "count": 1,
+  "callers": []
+ },
+ "0xca69935": {
+  "count": 2,
+  "callers": []
+ },
+ "0xca6a30d": {
+  "count": 1,
+  "callers": []
+ },
+ "0xca6a7cd": {
+  "count": 1,
+  "callers": []
+ },
+ "0xca6c359": {
+  "count": 45,
+  "callers": []
+ },
+ "0xca6cc99": {
+  "count": 4,
+  "callers": []
+ },
+ "0xca6ef35": {
+  "count": 3,
+  "callers": []
+ },
+ "0xca6f661": {
+  "count": 2,
+  "callers": []
+ },
+ "0xca6f6f9": {
+  "count": 1,
+  "callers": []
+ },
+ "0xca70361": {
+  "count": 2,
+  "callers": []
+ },
+ "0xca714b5": {
+  "count": 2,
+  "callers": []
+ },
+ "0xca7323d": {
+  "count": 1,
+  "callers": [
+   "chaos_shake_timer"
+  ]
+ },
+ "0xca76fb5": {
+  "count": 8,
+  "callers": []
+ },
+ "0xca95c31": {
+  "count": 1,
+  "callers": []
+ },
+ "0xca9a899": {
+  "count": 1,
+  "callers": []
+ },
+ "0xcaa5079": {
+  "count": 1,
+  "callers": []
+ },
+ "0xcac0219": {
+  "count": 3,
+  "callers": [
+   "chaos_shake_timer"
+  ]
+ },
+ "0xcac0879": {
+  "count": 4,
+  "callers": []
+ },
+ "0xcac08a1": {
+  "count": 2,
+  "callers": []
+ },
+ "0xcac0bb1": {
+  "count": 9,
+  "callers": []
+ },
+ "0xcac0db9": {
+  "count": 14,
+  "callers": [
+   "rh_platform_backgrounds_poll"
+  ]
+ }
+}
