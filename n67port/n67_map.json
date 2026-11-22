@@ -120,6 +120,11 @@
       "n67": "0x0C25BC79",
       "confidence": "verified",
       "evidence": "N67 0xC25BC78 is lv_bar_set_range: arg (obj,min,max); if max<min logs via 0xC2597EC with its own name string 0x2C683ED6 ('lv_bar_set_range'), file string 0x2C683D87 ('./lvgl/src/widgets/lv_bar.c') and format 0x2C683DA3 ('error range: min=%ld, max=%ld'); on success stores min at [obj+0x28], max at [obj+0x2c], then refresh/animate. Exactly the raw LVGL lv_bar_set_range semantics. (String refs use the 0x2C.. = 0x0C..+0x20000000 alias.)"
+    },
+    "SYM_LVX_MSGBOX_CREATE": {
+      "n67": "0x0C271D6D",
+      "confidence": "high",
+      "evidence": "10p LVX_MSGBOX_CREATE 0xC4CA0D8 is a 5-insn wrapper: push{r7,lr}; movs r2,#0; add r7,sp,#0; bl <msgbox_ctor>; pop. N67 0xC271D6C is the identical wrapper calling 0xC271CF8 with r2=0. 0xC271CF8 is a dialog constructor: lv_obj_create-like 0xC23EF90, init helper 0xC271C6C, parent resolve 0xC257E00, title/body setup. It sits in the same N67 LVX page/msgbox cluster as the already-mapped MSGBOX_SET_CONTENT 0xC274F61 and PAGE_TITLE_CREATE 0xC275501."
     }
   },
   "rejected": {
