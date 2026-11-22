@@ -1,0 +1,238 @@
+{
+  "preview": "chaos_work/extract3/preview.block",
+  "version": 65536,
+  "id": "990000000029",
+  "name": "N67 Chaos Installer",
+  "styleName": "格式1",
+  "entry_index": 0,
+  "files": [
+    {
+      "name": "_lua/_Lua/main.lua",
+      "path": "chaos_work/extract3/00_main.lua"
+    },
+    {
+      "name": "_lua/_Lua/icon.bin",
+      "path": "chaos_work/extract3/01_icon.bin"
+    },
+    {
+      "name": "_lua/_Lua/network-notices-01.txt",
+      "path": "chaos_work/extract3/02_network-notices-01.txt"
+    },
+    {
+      "name": "_lua/_Lua/network-notices-02.txt",
+      "path": "chaos_work/extract3/03_network-notices-02.txt"
+    },
+    {
+      "name": "_lua/_Lua/network-notices-03.txt",
+      "path": "chaos_work/extract3/04_network-notices-03.txt"
+    },
+    {
+      "name": "_lua/_Lua/THIRD-PARTY-NETWORK.txt",
+      "path": "chaos_work/extract3/05_THIRD-PARTY-NETWORK.txt"
+    },
+    {
+      "name": "_lua/_Lua/chaos-00.dat",
+      "path": "chaos_work/extract3/06_chaos-00.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-01.dat",
+      "path": "chaos_work/extract3/07_chaos-01.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-02.dat",
+      "path": "chaos_work/extract3/08_chaos-02.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-03.dat",
+      "path": "chaos_work/extract3/09_chaos-03.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-04.dat",
+      "path": "chaos_work/extract3/10_chaos-04.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-05.dat",
+      "path": "chaos_work/extract3/11_chaos-05.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-06.dat",
+      "path": "chaos_work/extract3/12_chaos-06.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-07.dat",
+      "path": "chaos_work/extract3/13_chaos-07.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-08.dat",
+      "path": "chaos_work/extract3/14_chaos-08.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-09.dat",
+      "path": "chaos_work/extract3/15_chaos-09.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-10.dat",
+      "path": "chaos_work/extract3/16_chaos-10.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-11.dat",
+      "path": "chaos_work/extract3/17_chaos-11.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-12.dat",
+      "path": "chaos_work/extract3/18_chaos-12.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-13.dat",
+      "path": "chaos_work/extract3/19_chaos-13.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-14.dat",
+      "path": "chaos_work/extract3/20_chaos-14.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-15.dat",
+      "path": "chaos_work/extract3/21_chaos-15.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-16.dat",
+      "path": "chaos_work/extract3/22_chaos-16.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-17.dat",
+      "path": "chaos_work/extract3/23_chaos-17.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-18.dat",
+      "path": "chaos_work/extract3/24_chaos-18.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-19.dat",
+      "path": "chaos_work/extract3/25_chaos-19.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-20.dat",
+      "path": "chaos_work/extract3/26_chaos-20.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-21.dat",
+      "path": "chaos_work/extract3/27_chaos-21.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-22.dat",
+      "path": "chaos_work/extract3/28_chaos-22.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-23.dat",
+      "path": "chaos_work/extract3/29_chaos-23.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-24.dat",
+      "path": "chaos_work/extract3/30_chaos-24.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-25.dat",
+      "path": "chaos_work/extract3/31_chaos-25.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-26.dat",
+      "path": "chaos_work/extract3/32_chaos-26.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-27.dat",
+      "path": "chaos_work/extract3/33_chaos-27.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-28.dat",
+      "path": "chaos_work/extract3/34_chaos-28.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-29.dat",
+      "path": "chaos_work/extract3/35_chaos-29.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-30.dat",
+      "path": "chaos_work/extract3/36_chaos-30.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-31.dat",
+      "path": "chaos_work/extract3/37_chaos-31.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-32.dat",
+      "path": "chaos_work/extract3/38_chaos-32.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-33.dat",
+      "path": "chaos_work/extract3/39_chaos-33.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-34.dat",
+      "path": "chaos_work/extract3/40_chaos-34.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-35.dat",
+      "path": "chaos_work/extract3/41_chaos-35.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-36.dat",
+      "path": "chaos_work/extract3/42_chaos-36.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-37.dat",
+      "path": "chaos_work/extract3/43_chaos-37.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-38.dat",
+      "path": "chaos_work/extract3/44_chaos-38.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-39.dat",
+      "path": "chaos_work/extract3/45_chaos-39.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-40.dat",
+      "path": "chaos_work/extract3/46_chaos-40.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-41.dat",
+      "path": "chaos_work/extract3/47_chaos-41.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-42.dat",
+      "path": "chaos_work/extract3/48_chaos-42.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-43.dat",
+      "path": "chaos_work/extract3/49_chaos-43.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-44.dat",
+      "path": "chaos_work/extract3/50_chaos-44.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-45.dat",
+      "path": "chaos_work/extract3/51_chaos-45.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-46.dat",
+      "path": "chaos_work/extract3/52_chaos-46.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-47.dat",
+      "path": "chaos_work/extract3/53_chaos-47.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-48.dat",
+      "path": "chaos_work/extract3/54_chaos-48.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-49.dat",
+      "path": "chaos_work/extract3/55_chaos-49.dat"
+    },
+    {
+      "name": "_lua/_Lua/chaos-rl.dat",
+      "path": "chaos_work/extract3/56_chaos-rl.dat"
+    }
+  ]
+}

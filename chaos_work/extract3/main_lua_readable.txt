@@ -1,0 +1,771 @@
+-- Shared native-app installer v5. Firmware ABI: N67 CN 3.1.190 only.
+
+-- One coroutine owns all shell/memory operations. No injection on face load.
+
+local lvgl = require('lvgl')
+
+local MODULE_SIZE = 4904
+
+local MODULE_BIN,CHAOS_BIN,CHAOS_RELOCS=nil,nil,nil
+local CHAOS_SIZE = 2061080
+local CHAOS_BLOCK,CHAOS_EXEC,chaos_ready = 0,0,false
+local function prepare_module()
+  if MODULE_BIN then return end
+  MODULE_BIN = <<BLOB len=288>>..'\r'..<<BLOB len=103>>..'\r'..<<BLOB len=679>>..'\r'..<<BLOB len=419>>..'\r'..<<BLOB len=1105>>..'\r'..<<BLOB len=323>>..'\r'..<<BLOB len=59>>..'\r'..<<BLOB len=593>>..'\r'..<<BLOB len=51>>..'\r'..<<BLOB len=349>>..'\r'..<<BLOB len=193>>..'\r'..<<BLOB len=387>>..'\r'..<<BLOB len=395>>
+  assert(#MODULE_BIN==MODULE_SIZE,'payload size')
+end
+local OFF_MAGIC=0x0
+local OFF_COPY=0xa
+local OFF_SYNC=0x56
+local OFF_TIMER_BOOTSTRAP=0x744
+local OFF_REGTICK=0xda
+local OFF_INSTALL_CHECK=0x8ea
+local OFF_INSTALL_HEALTH=0x79e
+local OFF_PREFLIGHT=0x904
+local BOOTSTRAP_SIZE=218
+
+local RES = {size=0x2000,status=0x200,ident=0x280,icon=0x2a0,title=0x2e0,cfg=0x300}
+
+local APP_ID, PAGE_ID = 0xE7D4, 0xE7D40000
+
+local TITLE, RELEASE = 'Chaos', 'alpha81-capture.38-10p-port.37'
+
+local MALLOC = 0x0C0F1171
+
+local EXEC, BLOCK, MODULE_BLOCK, REG_TIMER, BRIDGE = 0,0,0,nil,0
+
+local module_ready, block_ready, armed = false,false,false
+
+local owners, ranges, work, shell_count = {},{},nil,0
+
+local batch, last_phase = false,'就绪'
+
+local LOG, MARK, DUMP = '/data/chaos-n67.log','/data/chaos-n67.mark','/data/chaos-n67-read.txt'
+
+local function word(s,o) return string.unpack('<I4',s,o+1) end
+
+local function hx(n) return string.format('0x%08x',n) end
+
+local function heap(p,n) return p and p%4==0 and p>=0x3C000020 and p+(n or 4)<0x3EFFFFF8 end
+
+-- Match the registrar's bt_valid_ptr: native registry/desktop/timer objects
+-- can also live in SRAM. Allocation ownership still requires heap().
+local function runtime_ptr(p,n)
+  return heap(p,n) or (p and p%4==0 and p>=0x20000000 and p+(n or 4)<=0x20100000)
+end
+
+local function keep(s) owners[#owners+1]=s;return s end
+
+local function log(s)
+
+  local f=io.open(LOG,'ab');if f then f:write(s..'\n');f:close() end
+
+end
+
+local function mark(s)
+
+  last_phase=s;local f=io.open(MARK,'wb');if f then f:write(s);f:close() end
+
+  log(string.format('[%d] %s',shell_count,s))
+
+end
+
+local function yield_step() coroutine.yield() end
+
+local function shell(cmd)
+
+  shell_count=shell_count+1
+
+  local ok,kind,code=os.execute(cmd)
+
+  assert(ok==true and kind=='exit' and code==0,
+
+    'shell '..tostring(ok)..'/'..tostring(kind)..'/'..tostring(code)..' '..cmd:sub(1,80))
+  yield_step()
+
+end
+
+local function own(p,n) assert(heap(p,n));ranges[#ranges+1]={p,p+n} end
+
+local function write32(p,v)
+
+  local allowed=false
+
+  for _,r in ipairs(ranges) do if p>=r[1] and p+4<=r[2] then allowed=true;break end end
+
+  assert(allowed and p%4==0,'unowned write '..hx(p))
+
+  shell(string.format('mw %s=%08x',hx(p),v))
+
+end
+
+local function read(p,n)
+
+  assert(n>0 and n<=128 and (heap(p&~3,n+4) or (p>=0x20000000 and p+n<=0x20100000)), 'read range')
+
+  shell(string.format('xd %s %d > %s',hx(p),n,DUMP))
+
+  local f=assert(io.open(DUMP,'rb'),'memory dump missing');local t=f:read('*a');f:close()
+
+  local out={}
+
+  for line in t:gmatch('[^\r\n]+') do
+
+    local bytes=line:match('^%x%x%x%x:%s(.*)$')
+
+    if bytes then for h in bytes:sub(1,48):gmatch('(%x%x)%s') do
+
+      out[#out+1]=string.char(tonumber(h,16));if #out==n then return table.concat(out) end
+
+    end end
+
+  end
+
+  error('short memory dump '..hx(p))
+
+end
+
+local function owned_string(s)
+
+  assert(#s>=128,'long string required')
+
+  local p=tonumber(string.format('%p',s):match('0x(%x+)'),16)
+
+  assert(heap(p,#s+16),'string address')
+
+  local h=read(p,16);assert(h:byte(5)==0x14 and word(h,12)==#s,'Lua string ABI')
+
+  return p+16,s
+
+end
+
+local function writes(parts)
+
+  -- The proven NSH maximum is 48 writes per command, with a UI yield after each.
+
+  local n=batch and 48 or 1
+
+  for start=1,#parts,n do
+
+    local chunk={};for i=start,math.min(start+n-1,#parts) do chunk[#chunk+1]=parts[i] end
+
+    shell(table.concat(chunk,';'))
+
+  end
+
+end
+
+-- The old firmware memcpy veneer moved in 3.1.190. Copy through the already
+-- probed NSH memory-write path instead of calling an unverified code address.
+local function copy_string(dst,s)
+  local padded=(#s+3)&~3
+  local owned=false
+  for _,r in ipairs(ranges) do if dst>=r[1] and dst+padded<=r[2] then owned=true;break end end
+  assert(owned and dst%4==0,'unowned copy '..hx(dst))
+  local parts={}
+  for off=0,#s-1,4 do
+    local chunk=s:sub(off+1,off+4)
+    if #chunk<4 then chunk=chunk..string.rep('\0',4-#chunk) end
+    parts[#parts+1]=string.format('mw %s=%08x',hx(dst+off),word(chunk,0))
+    if #parts==48 then shell(table.concat(parts,';'));parts={} end
+  end
+  if #parts>0 then shell(table.concat(parts,';')) end
+end
+
+local function sync_code(p,n)
+
+  for _,reg in ipairs({0x07FFC080,0x07FFA018}) do
+
+    local base=reg==0x07FFC080 and p or p-0x20000000
+
+    local parts={};for line=base&~31,(base+n-1)&~31,32 do
+
+      parts[#parts+1]=string.format('mw %s=%08x',hx(reg),line)
+
+    end
+
+    writes(parts)
+
+  end
+
+end
+
+local TRAMP = (('70b50ff27c0404f1005482b06669009625686068a168e2682369a84702b0a06145f23900c4f23120e061bff34f8f002070bd00bf'
+
+  ..string.rep('0',152)):gsub('..',function(h) return string.char(tonumber(h,16)) end))
+
+local function fn(offset) return (EXEC+offset)|1 end
+
+local function native(f,a,b,c,d,e)
+
+  assert(f%2==1 and (f==MALLOC or ((EXEC~=0 and f>=EXEC and f<EXEC+MODULE_SIZE) or (CHAOS_EXEC~=0 and f>=CHAOS_EXEC and f<CHAOS_EXEC+CHAOS_SIZE))), 'native entry')
+
+  local blob=TRAMP..string.pack('<I4I4I4I4I4I4I4I4',f,a or 0,b or 0,c or 0,d or 0,e or 0,0,0)
+
+  local p,owner=owned_string(blob);local parts={}
+
+  for line=p&~31,(p+224)&~31,32 do parts[#parts+1]=string.format('mw %s=%08x',hx(0x07FFC080),line) end
+
+  if batch then
+
+    parts[#parts+1]='exec '..hx((p-0x20000000)|1);shell(table.concat(parts,';'))
+
+  else writes(parts);shell('exec '..hx((p-0x20000000)|1)) end
+
+  local result=blob:sub(0x99,0xA0);assert(word(result,4)==0x42315039 and #owner==160,'native result')
+
+  return word(result,0)
+
+end
+
+local BULK_STEP=1048576
+local function copy_fast(dst,s)
+assert(module_ready,'copy bridge not ready')
+local allowed=false
+for _,r in ipairs(ranges) do if dst>=r[1] and dst+#s<=r[2] then allowed=true;break end end
+assert(allowed and #s>0,'unowned bulk copy')
+local source=s
+if #source<128 then source=source..string.rep('\0',128-#source) end
+local src,owner=owned_string(source)
+for off=0,#s-1,BULK_STEP do
+local count=math.min(BULK_STEP,#s-off)
+local result=native(fn(OFF_COPY),dst+off,src+off,count)
+assert(result==dst+off and #owner==#source,
+string.format('bulk copy failed at +%x (%d bytes), result=%08x',off,count,result))
+end
+end
+local function sync_fast(p,n)
+assert(module_ready and n>0,'cache bridge not ready')
+local allowed=false
+for _,r in ipairs(ranges) do if p>=r[1] and p+n<=r[2] then allowed=true;break end end
+assert(allowed,'unowned bulk cache sync')
+for off=0,n-1,BULK_STEP do
+local count=math.min(BULK_STEP,n-off)
+assert(native(fn(OFF_SYNC),p+off,count)==count,
+string.format('bulk cache sync failed at +%x (%d bytes)',off,count))
+end
+end
+
+local function probe_batch()
+
+  local scratch=string.rep('\0',192);local p,owner=owned_string(scratch);own(p,8)
+
+  shell(string.format('mw %s=11223344;mw %s=55667788',hx(p),hx(p+4)))
+
+  local bytes=read(p,8);assert(word(bytes,0)==0x11223344 and word(bytes,4)==0x55667788 and #owner==192,'NSH chaining unavailable')
+
+  batch=true
+
+end
+
+local function load_module()
+
+  if module_ready then return end
+  prepare_module()
+
+  mark('复制原生模块')
+
+  if MODULE_BLOCK==0 then MODULE_BLOCK=native(MALLOC,((MODULE_SIZE+255)//256)*256) end
+
+  assert(heap(MODULE_BLOCK,MODULE_SIZE),'module allocation')
+
+  own(MODULE_BLOCK,(MODULE_SIZE+3)&~3)
+
+  -- The pinned Lua string is temporary executable storage for the audited
+  -- self-contained copy/sync prefix. The resident timer always uses the heap
+  -- copy below, which survives unloading this watchface and Lua collection.
+  local src,owner=owned_string(MODULE_BIN)
+  EXEC=src-0x20000000
+  sync_code(src,BOOTSTRAP_SIZE)
+  assert(native(fn(OFF_COPY),MODULE_BLOCK,src,MODULE_SIZE)==MODULE_BLOCK and #owner==MODULE_SIZE,'bootstrap copy')
+  assert(native(fn(OFF_SYNC),MODULE_BLOCK,MODULE_SIZE)==MODULE_SIZE,'bootstrap sync')
+  EXEC=MODULE_BLOCK-0x20000000
+
+  assert(native(fn(OFF_MAGIC))==0x4D544C42,'native magic')
+
+  module_ready=true
+
+end
+
+local function resident(REG_BLK)
+
+  local REG_APP,REG_PAGE,REG_ICONS=REG_BLK,REG_BLK+0x40,REG_BLK+0xB0
+
+  local REG_STUB,REG_TICK,REG_UI=REG_BLK+0xE8,REG_BLK+0xF0,REG_BLK+0x150
+
+  local REG_IDENT,REG_ICON=REG_BLK+RES.ident,REG_BLK+RES.icon
+
+  local REG_STAT,CFG=REG_BLK+RES.status,REG_BLK+RES.cfg
+
+local v={}
+v[0x8]=REG_IDENT
+v[0xc]=REG_ICON
+v[0x10]=APP_ID|0x00040000
+v[0x1c]=(REG_STUB-0x20000000)|1
+v[0xe8]=0x47704800
+v[0xec]=REG_BLK+RES.title
+v[0xf0]=0x52474554
+v[0xf8]=2
+v[0xfc]=0x0C4497CD
+v[0x100]=0x0C4467B5
+v[0x104]=0x0C448749
+v[0x108]=0x0C2A47A1
+v[0x10c]=REG_APP
+v[0x110]=REG_PAGE
+v[0x114]=REG_BLK+0x800
+v[0x118]=APP_ID
+v[0x11c]=PAGE_ID
+v[0x128]=0x200A3938
+v[0x12c]=0x200A1DE8
+v[0x140]=REG_BLK+RES.cfg
+v[0x144]=REG_APP|1
+local strings={[RES.ident]='com.chaos.manager',[RES.icon]='/data/chaos/chaos_icon.bin',[RES.title]='Chaos'}
+
+  local chunks,positions={},{}
+
+  for off,w in pairs(v) do chunks[off]=string.pack('<I4',w) end
+
+  for off,s in pairs(strings) do chunks[off]=s..'\0' end
+
+  for off in pairs(chunks) do positions[#positions+1]=off end;table.sort(positions)
+
+  local out,cursor={},0
+
+  for _,off in ipairs(positions) do
+
+    assert(off>=cursor,'resident overlap');out[#out+1]=string.rep('\0',off-cursor)
+
+    out[#out+1]=chunks[off];cursor=off+#chunks[off]
+
+  end
+
+  assert(cursor<=RES.size,'resident size');out[#out+1]=string.rep('\0',RES.size-cursor)
+
+  return table.concat(out)
+
+end
+
+
+local function load_chaos()
+  if chaos_ready then return end
+  mark('原生快速装载 Chaos')
+  assert(module_ready,'native loader bridge not ready')
+  if CHAOS_BLOCK==0 then CHAOS_BLOCK=native(MALLOC,CHAOS_SIZE);own(CHAOS_BLOCK,CHAOS_SIZE) end
+  CHAOS_EXEC=CHAOS_BLOCK-0x20000000
+  local function candidate(path)
+    if type(path)~='string' or path:sub(1,1)~='/' then return nil end
+    path=path:gsub('/main%.lua$','/')
+    if path:sub(-1)~='/' then path=path..'/' end
+    local name=path..'chaos-00.dat'
+    local f=io.open(name,'rb')
+    if not f then return nil end
+    f:close();return name
+  end
+  local path=candidate(SCRIPT_PATH)
+  if not path and type(debug)=='table' and type(debug.getinfo)=='function' then
+    local ok,info=pcall(debug.getinfo,1,'S')
+    if ok and type(info)=='table' and type(info.source)=='string' and info.source:sub(1,1)=='@' then path=candidate(info.source:sub(2)) end
+  end
+  path=path or candidate('/data/app/watchface/market/990000000029/_lua/_Lua/')
+  assert(path and #path<=240,'安装数据缺失，请重新传送完整 bin')
+  local path_source=path..string.rep('\0',math.max(1,128-#path))
+  local path_ptr,path_owner=owned_string(path_source)
+  local info=string.pack('<I4I4I4I4I4I4I4',0x314c4843,CHAOS_SIZE,1607023,50,4823,0x1d100000,3774707291)..string.rep('\0',100)
+  local info_ptr,info_owner=owned_string(info)
+  local result=native(fn(2653),CHAOS_BLOCK,info_ptr,path_ptr,#path)
+  assert(result==CHAOS_SIZE and #path_owner==#path_source and #info_owner==128,
+    string.format('原生载入校验失败 %08x，请重新传送完整 bin',result))
+  sync_fast(CHAOS_BLOCK,CHAOS_SIZE)
+  assert(native((CHAOS_EXEC+457381)|1,BLOCK,lvgl.FLAG.GESTURE_BUBBLE,lvgl.FLAG.EVENT_BUBBLE,lvgl.FLAG.PRESS_LOCK,fn(OFF_REGTICK))==0x4e363743,'Chaos init ABI')
+  chaos_ready=true
+end
+
+local function ensure_chaos_dir()
+  local path='/data/chaos/.installer-probe'
+  local f=io.open(path,'ab')
+  if not f then
+    local ok,kind,code=os.execute('mkdir /data/chaos')
+    f=io.open(path,'ab')
+    assert(f,'无法创建 /data/chaos：'..tostring(ok)..'/'..tostring(kind)..'/'..tostring(code))
+  end
+  assert(f:close(),'目录检查失败');os.remove(path)
+end
+
+-- Installer-owned data only; preserve user fonts, icons, settings and backups.
+local DATA_VERSION='alpha81-capture.24'
+local DATA_MARKER='/data/chaos/version.txt'
+local function data_assets() return {{'chaos_icon.bin',(function(s,z)
+local o,i='',1
+while i<=#s do
+local t=s:byte(i);i=i+1
+if t<128 then
+assert(t>0 and i+t-1<=#s);o=o..s:sub(i,i+t-1);i=i+t
+else
+assert(i+1<=#s);local d=s:byte(i)+s:byte(i+1)*256;i=i+2
+local n=t-128+4;assert(d>0 and d<=#o)
+local p=o:sub(#o-d+1,#o-d+n)
+if #p<n then p=p:rep((n+#p-1)//#p):sub(1,n) end
+o=o..p
+end
+assert(#o<=z)
+end
+assert(#o==z);return o
+end)(table.concat({<<BLOB len=107>>,'\r',<<BLOB len=59>>,'\r',<<BLOB len=1293>>,'\r',<<BLOB len=583>>,'\r',<<BLOB len=98>>,'\r',<<BLOB len=772>>,'\r',<<BLOB len=239>>,'\r',<<BLOB len=390>>,'\r',<<BLOB len=286>>,'\r',<<BLOB len=39>>,'\r',<<BLOB len=18>>,'\r',<<BLOB len=29>>,'\r',<<BLOB len=55>>,'\r',<<BLOB len=595>>,'\r',<<BLOB len=61>>,'\r',<<BLOB len=37>>,'\r',<<BLOB len=125>>,'\r',<<BLOB len=308>>,'\r',<<BLOB len=18>>,'\r',<<BLOB len=575>>,'\r',<<BLOB len=451>>,'\r',<<BLOB len=373>>}),36868)},{'chaos_settings_icon.bin',(function(s,z)
+local o,i='',1
+while i<=#s do
+local t=s:byte(i);i=i+1
+if t<128 then
+assert(t>0 and i+t-1<=#s);o=o..s:sub(i,i+t-1);i=i+t
+else
+assert(i+1<=#s);local d=s:byte(i)+s:byte(i+1)*256;i=i+2
+local n=t-128+4;assert(d>0 and d<=#o)
+local p=o:sub(#o-d+1,#o-d+n)
+if #p<n then p=p:rep((n+#p-1)//#p):sub(1,n) end
+o=o..p
+end
+assert(#o<=z)
+end
+assert(#o==z);return o
+end)(<<BLOB len=170>>..'\r'..<<BLOB len=1377>>..'\r'..<<BLOB len=255>>..'\r'..<<BLOB len=361>>..'\r'..<<BLOB len=250>>..'\r'..<<BLOB len=111>>..'\r'..<<BLOB len=226>>..'\r'..<<BLOB len=37>>..'\r'..<<BLOB len=131>>..'\r'..<<BLOB len=130>>..'\r'..<<BLOB len=648>>..'\r'..<<BLOB len=91>>..'\r'..<<BLOB len=232>>,16388)}} end
+local function data_read(path)
+ local f=io.open(path,'rb');if not f then return nil end
+ local b=f:read('*a');local ok=f:close();if not ok then return nil end;return b
+end
+local function data_replace(path,bytes)
+ local temp=path..'.update'
+ local f=assert(io.open(temp,'wb'),'无法写入更新：'..path)
+ local ok,err=pcall(function()
+  assert(f:write(bytes),'更新写入失败：'..path)
+  assert(f:close(),'更新关闭失败：'..path);f=nil
+  assert(data_read(temp)==bytes,'更新校验失败：'..path)
+  assert(os.rename(temp,path),'更新提交失败：'..path)
+ end)
+ if not ok then if f then pcall(function()f:close()end)end;os.remove(temp);error(err,0) end
+end
+local function update_program_data()
+ local current=data_read(DATA_MARKER)
+ if current==DATA_VERSION..'\n' then mark('data version matches '..DATA_VERSION);return end
+ local DATA_ASSETS=data_assets()
+ mark('update program data '..tostring(current or 'legacy')..' -> '..DATA_VERSION)
+ for _,e in ipairs(DATA_ASSETS)do
+  local path='/data/chaos/'..e[1]
+  data_replace(path,e[2])
+ end
+ -- Marker commits last. A failed update retains the previous marker and retries.
+ data_replace(DATA_MARKER,DATA_VERSION..'\n')
+ mark('program data committed '..DATA_VERSION)
+end
+
+local function write_icon()
+ update_program_data()
+end
+
+local function arm_registrar()
+
+  BRIDGE=native(MALLOC,128);own(BRIDGE,128)
+
+  local code=string.pack('<I4I4I4I4',0x4B024901,0xBF004718,BRIDGE,fn(OFF_TIMER_BOOTSTRAP))
+
+  local blob=string.pack('<I4I4I4I4I4I4I4I4',0x544D425A,0x0C25A289,(CHAOS_EXEC+457917)|1,600,BLOCK+0xF0,0,0,0)
+
+    ..code..string.rep('\0',80)
+
+  copy_fast(BRIDGE,blob)
+
+  sync_code(BRIDGE+32,16)
+
+  REG_TIMER=lvgl.Timer{period=100,repeat_count=-1,paused=true,cb=function(t) t:pause() end}
+
+  local ud=tonumber(tostring(REG_TIMER):match('0x(%x+)$'),16);assert(heap(ud,4),'timer userdata')
+
+  local tp=word(read(ud,4),0);assert(heap(tp,24),'timer pointer')
+
+  local raw=read(tp,24)
+
+  assert(word(raw,0)==100 and word(raw,16)==0xFFFFFFFF and heap(word(raw,12),8),'timer ABI')
+
+  local cb=word(raw,8);assert(cb>=0x0C080001 and cb<0x0C7EA290 and cb%2==1,'timer callback ABI')
+
+  own(tp+8,4);write32(tp+8,(BRIDGE+32-0x20000000)|1);REG_TIMER:ready();REG_TIMER:resume()
+
+end
+
+-- Reuse the bootstrap and its native timer slot. Never allocate another
+-- registrar just because the installer times out or the user taps Retry.
+local function retry_registrar()
+  local r=read(BLOCK+0xF0,96)
+  assert(word(r,0)==0x52474554,'注册上下文损坏，请重启')
+  local b=read(BRIDGE,28)
+  assert(word(b,0)==0x544D425A,'定时器上下文损坏，请重启')
+  if word(b,20)==0 and REG_TIMER then REG_TIMER:ready();REG_TIMER:resume() end
+  if (word(r,4)==2 or word(r,4)==3) and word(r,0x40)==0 and word(r,0x4C)>=80 then write32(BLOCK+0xF0+0x4C,0) end
+end
+
+local function registration_failure(bytes)
+  local b=read(BRIDGE,28)
+  local native_timer=runtime_ptr(word(b,20),24) and 1 or 0
+  return string.format('注册未完成 S%d B%d\nT%d A%d N%d C%d\nL%x I%x',
+    word(bytes,4),word(bytes,0x5C),word(bytes,0x30),word(bytes,0x4C),native_timer,word(b,24),word(bytes,0x34),word(bytes,0x40))
+end
+
+
+
+-- Layout adapted from WenHuaYiYang/Chaos-Module at
+-- 545311023e31404bb775e9ca6b33740c89f3a5b4 (AGPL-3.0).
+local SCR_W,SCR_H=336,480
+local root=lvgl.Object(nil,{w=SCR_W,h=SCR_H,bg_color=0x1C1C1E,bg_opa=lvgl.OPA(100),outline_width=0,border_width=0,pad_all=0})
+root:clear_flag(lvgl.FLAG.SCROLLABLE | lvgl.FLAG.PRESS_LOCK)
+root:add_flag(lvgl.FLAG.CLICKABLE | lvgl.FLAG.EVENT_BUBBLE | lvgl.FLAG.GESTURE_BUBBLE)
+local title_font,body=lvgl.Font('MiSans-Regular',32),lvgl.Font('MiSans-Regular',24)
+local version_font=lvgl.Font('MiSans-Regular',18)
+local function view()
+ local o=lvgl.Object(root,{w=SCR_W,h=SCR_H,bg_color=0x1C1C1E,bg_opa=lvgl.OPA(100),outline_width=0,border_width=0,pad_all=0})
+ o:clear_flag(lvgl.FLAG.SCROLLABLE | lvgl.FLAG.PRESS_LOCK)
+ o:add_flag(lvgl.FLAG.CLICKABLE | lvgl.FLAG.EVENT_BUBBLE | lvgl.FLAG.GESTURE_BUBBLE);return o
+end
+local main_view,settings_view=view(),view()
+local function view_show(settings)
+ main_view:set{align={type=lvgl.ALIGN.TOP_LEFT,x_ofs=0,y_ofs=settings and 3000 or 0}}
+ settings_view:set{align={type=lvgl.ALIGN.TOP_LEFT,x_ofs=0,y_ofs=settings and 0 or 3000}}
+end
+view_show(false)
+local function centered(parent,text,y,font,color)
+ local o=lvgl.Label(parent,{text=text,text_font=font,text_color=color,align={type=lvgl.ALIGN.CENTER,x_ofs=0,y_ofs=y}})
+ o:clear_flag(lvgl.FLAG.CLICKABLE | lvgl.FLAG.PRESS_LOCK)
+ o:add_flag(lvgl.FLAG.EVENT_BUBBLE | lvgl.FLAG.GESTURE_BUBBLE);return o
+end
+centered(main_view,'Chaos 安装器',-212,title_font,0xF2F2F2)
+local card=lvgl.Object(main_view,{w=SCR_W-32,h=68,bg_color=0x2C2C2E,bg_opa=lvgl.OPA(100),border_width=1,border_color=0x2A2A2C,radius=24,pad_all=0,align={type=lvgl.ALIGN.CENTER,x_ofs=0,y_ofs=-150}})
+card:clear_flag(lvgl.FLAG.SCROLLABLE | lvgl.FLAG.PRESS_LOCK)
+card:add_flag(lvgl.FLAG.EVENT_BUBBLE | lvgl.FLAG.GESTURE_BUBBLE)
+local compatibility=lvgl.Label(card,{text='N67 · 3.1.190',w=280,h=48,text_font=version_font,text_color=0xB3B3B3,text_align=2,align={type=lvgl.ALIGN.CENTER,x_ofs=0,y_ofs=0}})
+compatibility:clear_flag(lvgl.FLAG.CLICKABLE | lvgl.FLAG.PRESS_LOCK)
+compatibility:add_flag(lvgl.FLAG.EVENT_BUBBLE | lvgl.FLAG.GESTURE_BUBBLE)
+local button_styles={
+ primary={bg=0x2563EB,line=0x2563EB,fg=0xF2F2F2,opa=100,border=1},
+ danger={bg=0xFF453A,line=0xFF453A,fg=0xFF453A,opa=15,border=0},
+ ghost={bg=0x1C1C1E,line=0x2A2A2C,fg=0xB3B3B3,opa=100,border=1},
+}
+local function button(parent,text,y,kind)
+ local style=button_styles[kind] or button_styles.ghost
+ local o=lvgl.Object(parent,{w=SCR_W-32,h=64,bg_color=style.bg,bg_opa=lvgl.OPA(style.opa),border_width=style.border,border_color=style.line,radius=24,pad_all=0,align={type=lvgl.ALIGN.CENTER,x_ofs=0,y_ofs=y}})
+ o:clear_flag(lvgl.FLAG.SCROLLABLE | lvgl.FLAG.PRESS_LOCK)
+ o:add_flag(lvgl.FLAG.CLICKABLE | lvgl.FLAG.EVENT_BUBBLE | lvgl.FLAG.GESTURE_BUBBLE)
+ return o,centered(o,text,0,body,style.fg)
+end
+local install,caption=button(main_view,'运行',-76,'primary')
+local settings_open=button(main_view,'注入设置',2,'ghost')
+centered(settings_view,'注入设置',-198,title_font,0xF2F2F2)
+centered(settings_view,'N67 · 3.1.190',-152,version_font,0xB3B3B3)
+local settings_back=button(settings_view,'< 返回',78,'ghost')
+centered(settings_view,'自动载入仅限安装器表盘',116,version_font,0xB3B3B3)
+centered(settings_view,'入口选择在运行前保存',140,version_font,0x666666)
+
+local function system_version()
+  local f=io.open('/system/version/version.ini','rb');if not f then return nil end
+  local raw=f:read('*a');f:close();return raw and raw:match('version%s*=%s*([%d.]+)')
+end
+
+local function phase(s)
+  mark(s)
+  caption:set{text=s}
+  compatibility:set{text='当前进度: '..s, text_color=0x22C55E}
+end
+
+local function entry_preflight()
+  phase('检查应用 ID 与旧版')
+  local mask=native(fn(OFF_PREFLIGHT))
+  mark(string.format('ID_CHECK mask=%x',mask))
+  if mask&2~=0 then error('检测到旧版 E7C3 仍在运行\n请重启后只运行新版安装器',0) end
+  if mask&1~=0 then error('检测到新版 E7D4 已存在\n更新请先重启',0) end
+end
+
+local function install_app()
+  local version=system_version()
+  assert(version=='3.1.190','系统版本不支持：'..tostring(version or '无法读取'))
+  if not armed then
+    phase('连接注册接口');probe_batch();load_module()
+    if entry_preflight then entry_preflight() end
+    phase('检查应用注册')
+    local found=native(fn(OFF_INSTALL_CHECK),0x0C4467B5,APP_ID)
+    assert(found==0,'更新截屏扩展请先重启手环')
+    if runtime_ptr(found,60) then
+      phase('修复已驻留应用图标');ensure_chaos_dir();write_icon()
+      if BLOCK==0 then BLOCK=native(MALLOC,RES.size);own(BLOCK,RES.size) end
+      local fields={[0]=0x52474554,[4]=2,[8]=2,[16]=0x0C4467B5,
+        [24]=0x0C2A47A1,[28]=found,[40]=APP_ID,[56]=0x200A3938,[60]=0x200A1DE8}
+      local words={};for o=0,92,4 do words[#words+1]=string.pack('<I4',fields[o] or 0) end
+      copy_fast(BLOCK,string.rep('\0',RES.size))
+      copy_fast(BLOCK+0xF0,table.concat(words))
+      block_ready=true;arm_registrar();armed=true
+    else
+    assert(found==0,'注册未就绪 '..found..'，请进入一次应用列表')
+    phase('准备原生应用');ensure_chaos_dir();write_icon()
+    if BLOCK==0 then BLOCK=native(MALLOC,RES.size);own(BLOCK,RES.size) end
+    if not block_ready then
+      local blob=resident(BLOCK)
+      copy_fast(BLOCK,blob);sync_fast(BLOCK+0xE8,8)
+      if RES.gap_thunks then sync_code(BLOCK+RES.gap_thunks,96) end
+      block_ready=true
+    end
+    load_chaos();phase('注册应用图标');arm_registrar();armed=true
+    end
+  else
+    retry_registrar()
+  end
+  local last
+  for i=1,150 do
+    for _=1,10 do yield_step() end
+    local bytes=read(BLOCK+0xF0,96);local stage,bc=word(bytes,4),word(bytes,0x5C)
+    last=bytes
+    local info=string.format('stage=%d bc=%d tries=%d launcher=%x ticks=%d',stage,bc,word(bytes,0x4C),word(bytes,0x40),word(bytes,0x30))
+    mark(info)
+    compatibility:set{text='正在注册 '..i..'/150\n请返回表盘后上滑查看应用', text_color=0x71717A}
+    local ids=native(fn(OFF_PREFLIGHT))
+    mark(string.format('registered IDs=%x stage=%d',ids,stage))
+    local capture_status=native((CHAOS_EXEC+457885)|1)
+    assert(capture_status<256,'截屏扩展注册失败 '..capture_status..'，请重启')
+    if stage>=2 and stage<20 and (ids & 1)~=0 and capture_status==3 then
+      install:set{bg_color=0x2563EB,bg_opa=lvgl.OPA(100),border_color=0x2563EB}
+      caption:set{text='安装成功', text_color=0xF2F2F2}
+      compatibility:set{text='Chaos 已更新\n截屏与录屏请从 Chaos 首页进入', text_color=0x22C55E}
+      mark('installed '..info);return
+    end
+    assert(stage<0x100,'原生注册失败 '..stage)
+    if i==10 and word(bytes,0x30)==0 then retry_registrar() end
+  end
+  error('未查到有效应用 ID E7D4 / '..registration_failure(last),0)
+end
+
+install:onevent(lvgl.EVENT.SHORT_CLICKED,function()
+  if work then return end
+  install:set{bg_color=0x2563EB,bg_opa=lvgl.OPA(100),border_color=0x2563EB}
+  caption:set{text='正在注入中...', text_color=0xF2F2F2}
+  work=coroutine.create(install_app)
+end)
+
+local function scheduling_clock()
+if type(os.clock)=='function' then
+local ok,n=pcall(os.clock)
+if ok and type(n)=='number' and n==n then return n end
+end
+return nil
+end
+local scheduler=lvgl.Timer{period=20,repeat_count=-1,cb=function(t)
+if work then
+local began=scheduling_clock()
+for _=1,4 do
+local ok,reason=coroutine.resume(work)
+if not ok then
+mark('FAIL '..tostring(reason))
+install:set{bg_color=0x2563EB,bg_opa=lvgl.OPA(100),border_color=0x2563EB}
+caption:set{text='重试注入', text_color=0xF2F2F2}
+local message=tostring(reason):gsub('^.-%.lua:%d+:%s*','')
+compatibility:set{text=message,text_color=0xFF909C}
+work=nil
+break
+elseif coroutine.status(work)=='dead' then work=nil;break end
+if reason~='decode' and reason~='relocate' then break end
+local now=scheduling_clock()
+if not began or not now or now<began or now-began>=0.006 then break end
+end
+end
+t:resume()
+end}
+
+local AUTO_PATH='/data/chaos/auto-install'
+local automatic=false
+local af=io.open(AUTO_PATH,'rb');if af then automatic=af:read(1)=='1';af:close() end
+local auto_button=lvgl.Object(settings_view,{w=SCR_W-32,h=56,bg_color=0x1C1C1E,bg_opa=lvgl.OPA(100),radius=24,
+ border_width=1,border_color=0x2A2A2C,pad_all=0,align={type=lvgl.ALIGN.TOP_LEFT,x_ofs=16,y_ofs=SCR_H/2-76-28}})
+auto_button:clear_flag(lvgl.FLAG.SCROLLABLE | lvgl.FLAG.PRESS_LOCK)
+auto_button:add_flag(lvgl.FLAG.CLICKABLE | lvgl.FLAG.EVENT_BUBBLE | lvgl.FLAG.GESTURE_BUBBLE)
+local auto_text=lvgl.Label(auto_button,{text='',text_font=body,text_color=0xB3B3B3,
+ align={type=lvgl.ALIGN.CENTER,x_ofs=0,y_ofs=0}})
+auto_text:clear_flag(lvgl.FLAG.CLICKABLE | lvgl.FLAG.PRESS_LOCK)
+auto_text:add_flag(lvgl.FLAG.EVENT_BUBBLE | lvgl.FLAG.GESTURE_BUBBLE)
+local function auto_caption()
+ auto_text:set{text=(automatic and '随安装器载入：开' or '随安装器载入：关')}
+end
+auto_caption()
+auto_button:onevent(lvgl.EVENT.SHORT_CLICKED,function()
+ local ok=pcall(function()
+  ensure_chaos_dir()
+  local f=assert(io.open(AUTO_PATH,'wb'),'无法保存自动安装设置')
+  assert(f:write(automatic and '0' or '1'));assert(f:close());automatic=not automatic;auto_caption()
+ end)
+ if not ok then compatibility:set{text='自动安装设置未保存'} end
+end)
+local auto_ticks,auto_tries=0,0
+local auto_timer=lvgl.Timer{period=1000,repeat_count=-1,cb=function(t)
+ auto_ticks=auto_ticks+1
+ if not automatic or armed or work or auto_tries>=3 or auto_ticks<3 then return end
+ auto_tries=auto_tries+1;auto_ticks=-7
+ work=coroutine.create(install_app)
+end}
+keep(auto_button);keep(auto_text);keep(auto_timer)
+
+settings_open:onevent(lvgl.EVENT.SHORT_CLICKED,function() view_show(true) end)
+settings_back:onevent(lvgl.EVENT.SHORT_CLICKED,function() view_show(false) end)
+
+local function preference(path,name,y,default,two)
+ local enabled=default
+ local f=io.open(path,'rb');if f then local b=f:read(1);f:close();if b==string.char(0) or b==string.char(1) then enabled=b==string.char(1) end end
+ local o,lb=button(settings_view,'',y,'ghost')
+ o:set{h=56}
+ local function refresh()lb:set{text=name..(enabled and '：开' or '：关')}end
+ refresh()
+ o:onevent(lvgl.EVENT.SHORT_CLICKED,function()
+  if work or (armed and path~='/data/chaos/launcher.cfg') then compatibility:set{text='重新启动安装器后修改入口'};return end
+  local ok=pcall(function()
+   ensure_chaos_dir()
+   local data=string.char(enabled and 0 or 1)..(two and string.char(0) or '')
+   local w=assert(io.open(path,'wb'));assert(w:write(data));assert(w:close())
+   local check=assert(io.open(path,'rb'));local value=check:read('*a');check:close();assert(value==data)
+   enabled=not enabled;refresh()
+  end)
+  if not ok then compatibility:set{text='入口设置保存失败'}end
+ end)
+ keep(o);keep(lb)
+end
+preference('/data/chaos/native-entries.cfg','注入系统设置',-12,true,true)
+preference('/data/chaos/launcher.cfg','应用列表显示',52,true,false)
+settings_back:set{h=56,align={type=lvgl.ALIGN.CENTER,x_ofs=0,y_ofs=180}}
+
+local restart,restart_label=button(main_view,'重启',80,'ghost')
+local restarting=false
+restart:onevent(lvgl.EVENT.SHORT_CLICKED,function()
+ if work then compatibility:set{text='运行中，请等待'};return end
+ if restarting then return end
+ restarting=true;restart_label:set{text='正在重启'}
+ local t=lvgl.Timer{period=500,repeat_count=1,cb=function()
+  local ok,result=pcall(os.execute,'reboot')
+  if not ok or (result~=true and result~=0) then compatibility:set{text='重启请求失败，请手动重启'} end
+  restarting=false;restart_label:set{text='重启'}
+ end}
+ keep(t)
+end)
+local reset,reset_label=button(main_view,'重置设置',158,'danger')
+reset:set{h=56}
+local reset_armed=false
+reset:onevent(lvgl.EVENT.SHORT_CLICKED,function()
+ if work then compatibility:set{text='运行中，请等待'};return end
+ if not reset_armed then reset_armed=true;compatibility:set{text='再按一次确认，保留导入素材'};return end
+ reset_armed=false
+ local ok=pcall(function()
+  for _,path in ipairs({AUTO_PATH,'/data/chaos/native-entries.cfg','/data/chaos/launcher.cfg',
+   '/data/chaos/applist.cfg','/data/chaos/n67-beautify-a.bin','/data/chaos/n67-beautify-b.bin',
+   '/data/chaos/n67-background.cfg','/data/chaos/n67-system-about.bin'}) do
+   local f=io.open(path,'rb')
+   if f then f:close();assert(os.remove(path),'设置无法删除') end
+  end
+ end)
+ if ok then automatic=false;auto_caption();compatibility:set{text='设置已重置，请重启'}
+ else compatibility:set{text='部分设置未清除，请重试'}end
+end)
+keep(restart);keep(restart_label);keep(reset);keep(reset_label)
+
+keep(root);keep(scheduler)
+local prev=io.open(MARK,'rb');if prev then log('prev: '..tostring(prev:read('*a')));prev:close() end
+log('=== ready '..TITLE..' v'..RELEASE..' native='..MODULE_SIZE)
+-- Payload validation is deferred until installation is requested.
