@@ -142,7 +142,8 @@ def build(spec: dict, out: Path) -> dict:
         cursor += len(block)
 
     buf = bytearray(cursor)
-    struct.pack_into("<II", buf, 0, MAGIC, VERSION)
+    version = int(spec.get("version", VERSION))
+    struct.pack_into("<II", buf, 0, MAGIC, version)
     struct.pack_into("<I", buf, 0x10, 0x00000800)
     struct.pack_into("<I", buf, 0x14, 0x00010000)
     struct.pack_into("<H", buf, 0x1C, 1)
@@ -156,10 +157,10 @@ def build(spec: dict, out: Path) -> dict:
     pairs = [
         (0x80000000, preview_off),
         (1, BASE_OFF),
-        (0, SCRIPT_OFF),
-        (0, SCRIPT_OFF),
-        (0, SCRIPT_OFF),
-        (0, SCRIPT_OFF),
+        (0, props_off),
+        (0, props_off),
+        (0, props_off),
+        (0, props_off),
         (n, SCRIPT_OFF),
         (0, props_off),
         (0, props_off),

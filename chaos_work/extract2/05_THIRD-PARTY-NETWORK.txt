@@ -1,0 +1,5 @@
+Chaos N67 network notices: concatenate these UTF-8 files in order.
+network-notices-01.txt
+network-notices-02.txt
+network-notices-03.txt
+SHA256: f8d2b1c479c73e6115a0cd175f967f3ba436a3cbd83d0bb50860fedbaf2522c7

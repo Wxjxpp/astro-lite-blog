@@ -5,20 +5,21 @@
     python3 n67_chaos_extract.py Chaos-190.bin outdir/
 
 会做的事:
-  1. 用官方 tools/p67_pack.py 的容器格式解析整个安装包（已验证两者容器格式
-     完全相同，magic=0x1234A55A）。
-  2. 把 44 个资源条目（main.lua / icon.bin / 网络声明 / chaos-NN.dat /
-     chaos-rl.dat）原样导出到 outdir/。
-  3. 按 chaos-00.dat..chaos-36.dat 的 CPK1 分片头重新拼接出完整的
-     CHAOS_BIN 镜像（已验证与官方分片逐字节一致）。
-  4. 解析 chaos-rl.dat 的 CRL1 重定位表为 JSON。
-  5. 从 main.lua 里把 1184 字节的代码部分（跳过内嵌二进制长字符串）单独
-     导出成可读文本，方便人工核对地址常量。
+  1. 用官方 tools/p67_pack.py 的容器格式解析整个安装包（magic=0x1234A55A）。
+  2. 把所有资源条目（main.lua / icon.bin / 网络声明 / chaos-NN.dat /
+     chaos-rl.dat 等）原样导出到 outdir/。
+  3. 解开 chaos-NN.dat 的 CPK1 分片：每个分片是"单个 0x8000 输出窗口"的
+     LZ 压缩流（不是裸数据），按窗口偏移拼回真正的 CHAOS 镜像。
+     CPK1 头部第 17..20 字节是压缩流的 FNV-1a 校验（本工具会核对）。
+  4. 解析 chaos-rl.dat 的 CRL1 重定位表为 JSON，并核对站点值确实是
+     [0x1D100000, 0x1D100000+CHAOS_SIZE] 范围内的链接期地址。
+  5. 从 main.lua 里把代码部分（跳过内嵌二进制长字符串）单独导出成可读文本。
 
-已确认、可以直接使用的结论见同目录 REPORT.md。
-重定位的"打补丁"公式本工具不提供——按本次反汇编核实，候选公式
-（placeholder=0x1D100000+模块内偏移）只对 4260 个重定位点里的 105 个成立，
-不是通用规律，贸然套用会错误修补另外 4155 处，所以没有写进本工具。
+重定位结论（已由 loader 反汇编核实）:
+    设备侧公式是  new = old - 0x1D100000 + 运行时执行基址，
+    即 old 本身就是按 0x1D100000 链接好的绝对地址；不存在额外的"占位编码"。
+    CRL1 结构 = "CRL1" + u32(站点数) + u32(镜像总大小) + u32(FNV-1a(站点表))
+                + 站点数 * u32(升序偏移)。
 """
 import struct, sys, json, re
 from pathlib import Path
@@ -27,6 +28,51 @@ MAGIC = 0x1234A55A
 PAIR_OFF = 0xA8
 PAIRS = 11
 DEF_SIZE = 16
+
+FNV_INIT = 0x811C9DC5
+FNV_PRIME = 0x01000193
+
+
+def fnv1a(data, h=FNV_INIT):
+    for b in data:
+        h = ((h ^ b) * FNV_PRIME) & 0xFFFFFFFF
+    return h
+
+
+def lz_decode(src, expected=None):
+    """解 CPK1 分片里的 LZ 流。
+
+    格式与 main.lua 的 data_assets 解压器一致：
+      t = 下一字节
+      t < 128 : 字面量，复制随后 t 字节（t 不能为 0）
+      t >= 128: 回溯，读 u16 距离 d，复制 (t-128+4) 字节，允许重叠
+    """
+    out = bytearray()
+    i = 0
+    while i < len(src):
+        t = src[i]
+        i += 1
+        if t < 128:
+            if t == 0:
+                raise ValueError("LZ 字面量长度为 0")
+            if i + t > len(src):
+                raise ValueError("LZ 字面量越界")
+            out += src[i:i + t]
+            i += t
+        else:
+            if i + 2 > len(src):
+                raise ValueError("LZ 回溯参数越界")
+            d = src[i] | (src[i + 1] << 8)
+            i += 2
+            n = t - 128 + 4
+            if d == 0 or d > len(out):
+                raise ValueError(f"LZ 回溯距离非法: {d} > 已输出 {len(out)}")
+            start = len(out) - d
+            for k in range(n):
+                out.append(out[start + k])
+        if expected is not None and len(out) > expected:
+            raise ValueError("LZ 输出超过窗口大小")
+    return bytes(out)
 
 
 def read_block(buf, off):
@@ -64,10 +110,13 @@ def extract_container(path: Path, outdir: Path):
 
     id_bytes = buf[0x28:0x34].split(b"\0", 1)[0]
     name_bytes = buf[0x68:0xA4].split(b"\0", 1)[0]
+    style_bytes = buf[0x100:0x148].split(b"\0", 1)[0]
     spec = {
         "preview": str(preview_path),
+        "version": struct.unpack_from("<I", buf, 4)[0],
         "id": id_bytes.decode("latin1"),
         "name": name_bytes.decode("utf-8", "replace"),
+        "styleName": style_bytes.decode("utf-8", "replace"),
         "entry_index": 0,
         "files": [
             {"name": name, "path": str(fname)} for name, fname, _ in files
@@ -82,7 +131,7 @@ def extract_container(path: Path, outdir: Path):
 
 
 def reconstruct_chaos_bin(outdir: Path):
-    """把 chaos-NN.dat 分片拼回完整镜像；对照用，已验证与官方分片字节一致。"""
+    """解压 chaos-NN.dat 分片，拼回真正按 0x1D100000 链接的 CHAOS 镜像。"""
     chunk_files = []
     for p in outdir.glob("*_chaos-*.dat"):
         m = re.search(r"chaos-(\d+)\.dat$", p.name)
@@ -92,21 +141,58 @@ def reconstruct_chaos_bin(outdir: Path):
     if not chunk_files:
         print("[分片] 未找到 chaos-NN.dat，跳过")
         return None
-    recon = bytearray()
+
+    # 从 chaos-rl.dat 读镜像总大小（含 .bss）和站点表，用于校验
+    total, sites = None, []
+    for p in outdir.glob("*_chaos-rl.dat"):
+        data = p.read_bytes()
+        if data[:4] == b"CRL1":
+            body = data[4:]
+            n = len(body) // 4
+            vals = struct.unpack("<%dI" % n, body[:n * 4])
+            total, sites = vals[1], list(vals[3:])
+
+    image = bytearray(total) if total else bytearray()
+    covered = 0
     for n, p in chunk_files:
         raw = p.read_bytes()
-        marker = raw[:4]
-        assert marker == b"CPK1", f"chaos-{n:02d}.dat 头部不是 CPK1: {marker}"
+        assert raw[:4] == b"CPK1", f"chaos-{n:02d}.dat 头部不是 CPK1"
         f1, f2, f3 = struct.unpack_from("<III", raw, 4)
-        body = raw[16 + 4: 16 + 4 + f3]  # 跳过 CPK1头(16B) + 4字节未知校验
-        if len(recon) < f1:
-            recon.extend(b"\x00" * (f1 - len(recon)))
-        recon[f1:f1 + len(body)] = body
-        print(f"[分片] chaos-{n:02d}.dat -> 偏移 {hex(f1)}，{len(body)} 字节")
-    out = outdir / "CHAOS_BIN_reconstructed.bin"
-    out.write_bytes(recon)
-    print(f"[分片] 重建完成: {out} ({len(recon)} 字节，不含末尾全零 .bss)")
-    return recon
+        check = struct.unpack_from("<I", raw, 16)[0]
+        comp = raw[20:20 + f3]
+        if fnv1a(comp) != check:
+            raise ValueError(f"chaos-{n:02d}.dat 的 FNV-1a 校验不符")
+        out = lz_decode(comp, expected=f2)
+        if len(out) != f2:
+            print(f"[分片] 警告: chaos-{n:02d}.dat 解出 {len(out)} 字节，头部声明窗口 {f2}")
+        need = f1 + len(out)
+        if len(image) < need:
+            image.extend(b"\x00" * (need - len(image)))
+        image[f1:need] = out
+        covered = max(covered, need)
+        print(f"[分片] chaos-{n:02d}.dat -> 偏移 {hex(f1)}，"
+              f"压缩 {len(comp)} 字节，解出 {len(out)} 字节")
+
+    out_path = outdir / "CHAOS_IMAGE.bin"
+    out_path.write_bytes(bytes(image))
+    print(f"[分片] 解压完成: {out_path} ({len(image)} 字节，"
+          f"有效覆盖 {covered} 字节 / {hex(covered)})")
+
+    if sites and total:
+        bad = 0
+        for s in sites:
+            if s + 4 > len(image):
+                bad += 1
+                continue
+            v = struct.unpack_from("<I", image, s)[0]
+            if not (0x1D100000 <= v <= 0x1D100000 + total):
+                bad += 1
+        if bad:
+            print(f"[分片] 警告: {bad}/{len(sites)} 个重定位站点不在链接地址范围")
+        else:
+            print(f"[分片] 重定位站点校验通过: {len(sites)}/{len(sites)} 都是 "
+                  f"[0x1D100000, 0x1D100000+{total}] 的链接期地址")
+    return image
 
 
 def parse_relocations(outdir: Path):
@@ -123,15 +209,19 @@ def parse_relocations(outdir: Path):
     vals = struct.unpack("<%dI" % n, body[:n * 4])
     reloc_count, total_size, fnv1a_hash = vals[0], vals[1], vals[2]
     sites = vals[3:]
+    calc = fnv1a(struct.pack("<%dI" % len(sites), *sites))
     out = {
         "reloc_count_field": reloc_count,
         "module_total_size_field": total_size,
         "fnv1a_hash_field": hex(fnv1a_hash),
+        "fnv1a_recomputed": hex(calc),
+        "fnv1a_ok": calc == fnv1a_hash,
         "actual_site_count": len(sites),
         "sites": [hex(s) for s in sites],
     }
     (outdir / "chaos_rl_decoded.json").write_text(json.dumps(out, indent=1))
-    print(f"[重定位] {len(sites)} 个站点, 声明总大小 {total_size}, FNV-1a={hex(fnv1a_hash)}")
+    print(f"[重定位] {len(sites)} 个站点, 声明总大小 {total_size}, "
+          f"FNV-1a={hex(fnv1a_hash)} ({'校验通过' if calc == fnv1a_hash else '校验失败'})")
 
 
 def extract_main_lua_code(outdir: Path):
