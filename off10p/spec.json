@@ -1,0 +1,46 @@
+{
+  "preview": "off10p/preview.block",
+  "version": 66055,
+  "id": "979820260926",
+  "name": "Chaos127Alpha安装器 10p 3.101.043",
+  "styleName": "Chaos 安装器",
+  "entry_index": 0,
+  "files": [
+    {
+      "name": "_lua/xiaomi-band-10-pro/main.lua",
+      "path": "off10p/00_main.lua"
+    },
+    {
+      "name": "_lua/xiaomi-band-10-pro/chaos_sup.bin",
+      "path": "off10p/01_chaos_sup.bin"
+    },
+    {
+      "name": "_lua/xiaomi-band-10-pro/fetch-module.bin",
+      "path": "off10p/02_fetch-module.bin"
+    },
+    {
+      "name": "_lua/xiaomi-band-10-pro/capatch.bin",
+      "path": "off10p/03_capatch.bin"
+    },
+    {
+      "name": "_lua/xiaomi-band-10-pro/ca.pem",
+      "path": "off10p/04_ca.pem"
+    },
+    {
+      "name": "_lua/xiaomi-band-10-pro/chaos_icon.bin",
+      "path": "off10p/05_chaos_icon.bin"
+    },
+    {
+      "name": "_lua/xiaomi-band-10-pro/chaos_icon_settings.bin",
+      "path": "off10p/06_chaos_icon_settings.bin"
+    },
+    {
+      "name": "_lua/xiaomi-band-10-pro/lxgw.ttf",
+      "path": "off10p/07_lxgw.ttf"
+    },
+    {
+      "name": "_lua/xiaomi-band-10-pro/THIRD-PARTY-NETWORK.txt",
+      "path": "off10p/08_THIRD-PARTY-NETWORK.txt"
+    }
+  ]
+}
