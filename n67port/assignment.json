@@ -1,0 +1,1112 @@
+[
+ {
+  "sym": "SYM_READ",
+  "10p": "0xc1d129d",
+  "n67": "0xc37f459",
+  "score": 5.668,
+  "raw": 0.668,
+  "second": -4.507,
+  "margin": 5.175,
+  "locked": true
+ },
+ {
+  "sym": "SYM_LVX_PAGE_TITLE_CREATE",
+  "10p": "0xc4ca6c5",
+  "n67": "0xc275501",
+  "score": 5.643,
+  "raw": 0.643,
+  "second": -4.541,
+  "margin": 5.184,
+  "locked": true
+ },
+ {
+  "sym": "SYM_HEAP_FREE",
+  "10p": "0xc1f8ff9",
+  "n67": "0xc0f0791",
+  "score": 5.63,
+  "raw": 0.63,
+  "second": -4.492,
+  "margin": 5.122,
+  "locked": true
+ },
+ {
+  "sym": "SYM_HEAP_MALLOC",
+  "10p": "0xc1f903d",
+  "n67": "0xc0f1171",
+  "score": 5.448,
+  "raw": 0.448,
+  "second": -4.537,
+  "margin": 4.986,
+  "locked": true
+ },
+ {
+  "sym": "SYM_ERRNO_LOCATION",
+  "10p": "0xc1e45bd",
+  "n67": "0xc0e4121",
+  "score": 5.367,
+  "raw": 0.367,
+  "second": -4.62,
+  "margin": 4.987,
+  "locked": true
+ },
+ {
+  "sym": "SYM_OPEN",
+  "10p": "0xc1d0a29",
+  "n67": "0xc37e30d",
+  "score": 5.353,
+  "raw": 0.353,
+  "second": -4.509,
+  "margin": 4.862,
+  "locked": true
+ },
+ {
+  "sym": "SYM_WRITE",
+  "10p": "0xc1d2641",
+  "n67": "0xc37f0fd",
+  "score": 5.33,
+  "raw": 0.33,
+  "second": -4.474,
+  "margin": 4.804,
+  "locked": true
+ },
+ {
+  "sym": "SYM_LVX_MSGBOX_SET_CONTENT",
+  "10p": "0xc4ca131",
+  "n67": "0xc274f61",
+  "score": 5.311,
+  "raw": 0.311,
+  "second": -4.791,
+  "margin": 5.102,
+  "locked": true
+ },
+ {
+  "sym": "SYM_RENAME",
+  "10p": "0xc1d12e9",
+  "n67": "0xc37f491",
+  "score": 5.279,
+  "raw": 0.279,
+  "second": -4.723,
+  "margin": 5.003,
+  "locked": true
+ },
+ {
+  "sym": "SYM_BT_L2CAP_CONNECT",
+  "10p": "0xc805b0d",
+  "n67": "0xc39a0fd",
+  "score": 5.273,
+  "raw": 0.273,
+  "second": -4.778,
+  "margin": 5.051,
+  "locked": true
+ },
+ {
+  "sym": "SYM_CLOSE",
+  "10p": "0xc1b9d81",
+  "n67": "0xc37dba5",
+  "score": 5.257,
+  "raw": 0.257,
+  "second": -4.619,
+  "margin": 4.876,
+  "locked": true
+ },
+ {
+  "sym": "SYM_IOCTL",
+  "10p": "0xc1d01a5",
+  "n67": "0xc37e1b5",
+  "score": 5.22,
+  "raw": 0.22,
+  "second": -4.548,
+  "margin": 4.768,
+  "locked": true
+ },
+ {
+  "sym": "SYM_LSEEK",
+  "10p": "0xc1d0525",
+  "n67": "0xc37e1f5",
+  "score": 5.21,
+  "raw": 0.21,
+  "second": -4.477,
+  "margin": 4.687,
+  "locked": true
+ },
+ {
+  "sym": "SYM_UNLINK",
+  "10p": "0xc1d2355",
+  "n67": "0xc37f775",
+  "score": 5.195,
+  "raw": 0.195,
+  "second": -4.763,
+  "margin": 4.958,
+  "locked": true
+ },
+ {
+  "sym": "SYM_CLOCK_GETTIME",
+  "10p": "0xc201fe1",
+  "n67": "0xc0bb095",
+  "score": 0.738,
+  "raw": 0.738,
+  "second": 0.566,
+  "margin": 0.171,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LVX_STYLE_APPLY",
+  "10p": "0xc4bf899",
+  "n67": "0xc23913b",
+  "score": 0.5,
+  "raw": 0.5,
+  "second": 0.541,
+  "margin": -0.041,
+  "locked": false
+ },
+ {
+  "sym": "SYM_QUICKAPP_REGISTER_APP",
+  "10p": "0xc549679",
+  "n67": "0xc2467a1",
+  "score": 0.499,
+  "raw": 0.499,
+  "second": 0.407,
+  "margin": 0.092,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LV_OBJ_ALIGN_TO",
+  "10p": "0xc588ef1",
+  "n67": "0xc4349d5",
+  "score": 0.489,
+  "raw": 0.489,
+  "second": 0.44,
+  "margin": 0.049,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LV_BAR_SET_RANGE",
+  "10p": "0xc5883d9",
+  "n67": "0xc25bc39",
+  "score": 0.477,
+  "raw": 0.477,
+  "second": 0.387,
+  "margin": 0.09,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LVX_MSGBOX_CREATE",
+  "10p": "0xc4ca0d9",
+  "n67": "0xc448749",
+  "score": 0.475,
+  "raw": 0.475,
+  "second": 0.523,
+  "margin": -0.048,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LVX_LIST_ITEM_UPDATE",
+  "10p": "0xc4c8905",
+  "n67": "0xc2665f1",
+  "score": 0.467,
+  "raw": 0.467,
+  "second": 0.476,
+  "margin": -0.009,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LVX_LIST_ROW_TRAILING",
+  "10p": "0xc4c8c61",
+  "n67": "0xc257e95",
+  "score": 0.464,
+  "raw": 0.464,
+  "second": 0.524,
+  "margin": -0.06,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LV_TIMER_CREATE",
+  "10p": "0xc587ed1",
+  "n67": "0xc1610b9",
+  "score": 0.463,
+  "raw": 0.463,
+  "second": 0.407,
+  "margin": 0.056,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LVX_LIST_ROW_CREATE",
+  "10p": "0xc54ca3d",
+  "n67": "0xc0c00a3",
+  "score": 0.458,
+  "raw": 0.458,
+  "second": 0.483,
+  "margin": -0.024,
+  "locked": false
+ },
+ {
+  "sym": "SYM_APP_LAUNCHER_ADD",
+  "10p": "0xc513a45",
+  "n67": "0xc242e8b",
+  "score": 0.452,
+  "raw": 0.452,
+  "second": 0.428,
+  "margin": 0.024,
+  "locked": false
+ },
+ {
+  "sym": "SYM_APP_LAUNCHER_DEL",
+  "10p": "0xc513b2d",
+  "n67": "0xc23babb",
+  "score": 0.439,
+  "raw": 0.439,
+  "second": 0.41,
+  "margin": 0.028,
+  "locked": false
+ },
+ {
+  "sym": "SYM_CHAOS_REGISTER_DRIVER",
+  "10p": "0xc1aff61",
+  "n67": "0xc242785",
+  "score": 0.439,
+  "raw": 0.439,
+  "second": 0.412,
+  "margin": 0.027,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LVX_OBJECT_ALIGN",
+  "10p": "0xc589189",
+  "n67": "0xc241159",
+  "score": 0.433,
+  "raw": 0.433,
+  "second": 0.438,
+  "margin": -0.005,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LVX_LABEL_SET_TEXT",
+  "10p": "0xc589491",
+  "n67": "0xc2578e9",
+  "score": 0.429,
+  "raw": 0.429,
+  "second": 0.395,
+  "margin": 0.034,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LVX_LABEL_SET_LONG_MODE",
+  "10p": "0xc588bf9",
+  "n67": "0xc2a46d5",
+  "score": 0.401,
+  "raw": 0.401,
+  "second": 0.367,
+  "margin": 0.034,
+  "locked": false
+ },
+ {
+  "sym": "SYM_APP_LOOKUP",
+  "10p": "0xca69935",
+  "n67": "0xc2644d9",
+  "score": 0.4,
+  "raw": 0.4,
+  "second": 0.363,
+  "margin": 0.038,
+  "locked": false
+ },
+ {
+  "sym": "SYM_CHAOS_NOTIFY",
+  "10p": "0xca9a899",
+  "n67": "0xc4fdbbd",
+  "score": 0.4,
+  "raw": 0.4,
+  "second": 0.382,
+  "margin": 0.018,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LV_OBJ_GET_STYLE_PROP",
+  "10p": "0xc1068a9",
+  "n67": "0xc25ebbd",
+  "score": 0.397,
+  "raw": 0.397,
+  "second": 0.421,
+  "margin": -0.024,
+  "locked": false
+ },
+ {
+  "sym": "SYM_APP_INSTALL",
+  "10p": "0xca6a30d",
+  "n67": "0xc275ad5",
+  "score": 0.391,
+  "raw": 0.391,
+  "second": 0.322,
+  "margin": 0.069,
+  "locked": false
+ },
+ {
+  "sym": "SYM_CHAOS_UNREGISTER_DRIVER",
+  "10p": "0xc1b002d",
+  "n67": "0xc0e4139",
+  "score": 0.389,
+  "raw": 0.389,
+  "second": 0.443,
+  "margin": -0.055,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LV_DISPLAY_GET_HORIZONTAL_RESOLUTION",
+  "10p": "0xc13cd55",
+  "n67": "0xc4467b5",
+  "score": 0.371,
+  "raw": 0.371,
+  "second": 0.348,
+  "margin": 0.023,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LV_OBJ_TREE_WALK",
+  "10p": "0xc13c691",
+  "n67": "0xc4f1f29",
+  "score": 0.368,
+  "raw": 0.368,
+  "second": 0.396,
+  "margin": -0.028,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LV_EVENT_GET_CODE",
+  "10p": "0xc588211",
+  "n67": "0xc44a5ad",
+  "score": 0.367,
+  "raw": 0.367,
+  "second": 0.489,
+  "margin": -0.122,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LV_DISPLAY_INVALIDATE_AREA",
+  "10p": "0xc105165",
+  "n67": "0xc24427d",
+  "score": 0.342,
+  "raw": 0.342,
+  "second": 0.387,
+  "margin": -0.045,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LVX_OBJECT_DELETE",
+  "10p": "0xc588de9",
+  "n67": "0xc0ee82d",
+  "score": 0.339,
+  "raw": 0.339,
+  "second": 0.406,
+  "margin": -0.067,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LVX_LABEL_CREATE",
+  "10p": "0xc588f31",
+  "n67": "0xc23af59",
+  "score": 0.33,
+  "raw": 0.33,
+  "second": 0.413,
+  "margin": -0.083,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LV_OBJ_CLEAR_FLAG",
+  "10p": "0xc5891b1",
+  "n67": "0xc23ea15",
+  "score": 0.33,
+  "raw": 0.33,
+  "second": 0.385,
+  "margin": -0.055,
+  "locked": false
+ },
+ {
+  "sym": "SYM_PAGE_GOTO",
+  "10p": "0xca6c359",
+  "n67": "0xc4caee7",
+  "score": 0.314,
+  "raw": 0.314,
+  "second": 0.46,
+  "margin": -0.146,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LV_OBJ_ADD_EVENT_CB",
+  "10p": "0xc5883f1",
+  "n67": "0xc018005",
+  "score": 0.293,
+  "raw": 0.293,
+  "second": 0.403,
+  "margin": -0.11,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LVX_CONTENT_PAD_BOTTOM",
+  "10p": "0xc5893c1",
+  "n67": "0xc276ae5",
+  "score": 0.286,
+  "raw": 0.286,
+  "second": 0.336,
+  "margin": -0.05,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LV_TIMER_DEL",
+  "10p": "0xc588129",
+  "n67": "0xc119a75",
+  "score": 0.27,
+  "raw": 0.27,
+  "second": 0.329,
+  "margin": -0.058,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LVX_PAGE_CONTENT_CREATE",
+  "10p": "0xca67245",
+  "n67": "0xc44840f",
+  "score": 0.26,
+  "raw": 0.26,
+  "second": 0.366,
+  "margin": -0.106,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LVX_OBJECT_SET_SIZE",
+  "10p": "0xc588629",
+  "n67": "0xc44bab5",
+  "score": 0.257,
+  "raw": 0.257,
+  "second": 0.408,
+  "margin": -0.151,
+  "locked": false
+ },
+ {
+  "sym": "SYM_WATCHFACE_RESET_WATCHFACE",
+  "10p": "0xc5f36c1",
+  "n67": "0xc2c1269",
+  "score": 0.24,
+  "raw": 0.24,
+  "second": 0.203,
+  "margin": 0.036,
+  "locked": false
+ },
+ {
+  "sym": "SYM_NET_UNLOCK",
+  "10p": "0xc201b51",
+  "n67": "0xc23ba45",
+  "score": 0.235,
+  "raw": 0.235,
+  "second": 0.209,
+  "margin": 0.026,
+  "locked": false
+ },
+ {
+  "sym": "SYM_WATCHFACE_MANAGER_DELETE_WATCHFACE",
+  "10p": "0xca95c69",
+  "n67": "0xc0bdb91",
+  "score": 0.228,
+  "raw": 0.228,
+  "second": 0.23,
+  "margin": -0.002,
+  "locked": false
+ },
+ {
+  "sym": "SYM_BT_ADAPTER_GET_SCAN_MODE",
+  "10p": "0xc3b5699",
+  "n67": "0xc44a5c5",
+  "score": 0.225,
+  "raw": 0.225,
+  "second": 0.199,
+  "margin": 0.026,
+  "locked": false
+ },
+ {
+  "sym": "SYM_BT_ADAPTER_REGISTER",
+  "10p": "0xc3af3e9",
+  "n67": "0xc242841",
+  "score": 0.222,
+  "raw": 0.222,
+  "second": 0.21,
+  "margin": 0.012,
+  "locked": false
+ },
+ {
+  "sym": "SYM_REGISTER_BLOCKDRIVER",
+  "10p": "0xc1affd9",
+  "n67": "0xc23afe3",
+  "score": 0.221,
+  "raw": 0.221,
+  "second": 0.199,
+  "margin": 0.023,
+  "locked": false
+ },
+ {
+  "sym": "SYM_UNREGISTER_BLOCKDRIVER",
+  "10p": "0xc1b009d",
+  "n67": "0xc37e249",
+  "score": 0.221,
+  "raw": 0.221,
+  "second": 0.214,
+  "margin": 0.008,
+  "locked": false
+ },
+ {
+  "sym": "SYM_HIDDEN_AND_SHOW_APP_CB",
+  "10p": "0xc5141f1",
+  "n67": "0xc44c399",
+  "score": 0.213,
+  "raw": 0.213,
+  "second": 0.211,
+  "margin": 0.002,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LV_OBJ_REFRESH_STYLE",
+  "10p": "0xc1070ad",
+  "n67": "0xc2a31d5",
+  "score": 0.212,
+  "raw": 0.212,
+  "second": 0.213,
+  "margin": -0.0,
+  "locked": false
+ },
+ {
+  "sym": "SYM_HEAP_MALLINFO",
+  "10p": "0xc1f900d",
+  "n67": "0xc2c0141",
+  "score": 0.21,
+  "raw": 0.21,
+  "second": 0.216,
+  "margin": -0.006,
+  "locked": false
+ },
+ {
+  "sym": "SYM_APP_LAUNCHER_DATA_INIT",
+  "10p": "0xc513e91",
+  "n67": "0xc23b38b",
+  "score": 0.208,
+  "raw": 0.208,
+  "second": 0.207,
+  "margin": 0.001,
+  "locked": false
+ },
+ {
+  "sym": "SYM_FONT_MANAGER_REMOVE_PATH",
+  "10p": "0xc860399",
+  "n67": "0xc44bbe5",
+  "score": 0.208,
+  "raw": 0.208,
+  "second": 0.243,
+  "margin": -0.036,
+  "locked": false
+ },
+ {
+  "sym": "SYM_PAGE_FINISH",
+  "10p": "0xca6b9e9",
+  "n67": "0xc54d4ad",
+  "score": 0.207,
+  "raw": 0.207,
+  "second": 0.231,
+  "margin": -0.024,
+  "locked": false
+ },
+ {
+  "sym": "SYM_SERVICE_MANAGER_GET_PROFILE",
+  "10p": "0xc3bdd89",
+  "n67": "0xc2a1d21",
+  "score": 0.206,
+  "raw": 0.206,
+  "second": 0.203,
+  "margin": 0.002,
+  "locked": false
+ },
+ {
+  "sym": "SYM_SERVICE_MANAGER_REGISTER",
+  "10p": "0xc3bdbad",
+  "n67": "0xc3bd655",
+  "score": 0.206,
+  "raw": 0.206,
+  "second": 0.198,
+  "margin": 0.008,
+  "locked": false
+ },
+ {
+  "sym": "SYM_BT_GET_PAIRING_STATE",
+  "10p": "0xc3b60a1",
+  "n67": "0xc453b91",
+  "score": 0.205,
+  "raw": 0.205,
+  "second": 0.214,
+  "margin": -0.009,
+  "locked": false
+ },
+ {
+  "sym": "SYM_CORE_BT_PAIR_REQUEST_CALLBACK",
+  "10p": "0xc709e91",
+  "n67": "0xc271d6d",
+  "score": 0.203,
+  "raw": 0.203,
+  "second": 0.209,
+  "margin": -0.007,
+  "locked": false
+ },
+ {
+  "sym": "SYM_FONT_MANAGER_ADD_PATH",
+  "10p": "0xc86037d",
+  "n67": "0xc4fb559",
+  "score": 0.203,
+  "raw": 0.203,
+  "second": 0.207,
+  "margin": -0.003,
+  "locked": false
+ },
+ {
+  "sym": "SYM_SEM_WAIT",
+  "10p": "0xc206945",
+  "n67": "0xc241c89",
+  "score": 0.203,
+  "raw": 0.203,
+  "second": 0.172,
+  "margin": 0.03,
+  "locked": false
+ },
+ {
+  "sym": "SYM_SETSOCKOPT",
+  "10p": "0xc1fdab5",
+  "n67": "0xc23c8b9",
+  "score": 0.2,
+  "raw": 0.2,
+  "second": 0.173,
+  "margin": 0.027,
+  "locked": false
+ },
+ {
+  "sym": "SYM_DRIVER_CLOSE_DISPATCH",
+  "10p": "0xc1cec09",
+  "n67": "0xc0f12d5",
+  "score": 0.198,
+  "raw": 0.198,
+  "second": 0.194,
+  "margin": 0.005,
+  "locked": false
+ },
+ {
+  "sym": "SYM_NET_LOCK",
+  "10p": "0xc201b41",
+  "n67": "0xc37c0d1",
+  "score": 0.196,
+  "raw": 0.196,
+  "second": 0.224,
+  "margin": -0.027,
+  "locked": false
+ },
+ {
+  "sym": "SYM_RECVFROM",
+  "10p": "0xc1fd571",
+  "n67": "0xc1014ed",
+  "score": 0.196,
+  "raw": 0.196,
+  "second": 0.208,
+  "margin": -0.013,
+  "locked": false
+ },
+ {
+  "sym": "SYM_MODHANDLE",
+  "10p": "0xc203a69",
+  "n67": "0xc37fc39",
+  "score": 0.194,
+  "raw": 0.194,
+  "second": 0.186,
+  "margin": 0.007,
+  "locked": false
+ },
+ {
+  "sym": "SYM_PROTOBUF_SET_ORDERED_APP_LIST",
+  "10p": "0xc513529",
+  "n67": "0xc30b8bd",
+  "score": 0.194,
+  "raw": 0.194,
+  "second": 0.207,
+  "margin": -0.014,
+  "locked": false
+ },
+ {
+  "sym": "SYM_SEM_TRYWAIT",
+  "10p": "0xc206bfd",
+  "n67": "0xc0bd309",
+  "score": 0.191,
+  "raw": 0.191,
+  "second": 0.181,
+  "margin": 0.01,
+  "locked": false
+ },
+ {
+  "sym": "SYM_APP_NET_CONNECT_STATE_UPDATE",
+  "10p": "0xc71132d",
+  "n67": "0xc44bae1",
+  "score": 0.189,
+  "raw": 0.189,
+  "second": 0.218,
+  "margin": -0.029,
+  "locked": false
+ },
+ {
+  "sym": "SYM_INSMOD",
+  "10p": "0xc203a51",
+  "n67": "0xc23f09d",
+  "score": 0.189,
+  "raw": 0.189,
+  "second": 0.195,
+  "margin": -0.006,
+  "locked": false
+ },
+ {
+  "sym": "SYM_SERVICE_MANAGER_SHUTDOWN",
+  "10p": "0xc3bdce9",
+  "n67": "0xc3bd179",
+  "score": 0.188,
+  "raw": 0.188,
+  "second": 0.169,
+  "margin": 0.019,
+  "locked": false
+ },
+ {
+  "sym": "SYM_INTERCONNECT_CONNECT",
+  "10p": "0xc2e85f5",
+  "n67": "0xc104b9d",
+  "score": 0.187,
+  "raw": 0.187,
+  "second": 0.203,
+  "margin": -0.016,
+  "locked": false
+ },
+ {
+  "sym": "SYM_SENDTO",
+  "10p": "0xc1fd665",
+  "n67": "0xc54c5f5",
+  "score": 0.187,
+  "raw": 0.187,
+  "second": 0.214,
+  "margin": -0.027,
+  "locked": false
+ },
+ {
+  "sym": "SYM_INTERCONNECT_CLOSE",
+  "10p": "0xc2e8759",
+  "n67": "0xc24073d",
+  "score": 0.185,
+  "raw": 0.185,
+  "second": 0.22,
+  "margin": -0.035,
+  "locked": false
+ },
+ {
+  "sym": "SYM_BT_ADAPTER_GET_INSTANCE",
+  "10p": "0xca40f69",
+  "n67": "0xc396b89",
+  "score": 0.184,
+  "raw": 0.184,
+  "second": 0.189,
+  "margin": -0.005,
+  "locked": false
+ },
+ {
+  "sym": "SYM_BT_PAIR_REQUEST_REPLY",
+  "10p": "0xc3b0051",
+  "n67": "0xc26f73d",
+  "score": 0.184,
+  "raw": 0.184,
+  "second": 0.171,
+  "margin": 0.013,
+  "locked": false
+ },
+ {
+  "sym": "SYM_RMMOD",
+  "10p": "0xc203a5d",
+  "n67": "0xc43da65",
+  "score": 0.184,
+  "raw": 0.184,
+  "second": 0.184,
+  "margin": 0.0,
+  "locked": false
+ },
+ {
+  "sym": "SYM_THIRDPARTY_SUBMIT_MESSAGE_CONTENT",
+  "10p": "0xcaa5205",
+  "n67": "0xc37fe01",
+  "score": 0.183,
+  "raw": 0.183,
+  "second": 0.178,
+  "margin": 0.005,
+  "locked": false
+ },
+ {
+  "sym": "SYM_GETHOSTBYNAME_R",
+  "10p": "0xc1e8e65",
+  "n67": "0xc2a1dd5",
+  "score": 0.182,
+  "raw": 0.182,
+  "second": 0.193,
+  "margin": -0.01,
+  "locked": false
+ },
+ {
+  "sym": "SYM_NETDEV_INPUT",
+  "10p": "0xc1fc9f5",
+  "n67": "0xc37c17d",
+  "score": 0.182,
+  "raw": 0.182,
+  "second": 0.192,
+  "margin": -0.01,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LV_CACHE_DROP",
+  "10p": "0xc1667dd",
+  "n67": "0xc258499",
+  "score": 0.18,
+  "raw": 0.18,
+  "second": 0.192,
+  "margin": -0.011,
+  "locked": false
+ },
+ {
+  "sym": "SYM_SOCKET",
+  "10p": "0xc1cad35",
+  "n67": "0xc0ee72d",
+  "score": 0.177,
+  "raw": 0.177,
+  "second": 0.215,
+  "margin": -0.038,
+  "locked": false
+ },
+ {
+  "sym": "SYM_DEVIF_POLL",
+  "10p": "0xc1f9689",
+  "n67": "0xc263e09",
+  "score": 0.176,
+  "raw": 0.176,
+  "second": 0.185,
+  "margin": -0.009,
+  "locked": false
+ },
+ {
+  "sym": "SYM_FIRMWARE_LOG",
+  "10p": "0xc1f0d21",
+  "n67": "0xc4490b9",
+  "score": 0.176,
+  "raw": 0.176,
+  "second": 0.175,
+  "margin": 0.001,
+  "locked": false
+ },
+ {
+  "sym": "SYM_INTERCONNECT_SEND",
+  "10p": "0xc2e8685",
+  "n67": "0xc0e4171",
+  "score": 0.176,
+  "raw": 0.176,
+  "second": 0.179,
+  "margin": -0.003,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LV_CACHE_RELEASE",
+  "10p": "0xc1666ed",
+  "n67": "0xc46a00b",
+  "score": 0.176,
+  "raw": 0.176,
+  "second": 0.188,
+  "margin": -0.012,
+  "locked": false
+ },
+ {
+  "sym": "SYM_HEAP_ZALLOC",
+  "10p": "0xc1f90bd",
+  "n67": "0xc2a4931",
+  "score": 0.175,
+  "raw": 0.175,
+  "second": 0.196,
+  "margin": -0.021,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LV_OBJ_SET_STYLE_BG_OPA",
+  "10p": "0xc108375",
+  "n67": "0xc3b92dd",
+  "score": 0.175,
+  "raw": 0.175,
+  "second": 0.261,
+  "margin": -0.085,
+  "locked": false
+ },
+ {
+  "sym": "SYM_SERVICE_MANAGER_STARTUP",
+  "10p": "0xc3bdc25",
+  "n67": "0xc45dc69",
+  "score": 0.173,
+  "raw": 0.173,
+  "second": 0.2,
+  "margin": -0.027,
+  "locked": false
+ },
+ {
+  "sym": "SYM_SEM_POST",
+  "10p": "0xc2070d1",
+  "n67": "0xc23c881",
+  "score": 0.172,
+  "raw": 0.172,
+  "second": 0.19,
+  "margin": -0.018,
+  "locked": false
+ },
+ {
+  "sym": "SYM_BT_ADAPTER_UNREGISTER",
+  "10p": "0xc3af451",
+  "n67": "0xc0e4199",
+  "score": 0.169,
+  "raw": 0.169,
+  "second": 0.184,
+  "margin": -0.016,
+  "locked": false
+ },
+ {
+  "sym": "SYM_BT_ADAPTER_GET_STATE",
+  "10p": "0xc3af4f5",
+  "n67": "0xc25eba1",
+  "score": 0.167,
+  "raw": 0.167,
+  "second": 0.158,
+  "margin": 0.009,
+  "locked": false
+ },
+ {
+  "sym": "SYM_NETDEV_REGISTER",
+  "10p": "0xc1fc215",
+  "n67": "0xc257ecf",
+  "score": 0.166,
+  "raw": 0.166,
+  "second": 0.189,
+  "margin": -0.023,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LV_DISPLAY_GET_VERTICAL_RESOLUTION",
+  "10p": "0xc13cd75",
+  "n67": "0xc29e719",
+  "score": 0.165,
+  "raw": 0.165,
+  "second": 0.175,
+  "margin": -0.01,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LV_EVENT_GET_USER_DATA",
+  "10p": "0xc588311",
+  "n67": "0xc4b5191",
+  "score": 0.165,
+  "raw": 0.165,
+  "second": 0.141,
+  "margin": 0.024,
+  "locked": false
+ },
+ {
+  "sym": "SYM_POLL_NOTIFY",
+  "10p": "0xc1d0b45",
+  "n67": "0xc23e909",
+  "score": 0.165,
+  "raw": 0.165,
+  "second": 0.181,
+  "margin": -0.016,
+  "locked": false
+ },
+ {
+  "sym": "SYM_BT_PAIR_DISPLAY_REPLY",
+  "10p": "0xc3aff65",
+  "n67": "0xc39a181",
+  "score": 0.155,
+  "raw": 0.155,
+  "second": 0.17,
+  "margin": -0.015,
+  "locked": false
+ },
+ {
+  "sym": "SYM_IPV4_INPUT",
+  "10p": "0xc1f95c9",
+  "n67": "0xc2a1d6d",
+  "score": 0.151,
+  "raw": 0.151,
+  "second": 0.161,
+  "margin": -0.01,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LVX_OBJECT_ADD_FLAG",
+  "10p": "0xcac00c1",
+  "n67": "0xc2a4f55",
+  "score": 0.142,
+  "raw": 0.142,
+  "second": 0.153,
+  "margin": -0.011,
+  "locked": false
+ },
+ {
+  "sym": "SYM_DRIVER_IOCTL_DISPATCH",
+  "10p": "0xc1cff89",
+  "n67": "0xc2617d9",
+  "score": 0.14,
+  "raw": 0.14,
+  "second": 0.147,
+  "margin": -0.007,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LV_BAR_SET_VALUE",
+  "10p": "0xc5890a9",
+  "n67": "0xc43ad91",
+  "score": 0.137,
+  "raw": 0.137,
+  "second": 0.14,
+  "margin": -0.003,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LV_OBJ_MOVE_TO_INDEX",
+  "10p": "0xc589551",
+  "n67": "0xc29eff9",
+  "score": 0.122,
+  "raw": 0.122,
+  "second": 0.151,
+  "margin": -0.029,
+  "locked": false
+ },
+ {
+  "sym": "SYM_LV_BAR_CREATE",
+  "10p": "0xc588b91",
+  "n67": "0xc25a289",
+  "score": 0.103,
+  "raw": 0.103,
+  "second": 0.167,
+  "margin": -0.064,
+  "locked": false
+ },
+ {
+  "sym": "SYM_FIRMWARE_BUILD_STRING",
+  "10p": "0xc0c0850",
+  "n67": "0xc2a2255",
+  "score": 0.094,
+  "raw": -4.906,
+  "second": -4.884,
+  "margin": -0.023,
+  "locked": true
+ },
+ {
+  "sym": "SYM_FIRMWARE_VERSION_STRING",
+  "10p": "0xc0c0810",
+  "n67": "0xc2702b5",
+  "score": 0.088,
+  "raw": -4.912,
+  "second": -4.904,
+  "margin": -0.009,
+  "locked": true
+ }
+]

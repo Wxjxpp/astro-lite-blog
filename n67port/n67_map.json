@@ -1,0 +1,100 @@
+{
+  "target": "n67-3.1.190",
+  "ap_sha256": "3e264bc267431ec71843cc7c2e4acd928b9280ea39ee1cd888636adcebabf82f",
+  "ap_size": 7775288,
+  "ap_base": "0x0C080000",
+  "ap_base_note": "N67 reset vector at file 0x64 holds 0x0C080015; code at file 0x14 maps to 0x0C080014. Base is 0x0C080000, NOT 0x0C0C0000 (10p uses 0x0C0C0000).",
+  "format_note": "N67 module (alpha81) links internally at 0x1D100000; firmware-call constants are absolute 0x0C..... N67 firmware base = 0x0C080000.",
+  "symbols": {
+    "SYM_FIRMWARE_VERSION_STRING": {
+      "n67": "0x0C080810",
+      "confidence": "verified",
+      "evidence": "Same layout as 10p: version string '3.1.190' at AP file offset 0x810."
+    },
+    "SYM_FIRMWARE_BUILD_STRING": {
+      "n67": "0x0C080850",
+      "confidence": "verified",
+      "evidence": "Build string 'CONBINE_LTALM054_T1190_09161923_release_6006' at AP file offset 0x850."
+    },
+    "SYM_HEAP_MALLOC": {
+      "n67": "0x0C0F1171",
+      "confidence": "verified",
+      "evidence": "N67 0xC0F1170: push {r7,lr}; mov r1,r0; ldr r0,[pc]; bl 0xC0F0BB0; pop. Returns pointer or sets errno=ENOMEM(12). Matches 10p 0xC1F903C shape exactly. Also MALLOC constant in N67 installer main.lua."
+    },
+    "SYM_HEAP_FREE": {
+      "n67": "0x0C0F0791",
+      "confidence": "verified",
+      "evidence": "N67 0xC0F0790: push {r7,lr}; mov r1,r0; ldr r0,[pc]; bl 0xC0F066C; pop. Identical shape to 10p 0xC1F8FF8."
+    },
+    "SYM_ERRNO_LOCATION": {
+      "n67": "0x0C0E4121",
+      "confidence": "verified",
+      "evidence": "N67 0xC0E4120: push {r7,lr}; bl 0xC0EF48C; cbz; adds r0,#0x14; else ldr r0,[pc]. Same structure as 10p 0xC1E45BC (adds #0x3c there)."
+    },
+    "SYM_READ": {
+      "n67": "0x0C37F459",
+      "confidence": "verified",
+      "evidence": "N67 0xC37F458: fd lookup 0xC37C0D0 then vfs read 0xC37F388; on error errno=-r and return -1."
+    },
+    "SYM_WRITE": {
+      "n67": "0x0C37F0FD",
+      "confidence": "verified",
+      "evidence": "N67 0xC37F0FC: fd lookup then vfs write 0xC37EDC0; EINVAL(-22) for null buffer; on error errno=-r, return -1."
+    },
+    "SYM_OPEN": {
+      "n67": "0x0C37E30D",
+      "confidence": "high",
+      "evidence": "N67 0xC37E30C variadic: path=r1 from r0, loads cwd global, calls 0xC37CD4C (dfs open). Same role as 10p 0xC1D0A28."
+    },
+    "SYM_LSEEK": {
+      "n67": "0x0C37E1F5",
+      "confidence": "high",
+      "evidence": "N67 0xC37E1F4: sub sp,#0x1c; strd r2,r3 (64-bit offset); fd lookup 0xC37C0D0. Matches 10p 0xC1D0524 (mov r5,r2; mov r4,r3)."
+    },
+    "SYM_IOCTL": {
+      "n67": "0x0C37E1B5",
+      "confidence": "high",
+      "evidence": "N67 0xC37E1B4 variadic (push {r1,r2,r3}), fd lookup 0xC37C0D0 then 0xC37A218. Matches 10p 0xC1D01A4 variadic + fd lookup 0xC1B9700."
+    },
+    "SYM_CLOSE": {
+      "n67": "0x0C37DBA5",
+      "confidence": "medium",
+      "evidence": "N67 0xC37DBA4 thin close: calls 0xC3782DC(fd), on error errno=-r, return -1. 10p 0xC1B9D80 is newlib-style fd-table close; same semantics but different implementation."
+    },
+    "SYM_RENAME": {
+      "n67": "0x0C37F491",
+      "confidence": "verified",
+      "evidence": "N67 0xC37F490: validates two non-empty path strings, walks them (0xa4 stack). Called from module with two /data/chaos path strings."
+    },
+    "SYM_UNLINK": {
+      "n67": "0x0C37F775",
+      "confidence": "verified",
+      "evidence": "N67 0xC37F774: builds a stat/path struct, strb=1, calls 0xC379FFC. Called with '/data/chaos/chaos.log' in module."
+    },
+    "SYM_LVX_MSGBOX_SET_CONTENT": {
+      "n67": "0x0C274F61",
+      "confidence": "verified",
+      "evidence": "N67 0xC274F60 push.w{r4..sl,fp,lr}, sub sp,#0x24, args r0-r3+stack, cmp r1,#5 branch identical to 10p 0xC4CA130; same literal style."
+    },
+    "SYM_LVX_PAGE_TITLE_CREATE": {
+      "n67": "0x0C275501",
+      "confidence": "verified",
+      "evidence": "N67 0xC275500 push.w 9 regs, sub sp,#0xc, loads class ptr, calls label-create helper; structurally identical to 10p 0xC4CA6C4."
+    },
+    "SYM_BT_L2CAP_CONNECT": {
+      "n67": "0x0C39A0FD",
+      "confidence": "high",
+      "evidence": "N67 0xC39A0FC push{r7,lr}, sub sp,#8, loads globals r0-r2, puts 1 on stack, calls 0xC38EF08. Same call shape as 10p 0xC805B0C."
+    },
+    "SYM_HEAP_ZALLOC": {
+      "n67": "0x0C0F112D",
+      "confidence": "verified",
+      "evidence": "N67 0xC0F112C: push{r7,lr}; ldr r3,[pc](heap 0x200B0D44); mov r1,r0; ldr r0,[r3]; bl 0xC0F10EC; pop. Structurally identical to 10p ZALLOC 0xC1F90BC. N67 0xC0F10EC = malloc then memset(r0,0,size) (bl 0xC4B49C0), exactly like 10p internal zalloc 0xC1F8B60 (malloc 0xC1F8188 then memset 0xC588980). Prototype void*(uint32_t) matches symbol record."
+    },
+    "SYM_CLOCK_GETTIME": {
+      "n67": "0x0C0BB095",
+      "confidence": "high",
+      "evidence": "N67 0xC0BB094 switch on r0 clockid (==1 or ==4 share a path, ==0 separate, else), validates r1 timespec; calls helper 0xC0BA98C with r1, then errno=-ret / return -1. 10p 0xC201FE0 has same clockid switch and calls helper 0xC202194 with r1. Both helpers do: read raw time into stack, convert (umull/0xC506A24), strd 64-bit result to *out. Module call-context similarity 1.0. Prototype int(uint32_t, timespec*) matches."
+    }
+  }
+}
