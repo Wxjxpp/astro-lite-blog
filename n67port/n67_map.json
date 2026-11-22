@@ -117,11 +117,17 @@
       "evidence": "Alias of SYM_APP_INSTALL (same 10p address 0x0CA6A30D)."
     }
   },
-  "candidates": {
+  "rejected": {
     "SYM_PAGE_GOTO": {
       "n67": "0x0C44A5C5",
+      "reason": "Was a candidate. Full-body diff disproves it: 10p PAGE_GOTO maintains a page stack (ldrh [stack], [stack+2], calls 0xCA6A7CC) and page lifecycle (0xCA454D8/0xCA6B314); N67 0xC44A5C4 calls context-getter 0xC44A5AC(id=-1), toggles [ctx+0x25], and walks a parent/registry table by [node+0x16]. Different functions. Do not use."
+    }
+  },
+  "candidates": {
+    "SYM_LVX_LABEL_SET_TEXT": {
+      "n67": "0x0C263E09",
       "confidence": "candidate",
-      "evidence": "10p PAGE_GOTO 0xCA6C358 walks the page list (next +0x44, key +0x14) then dispatches with args (r0=page_key,r1..r3). N67 0xC44A5C4 calls page-list lookup 0xC448748 (next +0x40, key +0x14), keeps r5=r0, then dispatches. Idiom identical but node next-offset differs (0x44 vs 0x40, version) so not yet promoted; confirm on device or by full body diff."
+      "evidence": "10p LVX_LABEL_SET_TEXT 0xC589490 is a veneer (->PSRAM 0x1C06F039), so only the prototype is known: set label text from a C string. N67 0xC263E08 takes (obj, text): calls 0xC23B38A, compares [obj+0x24] to text, frees old, strlen+dup (0xC4B4888/0xC25998C), stores new at [obj+0x24], then 0xC26390C. Semantics match label set-text; used 38x by the N67 module. Not promoted because the 10p body is unavailable (veneer) so it cannot be compared directly."
     }
   }
 }
