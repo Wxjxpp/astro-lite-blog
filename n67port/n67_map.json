@@ -95,6 +95,33 @@
       "n67": "0x0C0BB095",
       "confidence": "high",
       "evidence": "N67 0xC0BB094 switch on r0 clockid (==1 or ==4 share a path, ==0 separate, else), validates r1 timespec; calls helper 0xC0BA98C with r1, then errno=-ret / return -1. 10p 0xC201FE0 has same clockid switch and calls helper 0xC202194 with r1. Both helpers do: read raw time into stack, convert (umull/0xC506A24), strd 64-bit result to *out. Module call-context similarity 1.0. Prototype int(uint32_t, timespec*) matches."
+    },
+    "SYM_APP_LOOKUP": {
+      "n67": "0x0C4467B5",
+      "confidence": "verified",
+      "evidence": "N67 0xC4467B4: push{r7,lr}; load list head [pc]; walk next at +4 until sentinel; compare 16-bit id at +0x10 to r0; return node. 10p APP_LOOKUP 0xCA69934 does the byte-identical walk: list head, next at +4, sentinel self-check, ldrh [node+0x10], cmp r0. Same ABI (id -> node). N67 installer main.lua also hardcodes 0x0C4467B5 in the app descriptor struct."
+    },
+    "SYM_CHAOS_APP_LOOKUP": {
+      "n67": "0x0C4467B5",
+      "confidence": "verified",
+      "evidence": "Alias of SYM_APP_LOOKUP (same 10p address 0x0CA69935)."
+    },
+    "SYM_APP_INSTALL": {
+      "n67": "0x0C4497CD",
+      "confidence": "high",
+      "evidence": "N67 0xC4497CC: validates [r0+8], reads id [r0+0x10], calls 0xC4467B4 (APP_LOOKUP), then zalloc/malloc 0x3C and fills app struct. 10p APP_INSTALL 0xCA6A30C validates [r0+8] and walks the same list by id at [r0+0x10] inline, then allocates. Same app-registration ABI; difference is helper call vs inline (version). N67 installer main.lua also hardcodes 0x0C4497CD in the descriptor."
+    },
+    "SYM_CHAOS_APP_INSTALL": {
+      "n67": "0x0C4497CD",
+      "confidence": "high",
+      "evidence": "Alias of SYM_APP_INSTALL (same 10p address 0x0CA6A30D)."
+    }
+  },
+  "candidates": {
+    "SYM_PAGE_GOTO": {
+      "n67": "0x0C44A5C5",
+      "confidence": "candidate",
+      "evidence": "10p PAGE_GOTO 0xCA6C358 walks the page list (next +0x44, key +0x14) then dispatches with args (r0=page_key,r1..r3). N67 0xC44A5C4 calls page-list lookup 0xC448748 (next +0x40, key +0x14), keeps r5=r0, then dispatches. Idiom identical but node next-offset differs (0x44 vs 0x40, version) so not yet promoted; confirm on device or by full body diff."
     }
   }
 }
