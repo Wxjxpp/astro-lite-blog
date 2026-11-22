@@ -115,6 +115,11 @@
       "n67": "0x0C4497CD",
       "confidence": "high",
       "evidence": "Alias of SYM_APP_INSTALL (same 10p address 0x0CA6A30D)."
+    },
+    "SYM_LV_BAR_SET_RANGE": {
+      "n67": "0x0C25BC79",
+      "confidence": "verified",
+      "evidence": "N67 0xC25BC78 is lv_bar_set_range: arg (obj,min,max); if max<min logs via 0xC2597EC with its own name string 0x2C683ED6 ('lv_bar_set_range'), file string 0x2C683D87 ('./lvgl/src/widgets/lv_bar.c') and format 0x2C683DA3 ('error range: min=%ld, max=%ld'); on success stores min at [obj+0x28], max at [obj+0x2c], then refresh/animate. Exactly the raw LVGL lv_bar_set_range semantics. (String refs use the 0x2C.. = 0x0C..+0x20000000 alias.)"
     }
   },
   "rejected": {
